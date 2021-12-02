@@ -509,7 +509,7 @@ const increment = (key, val, cached) =>
   key === '::increment' && typeof val === 'number' && (cached() || 0) + val;
 
 const serverTimestamp = (key) =>
-  key === '::serverTimestamp' && getFirestore().FieldValue.serverTimestamp();
+  key === '::serverTimestamp' && getFirestore().Timestamp.now();
 
 /**
  * Process Mutation to a vanilla JSON
