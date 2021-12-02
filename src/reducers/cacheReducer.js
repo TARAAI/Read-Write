@@ -20,10 +20,10 @@ import {
   isEmpty,
   identity,
 } from 'lodash';
-import { Timestamp } from 'firebase/firestore';
 import { actionTypes } from '../constants';
 import { getBaseQueryName } from '../utils/query';
 import mark from '../utils/profiling';
+import { getFirestore } from '../createFirestoreInstance';
 
 const info = debug('rrf:cache');
 const verbose = debug('rrfVerbose:cache');
@@ -508,7 +508,8 @@ const arrayRemove = (key, val, cached) =>
 const increment = (key, val, cached) =>
   key === '::increment' && typeof val === 'number' && (cached() || 0) + val;
 
-const serverTimestamp = (key) => key === '::serverTimestamp' && Timestamp.now();
+const serverTimestamp = (key) =>
+  key === '::serverTimestamp' && getFirestore().FieldValue.serverTimestamp();
 
 /**
  * Process Mutation to a vanilla JSON
