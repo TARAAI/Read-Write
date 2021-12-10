@@ -187,7 +187,9 @@ async function writeInTransaction(firebase, operations) {
       const coll = firestoreRef(firebase, read);
       const snapshot = await coll.get();
       if (hasNothing(snapshot) || snapshot.docs.length === 0) return [];
-      const unserializedDocs = await Promise.all(snapshot.docs.map(getter));
+      const unserializedDocs = await Promise.all(
+        snapshot.docs.map(({ ref }) => getter(ref)),
+      );
       return unserializedDocs.map(serialize);
     });
 

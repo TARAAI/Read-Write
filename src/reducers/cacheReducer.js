@@ -105,6 +105,8 @@ const formatTimestamp = ({ seconds } = {}) =>
   new Intl.DateTimeFormat('en-US', { dateStyle: 'short' }).format(
     new Date(seconds * 1000),
   );
+const isDocRead = ({ doc, id } = {}) =>
+  typeof id === 'string' || typeof doc === 'string';
 
 const PROCESSES = {
   '<': (a, b) => a < b,
@@ -563,6 +565,23 @@ function translateMutationToOverrides({ payload }, db = {}, dbo = {}) {
 
       const collection = db[path] || {};
       const overrides = dbo[path] || {};
+
+      if (!isDocRead(reads[key])) {
+        const pathIds = processOptimistic(reads[key], {
+          database: db,
+          databaseOverrides: dbo,
+        });
+        return {
+          ...result,
+          [key]: pathIds.map(([path, id]) => ({
+            id,
+            path,
+            ...collection[id],
+            ...(overrides[id] || {}),
+          })),
+        };
+      }
+
       return {
         ...result,
         [key]: { id, path, ...collection[id], ...(overrides[id] || {}) },
