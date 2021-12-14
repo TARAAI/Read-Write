@@ -175,6 +175,8 @@ async function writeInTransaction(firebase, operations) {
 
     const done = mark('mutate.writeInTransaction:reads');
     const readsPromised = mapValues(operations.reads, async (read) => {
+      if (!read) return read;
+
       if (isProviderRead(read)) return read();
 
       if (isDocRead(read)) {
@@ -199,6 +201,7 @@ async function writeInTransaction(firebase, operations) {
     const writes = [];
 
     operations.writes.forEach((writeFnc) => {
+      if (!writeFnc) return;
       const complete = mark('mutate.writeInTransaction:writes');
       const operation =
         typeof writeFnc === 'function' ? writeFnc(reads) : writeFnc;
@@ -206,7 +209,7 @@ async function writeInTransaction(firebase, operations) {
       if (Array.isArray(operation)) {
         operation.map((op) => write(firebase, op, transaction));
         writes.push(operation);
-      } else {
+      } else if (operation) {
         writes.push(write(firebase, operation, transaction));
       }
 
