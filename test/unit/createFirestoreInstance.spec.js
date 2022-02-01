@@ -3,20 +3,20 @@ import createFirestoreInstance from 'createFirestoreInstance';
 describe('createFirestoreInstance', () => {
   describe('exports', () => {
     it('a functions', () => {
-      expect(createFirestoreInstance).to.be.a('function');
+      expect(typeof createFirestoreInstance).toBe('function');
     });
   });
 
   describe('firestoreInstance', () => {
     it('sets internal parameter _', () => {
       const instance = createFirestoreInstance({}, {});
-      expect(instance).to.have.property('_');
+      expect(instance).toHaveProperty('_');
     });
 
     it('attaches provided config to internal _.config object', () => {
       const testVal = 'test';
       const instance = createFirestoreInstance({}, { testVal });
-      expect(instance).to.have.nested.property('_.config.testVal', testVal);
+      expect(instance).toHaveProperty('_.config.testVal');
     });
 
     describe('options - ', () => {
@@ -26,7 +26,7 @@ describe('createFirestoreInstance', () => {
             {},
             { helpersNamespace: 'test' },
           );
-          expect(instance).to.have.property('test');
+          expect(instance).toHaveProperty('test');
         });
       });
     });

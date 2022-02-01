@@ -1,0 +1,88 @@
+[
+  {
+    "event": "action",
+    "data": [
+      {
+        "path": "check-test/first-test/counters",
+        "id": "global",
+        "value": 1
+      }
+    ]
+  },
+  {
+    "event": "firestore",
+    "data": {}
+  },
+  {
+    "event": "cache",
+    "data": {}
+  },
+  {
+    "event": "dispatch",
+    "data": {
+      "method": "mutate",
+      "meta": {
+        "timestamp": "1641734679915"
+      },
+      "args": [
+        {
+          "path": "check-test/first-test/counters",
+          "id": "global",
+          "value": 1
+        }
+      ],
+      "types": [
+        {
+          "type": "@@reduxFirestore/MUTATE_START",
+          "payload": {
+            "data": {
+              "path": "check-test/first-test/counters",
+              "id": "global",
+              "value": 1
+            }
+          }
+        },
+        "@@reduxFirestore/MUTATE_SUCCESS",
+        {
+          "type": "@@reduxFirestore/MUTATE_FAILURE",
+          "meta": {
+            "timestamp": "1641734679915"
+          },
+          "payload": {
+            "data": {
+              "path": "check-test/first-test/counters",
+              "id": "global",
+              "value": 1
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "event": "cache",
+    "data": {
+      "databaseOverrides": {
+        "check-test/first-test/counters": {
+          "global": {
+            "path": "check-test/first-test/counters",
+            "id": "global",
+            "value": 1
+          }
+        }
+      }
+    }
+  },
+  {
+    "event": "firestore",
+    "data": {
+      "check-test/first-test/counters": {
+        "global": {
+          "id": "global",
+          "path": "check-test/first-test/counters",
+          "value": 1
+        }
+      }
+    }
+  }
+]

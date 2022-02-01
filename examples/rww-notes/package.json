@@ -1,0 +1,46 @@
+{
+  "name": "rww-notes",
+  "private": true,
+  "scripts": {
+    "dev": "concurrently --kill-others \"yarn dev:lib\" \"yarn dev:firestore\" \"yarn next dev\"",
+    "dev:firestore": "firebase emulators:start --only firestore,ui --project demo-read-write-web3",
+    "dev:lib": "yarn --cwd ../.. watch",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "test": "jest --watch",
+    "storybook": "concurrently --kill-others \"yarn dev:firestore\" \"yarn start-storybook -s ./public -p 6006\"",
+    "dont-postinstall": "rm -rf $PWD/node_modules/read-write-web3 && ln -s $PWD/../../es $PWD/node_modules/read-write-web3"
+  },
+  "dependencies": {
+    "@reduxjs/toolkit": "^1.7.1",
+    "@remirror/pm": "^1.0.11",
+    "@remirror/react": "^1.0.21",
+    "firebase": "^9.6.5",
+    "next": "12.0.9",
+    "react": "17.0.2",
+    "react-dom": "17.0.2",
+    "react-redux": "^7.2.6",
+    "react-redux-firebase": "^3.11.0",
+    "read-write-web3": "../../es",
+    "remirror": "^1.0.61"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.16.12",
+    "@storybook/addon-actions": "^6.4.16",
+    "@storybook/addon-essentials": "^6.4.16",
+    "@storybook/addon-links": "^6.4.16",
+    "@storybook/react": "^6.4.16",
+    "@testing-library/jest-dom": "^5.16.1",
+    "@testing-library/react": "^12.1.2",
+    "@types/node": "17.0.13",
+    "@types/react": "17.0.38",
+    "babel-loader": "^8.2.3",
+    "concurrently": "^7.0.0",
+    "eslint": "8.8.0",
+    "eslint-config-next": "12.0.9",
+    "jest": "^27.4.7",
+    "redux-mock-store": "^1.5.4",
+    "typescript": "4.5.5"
+  }
+}

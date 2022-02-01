@@ -9,12 +9,13 @@ import {
   detachListener,
   dispatchListenerResponse,
   firestoreRef,
-  getPopulateActions,
   getQueryConfig,
   getQueryName,
   orderedFromSnap,
   snapshotCache,
 } from '../utils/query';
+import { getPopulateActions } from '../utils/query-populates';
+import { convertReadProviders } from '../utils/mutate';
 
 /**
  * Add data to a collection or document on Cloud Firestore with the call to
@@ -93,11 +94,11 @@ export function get(firebase, dispatch, queryOption) {
       actionTypes.GET_REQUEST,
       {
         type: actionTypes.GET_SUCCESS,
-        payload: (snap) => ({
+        payload: (snap = {}) => ({
           data: dataByIdSnapshot(snap),
           ordered: orderedFromSnap(snap),
           fromCache:
-            typeof snap.metadata?.fromCache === 'boolean'
+            snap.metadata && typeof snap.metadata.fromCache === 'boolean'
               ? snap.metadata.fromCache
               : true,
         }),
@@ -190,7 +191,7 @@ export function deleteRef(firebase, dispatch, queryOption) {
  */
 export function setListener(firebase, dispatch, queryOpts, successCb, errorCb) {
   const meta = getQueryConfig(queryOpts);
-  const done = resource(meta.collection);
+  const done = resource(meta, getQueryName);
 
   // Create listener
   const success = (docData) => {
@@ -204,6 +205,7 @@ export function setListener(firebase, dispatch, queryOpts, successCb, errorCb) {
       return;
     }
 
+    /* istanbul ignore next: populations are depreacted */
     getPopulateActions({ firebase, docData, meta })
       .then((populateActions) => {
         // Dispatch each populate action
@@ -243,15 +245,7 @@ export function setListener(firebase, dispatch, queryOpts, successCb, errorCb) {
       logListenerError,
       preserveOnListenerError,
     } = firebase._.config || {};
-    // TODO: Look into whether listener is automatically removed in all cases
-    // Log error handling the case of it not existing
-    if (
-      logListenerError !== false &&
-      !!console &&
-      typeof console.error === 'function' // eslint-disable-line no-console
-    ) {
-      console.error('redux-firestore listener error:', err); // eslint-disable-line no-console
-    }
+
     dispatch({
       type: actionTypes.LISTENER_ERROR,
       meta,
@@ -300,39 +294,24 @@ export function setListeners(firebase, dispatch, listeners) {
 
   const { config } = firebase._;
 
-  // Only attach one listener (count of matching listener path calls is tracked)
-  if (config.oneListenerPerPath) {
-    listeners.forEach((listener) => {
-      const path = getQueryName(listener);
-      const oldListenerCount = firebase._.pathListenerCounts[path] || 0;
-      firebase._.pathListenerCounts[path] = oldListenerCount + 1;
+  const { allowMultipleListeners } = config;
 
-      // If we already have an attached listener exit here
-      if (oldListenerCount > 0) {
-        return;
-      }
+  listeners.forEach((listener) => {
+    if (!firebase._.pathListenerCounts) firebase._.pathListenerCounts = {};
+    const path = getQueryName(listener);
+    const oldListenerCount = firebase._.pathListenerCounts[path] || 0;
+    const multipleListenersEnabled =
+      typeof allowMultipleListeners === 'function'
+        ? allowMultipleListeners(listener, firebase._.listeners)
+        : allowMultipleListeners;
 
+    firebase._.pathListenerCounts[path] = oldListenerCount + 1;
+
+    // If we already have an attached listener exit here
+    if (oldListenerCount === 0 || multipleListenersEnabled) {
       setListener(firebase, dispatch, listener);
-    });
-  } else {
-    const { allowMultipleListeners } = config;
-
-    listeners.forEach((listener) => {
-      const path = getQueryName(listener);
-      const oldListenerCount = firebase._.pathListenerCounts[path] || 0;
-      const multipleListenersEnabled =
-        typeof allowMultipleListeners === 'function'
-          ? allowMultipleListeners(listener, firebase._.listeners)
-          : allowMultipleListeners;
-
-      firebase._.pathListenerCounts[path] = oldListenerCount + 1;
-
-      // If we already have an attached listener exit here
-      if (oldListenerCount === 0 || multipleListenersEnabled) {
-        setListener(firebase, dispatch, listener);
-      }
-    });
-  }
+    }
+  });
 }
 
 /**
@@ -417,6 +396,8 @@ export function runTransaction(firebase, dispatch, transactionPromise) {
  */
 export function mutate(firebase, dispatch, mutations) {
   const timestamp = `${+new Date()}`;
+
+  convertReadProviders(mutations);
 
   return wrapInDispatch(dispatch, {
     ref: firebase,

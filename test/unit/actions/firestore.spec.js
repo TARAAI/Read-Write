@@ -1,7 +1,8 @@
-import createFirestoreInstance from 'createFirestoreInstance';
+import createFirestoreInstance, { getFirestore } from 'createFirestoreInstance';
 import { firestoreActions } from 'actions';
 import { setListeners } from 'actions/firestore';
 import { actionTypes, defaultConfig } from 'constants';
+import { identity } from 'lodash';
 
 let dispatchSpy;
 let fakeFirebase;
@@ -23,17 +24,17 @@ let callErrorCallback = false;
 
 describe('firestoreActions', () => {
   beforeEach(() => {
-    dispatchSpy = sinon.spy();
-    addSpy = sinon.spy(() => Promise.resolve(successRes));
-    setSpy = sinon.spy(() => Promise.resolve(successRes));
-    getSpy = sinon.spy(() => Promise.resolve(successRes));
-    updateSpy = sinon.spy(() => Promise.resolve(successRes));
-    deleteSpy = sinon.spy(() => Promise.resolve(successRes));
-    onSnapshotSpy = sinon.spy((func, func2) => {
+    dispatchSpy = jest.fn();
+    addSpy = jest.fn(() => Promise.resolve(successRes));
+    setSpy = jest.fn(() => Promise.resolve(successRes));
+    getSpy = jest.fn(() => Promise.resolve(successRes));
+    updateSpy = jest.fn(() => Promise.resolve(successRes));
+    deleteSpy = jest.fn(() => Promise.resolve(successRes));
+    onSnapshotSpy = jest.fn((func, func2) => {
       if (!callErrorCallback) {
-        func(sinon.spy());
+        func(jest.fn());
       } else {
-        func2(sinon.spy());
+        func2(jest.fn());
       }
     });
     listenerConfig = {};
@@ -59,23 +60,36 @@ describe('firestoreActions', () => {
   });
 
   afterEach(() => {
+    jest.clearAllMocks();
     callErrorCallback = false;
   });
 
   describe('exports', () => {
     it('add', () => {
-      expect(firestoreActions).to.be.respondTo('add');
+      expect(firestoreActions).toHaveProperty('add');
     });
   });
 
   describe('actions', () => {
+    describe('getFirestore', () => {
+      it('getFirestore returns instance', async () => {
+        const instance = createFirestoreInstance(
+          fakeFirebase,
+          { helpersNamespace: 'test' },
+          dispatchSpy,
+        );
+
+        expect(getFirestore()).toBe(instance);
+      });
+    });
+
     describe('add', () => {
       it('throws if Firestore is not initialized', () => {
         const instance = createFirestoreInstance(
           {},
           { helpersNamespace: 'test' },
         );
-        expect(() => instance.test.add({ collection: 'test' })).to.throw(
+        expect(() => instance.test.add({ collection: 'test' })).toThrowError(
           'Firestore must be required and initalized.',
         );
       });
@@ -87,15 +101,15 @@ describe('firestoreActions', () => {
           dispatchSpy,
         );
         await instance.test.add({ collection: 'test' }, { some: 'thing' });
-        expect(dispatchSpy).to.have.nested.property(
-          'firstCall.args.0.type',
-          actionTypes.ADD_REQUEST,
+        expect(dispatchSpy.mock.calls[0][0]).toHaveProperty(
+          'type',
+          '@@reduxFirestore/ADD_REQUEST',
         );
-        expect(dispatchSpy).to.have.nested.property(
-          'secondCall.args.0.type',
-          actionTypes.ADD_SUCCESS,
+        expect(dispatchSpy.mock.calls[1][0]).toHaveProperty(
+          'type',
+          '@@reduxFirestore/ADD_SUCCESS',
         );
-        expect(addSpy).to.have.been.calledOnce;
+        expect(addSpy).toHaveBeenCalled();
       });
     });
 
@@ -105,7 +119,7 @@ describe('firestoreActions', () => {
           {},
           { helpersNamespace: 'test' },
         );
-        expect(() => instance.test.set({ collection: 'test' })).to.throw(
+        expect(() => instance.test.set({ collection: 'test' })).toThrowError(
           'Firestore must be required and initalized.',
         );
       });
@@ -117,15 +131,15 @@ describe('firestoreActions', () => {
           dispatchSpy,
         );
         await instance.test.set({ collection: 'test' }, { some: 'thing' });
-        expect(dispatchSpy).to.have.nested.property(
-          'firstCall.args.0.type',
-          actionTypes.SET_REQUEST,
+        expect(dispatchSpy.mock.calls[0][0]).toHaveProperty(
+          'type',
+          '@@reduxFirestore/SET_REQUEST',
         );
-        expect(dispatchSpy).to.have.nested.property(
-          'secondCall.args.0.type',
-          actionTypes.SET_SUCCESS,
+        expect(dispatchSpy.mock.calls[1][0]).toHaveProperty(
+          'type',
+          '@@reduxFirestore/SET_SUCCESS',
         );
-        expect(setSpy).to.have.been.calledOnce;
+        expect(setSpy).toHaveBeenCalled();
       });
     });
 
@@ -135,7 +149,7 @@ describe('firestoreActions', () => {
           {},
           { helpersNamespace: 'test' },
         );
-        expect(() => instance.test.update({ collection: 'test' })).to.throw(
+        expect(() => instance.test.update({ collection: 'test' })).toThrowError(
           'Firestore must be required and initalized.',
         );
       });
@@ -147,15 +161,15 @@ describe('firestoreActions', () => {
           dispatchSpy,
         );
         await instance.test.update({ collection: 'test' }, { some: 'thing' });
-        expect(dispatchSpy).to.have.nested.property(
-          'firstCall.args.0.type',
-          actionTypes.UPDATE_REQUEST,
+        expect(dispatchSpy.mock.calls[0][0]).toHaveProperty(
+          'type',
+          '@@reduxFirestore/UPDATE_REQUEST',
         );
-        expect(dispatchSpy).to.have.nested.property(
-          'secondCall.args.0.type',
-          actionTypes.UPDATE_SUCCESS,
+        expect(dispatchSpy.mock.calls[1][0]).toHaveProperty(
+          'type',
+          '@@reduxFirestore/UPDATE_SUCCESS',
         );
-        expect(updateSpy).to.have.been.calledOnce;
+        expect(updateSpy).toHaveBeenCalled();
       });
     });
 
@@ -170,8 +184,8 @@ describe('firestoreActions', () => {
           collection: 'test',
           doc: 'test',
         });
-        expect(dispatchSpy).to.have.been.calledTwice;
-        expect(res).to.equal(successRes);
+        expect(dispatchSpy.mock.calls.length).toBe(2);
+        expect(res).toBe(successRes);
       });
 
       it('throws if attempting to delete a collection', async () => {
@@ -182,19 +196,19 @@ describe('firestoreActions', () => {
         try {
           await instance.test.deleteRef({ collection: 'test' });
         } catch (err) {
-          expect(err.message).to.equal('Only documents can be deleted.');
+          expect(err.message).toBe('Only documents can be deleted.');
         }
       });
 
       it('calls onAttemptCollectionDelete if provided', async () => {
-        const funcSpy = sinon.spy(() => Promise.resolve('test'));
+        const funcSpy = jest.fn(() => Promise.resolve('test'));
         const instance = createFirestoreInstance(
           {},
           { helpersNamespace: 'test', onAttemptCollectionDelete: funcSpy },
         );
         const res = await instance.test.deleteRef({ collection: 'test' });
-        expect(funcSpy).to.have.been.calledOnce;
-        expect(res).to.equal('test');
+        expect(funcSpy).toHaveBeenCalled();
+        expect(res).toBe('test');
       });
     });
 
@@ -204,7 +218,7 @@ describe('firestoreActions', () => {
           {},
           { helpersNamespace: 'test' },
         );
-        expect(() => instance.test.get({ collection: 'test' })).to.throw(
+        expect(() => instance.test.get({ collection: 'test' })).toThrowError(
           'Firestore must be required and initalized.',
         );
       });
@@ -220,7 +234,7 @@ describe('firestoreActions', () => {
             doc: 'testing',
             subcollection: [{ collection: 'test' }],
           }),
-        ).to.throw('Firestore must be required and initalized.');
+        ).toThrowError('Firestore must be required and initalized.');
       });
 
       it('throws if attempting to delete a nested sub-collection', () => {
@@ -237,7 +251,7 @@ describe('firestoreActions', () => {
               { collection: 'test2' },
             ],
           }),
-        ).to.throw('Firestore must be required and initalized.');
+        ).toThrowError('Firestore must be required and initalized.');
       });
 
       it('calls dispatch twice', async () => {
@@ -247,21 +261,23 @@ describe('firestoreActions', () => {
           dispatchSpy,
         );
         const res = await instance.test.get({ collection: 'test' });
-        expect(res).to.equal(successRes);
-        expect(dispatchSpy).to.have.been.calledTwice;
+        expect(res).toBe(successRes);
+        expect(dispatchSpy.mock.calls.length).toBe(2);
       });
     });
 
     describe('setListener', () => {
       describe('docChanges', () => {
-        after(() => {
-          onSnapshotSpy = sinon.spy((func, func2) => {
+        afterEach(() => {
+          const thing = jest.fn();
+          onSnapshotSpy = jest.fn((func, func2) => {
             if (!callErrorCallback) {
-              func(sinon.spy());
+              func(thing);
             } else {
-              func2(sinon.spy());
+              func2(thing);
             }
           });
+          jest.clearAllMocks();
         });
 
         it('calls success callback if provided', async () => {
@@ -275,9 +291,9 @@ describe('firestoreActions', () => {
             fakeConfig,
             dispatchSpy,
           );
-          const successSpy = sinon.spy();
+          const successSpy = jest.fn();
           await instance.test.setListener(listenerConfig, successSpy);
-          expect(successSpy).to.have.been.calledOnce;
+          expect(successSpy).toHaveBeenCalled();
         });
 
         it('calls error callback if provided', async () => {
@@ -292,17 +308,82 @@ describe('firestoreActions', () => {
             fakeConfig,
             dispatchSpy,
           );
-          const successSpy = sinon.spy();
-          const errorSpy = sinon.spy();
+          const successSpy = jest.fn();
+          const errorSpy = jest.fn();
           await instance.test.setListener(listenerConfig, successSpy, errorSpy);
-          expect(successSpy).to.have.callCount(0);
-          expect(errorSpy).to.have.been.calledOnce;
+          expect(successSpy.mock.calls.length).toBe(0);
+          expect(errorSpy).toHaveBeenCalled();
           callErrorCallback = false;
         });
 
         describe('as a parameter', () => {
+          it('updates single root-level doc in state when docChanges includes single doc change with type: "modified"', async () => {
+            onSnapshotSpy = jest.fn((func) => {
+              func({
+                docChanges: [
+                  {
+                    doc: {
+                      id: '123ABC',
+                      data: () => ({ some: 'value' }),
+                      ref: {
+                        path: 'test/1',
+                        parent: {
+                          path: 'test',
+                        },
+                      },
+                    },
+                    newIndex: 1,
+                    oldIndex: 0,
+                    type: 'modified',
+                  },
+                ],
+                size: 2,
+                doc: {
+                  id: '123ABC',
+                  parent: {
+                    path: 'test',
+                  },
+                },
+              });
+            });
+            listenerConfig = {
+              collection: 'test',
+              doc: '1',
+            };
+            const instance = createFirestoreInstance(
+              fakeFirebase,
+              fakeConfig,
+              dispatchSpy,
+            );
+            await instance.test.setListener(listenerConfig);
+            expect(onSnapshotSpy).toHaveBeenCalled();
+
+            expect(dispatchSpy.mock.calls.length).toBe(2);
+            expect(dispatchSpy.mock.calls[0][0]).toStrictEqual({
+              meta: {
+                collection: 'test',
+                doc: '123ABC',
+                path: 'test',
+                reprocess: true,
+              },
+              payload: {
+                data: { id: '123ABC', path: 'test', some: 'value' },
+                ordered: { newIndex: 1, oldIndex: 0 },
+              },
+              type: '@@reduxFirestore/DOCUMENT_MODIFIED',
+            });
+            expect(dispatchSpy.mock.calls[0][0]).toHaveProperty(
+              'type',
+              actionTypes.DOCUMENT_MODIFIED,
+            );
+            expect(dispatchSpy.mock.calls[1][0]).toHaveProperty(
+              'type',
+              actionTypes.SET_LISTENER,
+            );
+          });
+
           it('updates single doc in state when docChanges includes single doc change with type: "modified"', async () => {
-            onSnapshotSpy = sinon.spy((func) => {
+            onSnapshotSpy = jest.fn((func) => {
               func({
                 docChanges: [
                   {
@@ -339,17 +420,17 @@ describe('firestoreActions', () => {
               dispatchSpy,
             );
             await instance.test.setListener(listenerConfig);
-            expect(onSnapshotSpy).to.be.calledOnce;
+            expect(onSnapshotSpy).toHaveBeenCalled();
             // SET_LISTENER, DOCUMENT_MODIFIED
-            expect(dispatchSpy).to.be.calledTwice;
-            const {
-              args: [{ type: secondType }],
-            } = dispatchSpy.getCall(0);
-            const {
-              args: [{ type: firstType }],
-            } = dispatchSpy.getCall(1);
-            expect(secondType).to.equal(actionTypes.DOCUMENT_MODIFIED);
-            expect(firstType).to.equal(actionTypes.SET_LISTENER);
+            expect(dispatchSpy.mock.calls.length).toBe(2);
+            expect(dispatchSpy.mock.calls[0][0]).toHaveProperty(
+              'type',
+              actionTypes.DOCUMENT_MODIFIED,
+            );
+            expect(dispatchSpy.mock.calls[1][0]).toHaveProperty(
+              'type',
+              actionTypes.SET_LISTENER,
+            );
           });
 
           it('updates multiple docs in state when docChanges includes multiple doc changes', async () => {
@@ -381,7 +462,7 @@ describe('firestoreActions', () => {
                 type: 'modified',
               },
             ];
-            onSnapshotSpy = sinon.spy((func) => {
+            onSnapshotSpy = jest.fn((func) => {
               func({
                 docChanges,
                 size: 3,
@@ -399,22 +480,25 @@ describe('firestoreActions', () => {
               fakeConfig,
               dispatchSpy,
             );
+
             await instance.test.setListener(listenerConfig);
-            expect(onSnapshotSpy).to.be.calledOnce;
+
+            expect(onSnapshotSpy).toHaveBeenCalled();
             // SET_LISTENER, DOCUMENT_MODIFIED, DOCUMENT_MODIFIED
-            expect(dispatchSpy).to.have.callCount(3);
-            const {
-              args: [{ type: secondType }],
-            } = dispatchSpy.getCall(1);
-            const {
-              args: [{ type: thirdType }],
-            } = dispatchSpy.getCall(0);
-            expect(secondType).to.equal(actionTypes.DOCUMENT_MODIFIED);
-            expect(thirdType).to.equal(actionTypes.DOCUMENT_MODIFIED);
+            expect(dispatchSpy.mock.calls.length).toBe(3);
+
+            expect(dispatchSpy.mock.calls[1][0]).toHaveProperty(
+              'type',
+              actionTypes.DOCUMENT_MODIFIED,
+            );
+            expect(dispatchSpy.mock.calls[2][0]).toHaveProperty(
+              'type',
+              actionTypes.SET_LISTENER,
+            );
           });
 
           it('still dispatches LISTENER_RESPONSE action type if whole collection is being updated (i.e. docChanges.length === size)', async () => {
-            onSnapshotSpy = sinon.spy((success) => {
+            onSnapshotSpy = jest.fn((success) => {
               success({
                 docChanges: [
                   {
@@ -468,15 +552,15 @@ describe('firestoreActions', () => {
               type: actionTypes.LISTENER_RESPONSE,
             };
             await instance.test.setListener(listenerConfig);
-            expect(dispatchSpy).to.be.calledWith(expectedAction);
-            expect(dispatchSpy).to.be.calledWith(expectedAction2);
-            expect(onSnapshotSpy).to.be.calledOnce;
-            // expect(dispatchSpy.withArgs(expectedAction)).to.be.calledOnce;
-            // expect(dispatchSpy.getCall(2)).to.be.calledWith(expectedAction2);
-            // expect(dispatchSpy.firstCall).to.be.calledWith(expectedAction);
-            // expect(dispatchSpy.secondCall).to.be.calledWith(expectedAction2);
-            // expect(dispatchSpy.getCall(2)).to.be.calledWith(expectedAction2);
-            expect(dispatchSpy).to.have.callCount(2);
+            expect(dispatchSpy).toHaveBeenCalledWith(expectedAction);
+            expect(dispatchSpy).toHaveBeenCalledWith(expectedAction2);
+            expect(onSnapshotSpy).toHaveBeenCalled();
+            // expect(dispatchSpy.withArgs(expectedAction)).toHaveBeenCalled();
+            // expect(dispatchSpy.getCall(2)).toHaveBeenCalledWith(expectedAction2);
+            // expect(dispatchSpy.firstCall).toHaveBeenCalledWith(expectedAction);
+            // expect(dispatchSpy.secondCall).toHaveBeenCalledWith(expectedAction2);
+            // expect(dispatchSpy.getCall(2)).toHaveBeenCalledWith(expectedAction2);
+            expect(dispatchSpy.mock.calls.length).toBe(2);
           });
         });
 
@@ -497,7 +581,7 @@ describe('firestoreActions', () => {
                 type: 'modified',
               },
             ];
-            onSnapshotSpy = sinon.spy((func) => {
+            onSnapshotSpy = jest.fn((func) => {
               func({
                 docChanges: () => docChanges,
                 size: 2,
@@ -528,10 +612,10 @@ describe('firestoreActions', () => {
               type: actionTypes.SET_LISTENER,
             };
             await instance.test.setListener(listenerConfig);
-            expect(onSnapshotSpy).to.be.calledOnce;
+            expect(onSnapshotSpy).toHaveBeenCalled();
             // SET_LISTENER, LISTENER_RESPONSE
-            expect(dispatchSpy).to.be.calledTwice;
-            expect(dispatchSpy).to.be.calledWith(expectedAction);
+            expect(dispatchSpy.mock.calls.length).toBe(2);
+            expect(dispatchSpy).toHaveBeenCalledWith(expectedAction);
           });
 
           it('updates multiple docs in state when docChanges includes multiple doc changes', async () => {
@@ -563,7 +647,7 @@ describe('firestoreActions', () => {
                 type: 'modified',
               },
             ];
-            onSnapshotSpy = sinon.spy((func) => {
+            onSnapshotSpy = jest.fn((func) => {
               func({
                 docChanges: () => docChanges,
                 size: 3,
@@ -581,21 +665,22 @@ describe('firestoreActions', () => {
               dispatchSpy,
             );
             await instance.test.setListener(listenerConfig);
-            expect(onSnapshotSpy).to.be.calledOnce;
+            expect(onSnapshotSpy).toHaveBeenCalled();
             // SET_LISTENER, DOCUMENT_MODIFIED, DOCUMENT_MODIFIED
-            expect(dispatchSpy).to.be.calledThrice;
-            const {
-              args: [{ type: secondType }],
-            } = dispatchSpy.getCall(1);
-            const {
-              args: [{ type: thirdType }],
-            } = dispatchSpy.getCall(0);
-            expect(secondType).to.equal(actionTypes.DOCUMENT_MODIFIED);
-            expect(thirdType).to.equal(actionTypes.DOCUMENT_MODIFIED);
+            expect(dispatchSpy.mock.calls.length).toBe(3);
+
+            expect(dispatchSpy.mock.calls[1][0]).toHaveProperty(
+              'type',
+              actionTypes.DOCUMENT_MODIFIED,
+            );
+            expect(dispatchSpy.mock.calls[2][0]).toHaveProperty(
+              'type',
+              actionTypes.SET_LISTENER,
+            );
           });
 
           it('still dispatches LISTENER_RESPONSE action type if whole collection is being updated (i.e. docChanges.length === size)', async () => {
-            onSnapshotSpy = sinon.spy((success) => {
+            onSnapshotSpy = jest.fn((success) => {
               success({
                 docChanges: () => [
                   {
@@ -649,15 +734,10 @@ describe('firestoreActions', () => {
               type: actionTypes.LISTENER_RESPONSE,
             };
             await instance.test.setListener(listenerConfig);
-            expect(dispatchSpy).to.be.calledWith(expectedAction);
-            expect(dispatchSpy).to.be.calledWith(expectedAction2);
-            expect(onSnapshotSpy).to.be.calledOnce;
-            // expect(dispatchSpy.withArgs(expectedAction)).to.be.calledOnce;
-            // expect(dispatchSpy.getCall(2)).to.be.calledWith(expectedAction2);
-            // expect(dispatchSpy.firstCall).to.be.calledWith(expectedAction);
-            // expect(dispatchSpy.secondCall).to.be.calledWith(expectedAction2);
-            // expect(dispatchSpy.getCall(2)).to.be.calledWith(expectedAction2);
-            expect(dispatchSpy).to.have.callCount(2);
+            expect(dispatchSpy).toHaveBeenCalledWith(expectedAction);
+            expect(dispatchSpy).toHaveBeenCalledWith(expectedAction2);
+            expect(onSnapshotSpy).toHaveBeenCalled();
+            expect(dispatchSpy.mock.calls.length).toBe(2);
           });
         });
       });
@@ -674,7 +754,7 @@ describe('firestoreActions', () => {
             dispatchSpy,
           );
           await instance.test.setListener(listenerConfig);
-          expect(dispatchSpy).to.have.been.calledOnce;
+          expect(dispatchSpy).toHaveBeenCalled();
         });
       });
     });
@@ -687,7 +767,7 @@ describe('firestoreActions', () => {
         );
         expect(() =>
           instance.test.setListeners({ collection: 'test' }),
-        ).to.throw(
+        ).toThrowError(
           'Listeners must be an Array of listener configs (Strings/Objects).',
         );
       });
@@ -699,7 +779,7 @@ describe('firestoreActions', () => {
         );
         expect(() =>
           instance.test.setListeners({ collection: 'test' }),
-        ).to.throw(
+        ).toThrowError(
           'Listeners must be an Array of listener configs (Strings/Objects).',
         );
       });
@@ -709,7 +789,7 @@ describe('firestoreActions', () => {
           { collection: 'test' },
           { collection: 'test2' },
         ]);
-        expect(onSnapshotSpy).to.be.calledTwice;
+        expect(onSnapshotSpy.mock.calls.length).toBe(2);
       });
 
       it('supports subcollections', () => {
@@ -723,7 +803,7 @@ describe('firestoreActions', () => {
             doc: '1',
             subcollections: [{ collection: 'test2' }],
           }),
-        ).to.throw(
+        ).toThrowError(
           'Listeners must be an Array of listener configs (Strings/Objects).',
         );
       });
@@ -751,11 +831,11 @@ describe('firestoreActions', () => {
               subcollections: [{ collection: 'test2' }],
             },
           ];
-          const forEachMock = sinon.spy(listeners, 'forEach');
+
           await instance.test.setListeners(listeners);
-          expect(forEachMock).to.be.calledOnce;
+
           // SET_LISTENER, LISTENER_RESPONSE
-          expect(dispatchSpy).to.be.calledTwice;
+          expect(dispatchSpy.mock.calls.length).toBe(2);
         });
 
         it('works with two listeners of the same path (only attaches once)', async () => {
@@ -785,11 +865,12 @@ describe('firestoreActions', () => {
               subcollections: [{ collection: 'test3' }],
             },
           ];
-          const forEachMock = sinon.spy(listeners, 'forEach');
+
           await instance.test.setListeners(listeners);
-          expect(forEachMock).to.be.calledOnce;
+
+          // expect(instance.test.setListener.mock.calls.length).toBe(1);
           // SET_LISTENER, LISTENER_RESPONSE
-          expect(dispatchSpy).to.be.calledTwice;
+          expect(dispatchSpy.mock.calls.length).toBe(2);
         });
       });
     });
@@ -800,7 +881,7 @@ describe('firestoreActions', () => {
           {},
           { helpersNamespace: 'test' },
         );
-        expect(() => instance.test.unsetListener()).to.throw(
+        expect(() => instance.test.unsetListener()).toThrowError(
           'Invalid Path Definition: Only Strings and Objects are accepted.',
         );
       });
@@ -812,7 +893,7 @@ describe('firestoreActions', () => {
         );
         expect(() =>
           instance.test.unsetListener({ collection: 'test' }),
-        ).to.throw('dispatch is not a function');
+        ).toThrowError('dispatch is not a function');
       });
     });
 
@@ -824,7 +905,7 @@ describe('firestoreActions', () => {
         );
         expect(() =>
           instance.test.unsetListeners({ collection: 'test' }),
-        ).to.throw(
+        ).toThrowError(
           'Listeners must be an Array of listener configs (Strings/Objects)',
         );
       });
@@ -836,7 +917,7 @@ describe('firestoreActions', () => {
           dispatchSpy,
         );
         instance.test.unsetListeners([{ collection: 'test' }]);
-        expect(dispatchSpy).to.have.been.calledWith({
+        expect(dispatchSpy).toHaveBeenCalledWith({
           meta: { collection: 'test' },
           payload: { name: 'test', preserveCache: true },
           type: actionTypes.UNSET_LISTENER,
@@ -855,7 +936,7 @@ describe('firestoreActions', () => {
           dispatchSpy,
         );
         instance.test.unsetListeners([{ collection: 'test' }]);
-        expect(dispatchSpy).to.have.been.calledWith({
+        expect(dispatchSpy).toHaveBeenCalledWith({
           meta: { collection: 'test' },
           payload: { name: 'test', preserveCache: false },
           type: actionTypes.UNSET_LISTENER,
@@ -879,7 +960,7 @@ describe('firestoreActions', () => {
             dispatchSpy,
           );
           await instance.test.unsetListeners([{ collection: 'test' }]);
-          expect(dispatchSpy).to.have.callCount(0);
+          expect(dispatchSpy.mock.calls.length).toBe(0);
         });
 
         it('dispatches UNSET_LISTENER action if there is more than one listener', async () => {
@@ -903,7 +984,7 @@ describe('firestoreActions', () => {
           ]);
           await instance.test.unsetListeners([{ collection: 'test' }]);
           // UNSET_LISTENER, LISTENER_RESPONSE
-          expect(dispatchSpy).to.be.calledTwice;
+          expect(dispatchSpy.mock.calls.length).toBe(2);
         });
       });
     });
@@ -913,22 +994,59 @@ describe('firestoreActions', () => {
         const instance = createFirestoreInstance(fakeFirebase, {
           helpersNamespace: 'test',
         });
-        expect(() => instance.test.runTransaction()).to.throw(
+        expect(() => instance.test.runTransaction()).toThrowError(
           'dispatch is not a function',
         );
       });
     });
 
+    describe('Global Convertor', () => {
+      it('converts a snapshot into a custom object', async () => {
+        const globalDataConvertor = {
+          toFirestore: (snap) => ({ 'firestore-prop': snap.prop }),
+          fromFirestore: (snap) => ({ prop: snap.id }),
+        };
+        // Firestore internally calls to/from firestore on get/set/onSnapshot
+        const doc = jest.fn(() => {
+          let _convert;
+          const ref = {
+            withConverter: jest.fn((val) => {
+              _convert = val;
+              return ref;
+            }),
+            get: jest.fn(() => Promise.resolve(_convert.fromFirestore(ref))),
+            id: 'id',
+            parent: { path: 'path' },
+          };
+          return ref;
+        });
+        const collection = jest.fn(() => ({ doc }));
+        const firestore = jest.fn(() => ({ collection, doc }));
+
+        const instance = createFirestoreInstance(
+          { firestore },
+          {
+            helpersNamespace: 'test',
+            globalDataConvertor,
+          },
+          dispatchSpy,
+        );
+
+        const res = await instance.test.get({ collection: 'test', doc: 'id' });
+        expect(res).toStrictEqual({ prop: 'id' });
+      });
+    });
+
     describe('mutate', () => {
       it('handles mutate action types', () => {
-        const set = sinon.spy(() => Promise.resolve());
-        const doc = sinon.spy(() => ({
+        const set = jest.fn(() => Promise.resolve());
+        const doc = jest.fn(() => ({
           set,
           id: 'id',
           parent: { path: 'path' },
         }));
-        const collection = sinon.spy(() => ({ doc }));
-        const firestore = sinon.spy(() => ({ collection, doc }));
+        const collection = jest.fn(() => ({ doc }));
+        const firestore = jest.fn(() => ({ collection, doc }));
 
         const instance = createFirestoreInstance(
           { firestore },
@@ -941,7 +1059,7 @@ describe('firestoreActions', () => {
           data: { a: 1 },
         });
 
-        expect(set).to.have.been.calledOnceWith({ a: 1 });
+        expect(set).toHaveBeenCalledWith({ a: 1 }, { merge: true });
       });
     });
   });

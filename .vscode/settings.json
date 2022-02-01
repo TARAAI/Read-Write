@@ -1,0 +1,4 @@
+{
+  "gitdoc.enabled": true,
+  "jest.jestCommandLine": "jest"
+}

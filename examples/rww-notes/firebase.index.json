@@ -1,0 +1,14 @@
+{
+  "indexes": [
+    {
+      "collectionGroup": "counter",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "amount",
+          "order": "ASCENDING"
+        }
+      ]
+    }
+  ]
+}

@@ -1,5 +1,10 @@
+import { ReduxFirestoreQuerySetting } from 'react-redux-firebase';
 import * as Firebase from 'firebase';
 import { Dispatch } from 'redux';
+import {
+  AsyncThunkAction,
+  ActionCreatorWithPreparedPayload,
+} from '@reduxjs/toolkit';
 
 /**
  * Action types used within actions dispatched internally. These action types
@@ -95,44 +100,49 @@ export interface Config {
 
   globalDataConvertor: {
     toFirestore: (snapshot) => null | object | array;
-    fromFirestore: (snapshot) => null | object | array;
+    fromFirestore: (snapshot) => any;
   };
 }
 
-type ArrayUnion = ['::arrayUnion', unknown];
-type ArrayRemove = ['::arrayRemove', unknown];
+/**
+ *
+ * mutate - Data-driven Design for writing, batching & transacting with Firestore
+ *
+ */
+type ArrayUnion = ['::arrayUnion', any | any[]];
+type ArrayRemove = ['::arrayRemove', any | any[]];
 type Increment = ['::increment', number];
 type ServerTimestamp = ['::serverTimestamp'];
 type FieldValueTuple = ArrayUnion | ArrayRemove | Increment | ServerTimestamp;
 
-export type MutateData =
-  | FieldValueTuple
-  | number
-  | null
-  | boolean
-  | string
-  | object
-  | array;
-
-export type Read = { collection: string; doc: string };
-
-export type Write = Read & { data: Record<string, MutateData> };
-
-export type Batch = Write[];
-
-export type WriteFn = (readKeys: string) => Write | Write[];
-
+type PathId = { id: string; path: string };
+export type Read = PathId;
 /**
- * As of Mar 2021, Firestore does not support transactional queries.
+ * As of Nov 2021, Firestore does not support transactional queries.
  * Queries are run as a standard read. Each document returned is read
  * a second time in the transaction. This is a best effort. Full
  * Transactional Query support is only available with firebase-admin.
  */
-export type ReadQuery = Omit<Read, 'doc'> & { _slowCollectionRead: true };
+export type ReadQuery = Omit<ReduxFirestoreQuerySetting, 'storeAs'> &
+  Pick<PathId, 'path'> & { alias: string };
+export type ReadProvides = () => unknown;
 
-export type Transaction = {
-  reads: (Read | ReadQuery)[];
-  writes: (WriteFn | Writes)[];
+export type Write = PathId & { [key: string]: FieldValueTuple | unknown };
+export type WriteFn<Reads extends string> = (reads: { [Key in Reads]: any }) =>
+  | Write
+  | Write[];
+
+export type Batch = Write[];
+
+export type Transaction<Type extends Record<string, unknown>> = {
+  reads: {
+    [P in keyof Type]: ReadQuery | Read | ReadProvides;
+  };
+  writes:
+    | WriteFn<Extract<keyof Type, string>>[]
+    | WriteFn<Extract<keyof Type, string>>
+    | Write
+    | Write[];
 };
 
 /**
@@ -144,7 +154,299 @@ export type Transaction = {
  * cache reducer. When the change is accepted or rejected it updated the
  * cache reducer to reflect data in firestore.
  */
-export type mutate = (operations: Write | Batch | Transaction) => Promise;
+export type mutate = <Reads extends Record<string, unknown>>(
+  operations: Transaction<Reads> | Batch | Write,
+) => Promise;
+
+/**
+ *
+ * createMutate - Simple wrapper for Redux Toolkit async action creators
+ *
+ */
+type Writer<ReadType extends Record<string, unknown>> =
+  | WriteFn<Extract<keyof ReadType, string>>
+  | Write;
+type Writers<ReadType extends Record<string, unknown>> =
+  | Writer<ReadType>
+  | Writer<ReadType>[];
+
+type SimpleRead<ReadType extends Record<string, unknown>> = {
+  [P in keyof ReadType]: ReadProvides;
+};
+type TransactionRead<ReadType extends Record<string, unknown>> = {
+  [P in keyof ReadType]: ReadQuery | Read | ReadProvides;
+};
+
+type SimpleReadFn<Payload, ReadType extends Record<string, unknown>> = (
+  payload?: Payload,
+) => SimpleRead<ReadType>;
+
+type TransactionReadFn<Payload, ReadType extends Record<string, unknown>> = (
+  payload?: Payload,
+) => TransactionRead<ReadType>;
+
+type SimpleMutate<Payload, ReadType extends Record<string, unknown>> = {
+  action: string;
+  read: SimpleReadFn<Payload, ReadType>;
+  write: Writer<ReadType>;
+};
+type ComplexMutate<Payload, ReadType extends Record<string, unknown>> = {
+  action: string;
+  readwrite: (payload: Payload, thunkAPI: FirebaseThunkAPI) => Writer<ReadType>;
+};
+
+type BatchMutate<Payload, ReadType extends Record<string, unknown>> = {
+  action: string;
+  read: SimpleReadFn<Payload, ReadType>;
+  write: Writers<ReadType>;
+};
+type ComplexBatch<Payload, ReadType extends Record<string, unknown>> = {
+  action: string;
+  readwrite: (
+    payload?: Payload,
+    thunkAPI: FirebaseThunkAPI,
+  ) => Writers<ReadType>;
+};
+
+type TransactionMutate<Payload, ReadType extends Record<string, unknown>> = {
+  action: string;
+  read: TransactionReadFn<Payload, ReadType>;
+  write: Writers<ReadType>;
+};
+type ComplexTransaction<Payload, ReadType extends Record<string, unknown>> = {
+  action: string;
+  readwrite: (
+    payload: Payload,
+    thunkAPI: FirebaseThunkAPI,
+  ) => {
+    read: TransactionRead<ReadType>;
+    write: Writers<ReadType>;
+  };
+};
+
+type Mutations<Payload, ReadType extends Record<string, unknown>> =
+  | SimpleMutate<Payload, ReadType>
+  | ComplexMutate<Payload, ReadType>
+  | BatchMutate<Payload, ReadType>
+  | ComplexBatch<Payload, ReadType>
+  | TransactionMutate<Payload, ReadType>
+  | ComplexTransaction<Payload, ReadType>;
+
+export function createMutate<Payload, ReadType extends Record<string, unknown>>(
+  mutation: Mutations<Payload, ReadType, ReadType>,
+): ((arg: Payload) => AsyncThunkAction<any, void, {}>) & {
+  pending: ActionCreatorWithPreparedPayload<
+    [string, void],
+    undefined,
+    string,
+    never,
+    {
+      arg: Payload;
+      requestId: string;
+    }
+  >;
+  rejected: ActionCreatorWithPreparedPayload<
+    [string, void],
+    undefined,
+    string,
+    never,
+    {
+      arg: Payload;
+      requestId: string;
+    }
+  >;
+  fulfilled: ActionCreatorWithPreparedPayload<
+    [string, void],
+    undefined,
+    string,
+    never,
+    {
+      arg: Payload;
+      requestId: string;
+    }
+  >;
+  typePrefix: string;
+};
+
+export function ReactReduxFirebaseProvider(
+  props: ReactReduxFirebaseProviderProps,
+): any;
+
+export interface ReactReduxFirebaseProviderProps {
+  firebase: any;
+  config: any;
+  dispatch: Dispatch;
+  children?: React.ReactNode;
+  initializeAuth?: boolean;
+  createFirestoreInstance?: (
+    firebase: any,
+    configs: any,
+    dispatch: Dispatch,
+  ) => object;
+}
+
+export namespace ReduxFirestoreContext {
+  const prototype: {};
+}
+
+export function useFirestore(): any;
+
+// -- useRead subscriptions
+
+type Loading = undefined;
+type NotFound = null;
+
+/**
+ * read subscription for a single doc
+ * @param query ReadQuery
+ * @returns Docs
+ */
+function useRead<Doc extends PathId>(pathId: PathId): Doc | Loading | NotFound;
+/**
+ * read single value from cache
+ * @param pathId PathId
+ * @param field keyof Doc
+ * @returns Value of key
+ */
+function useRead<Doc extends PathId>(
+  pathId: PathId,
+  field: K,
+): Doc[K] | Loading | NotFound;
+/**
+ * read single value from cache
+ * @param pathId PathId
+ * @param field keyof Doc
+ * @returns Value of key
+ */
+function useRead<Doc extends PathId>(
+  pathId: PathId,
+  fields: K[],
+): Pick<Doc, K> | Loading | NotFound;
+/**
+ * read subscription to get docs
+ * @param query ReadQuery
+ * @returns Docs
+ */
+function useRead<Doc extends PathId>(
+  query: Omit<ReadQuery, 'id'>,
+): Doc[] | Loading | NotFound;
+/**
+ * read subscription for single value
+ * @param query ReadQuery
+ * @param field keyof Doc
+ * @returns Value of key
+ */
+function useRead<Doc extends PathId>(
+  query: Omit<ReadQuery, 'id'>,
+  field: K,
+): Doc[K][] | Loading | NotFound;
+/**
+ * read subscription for single value
+ * @param query ReadQuery
+ * @param field keyof Doc
+ * @returns Value of key
+ */
+function useRead<Doc extends PathId>(
+  query: Omit<ReadQuery, 'id'>,
+  fields: K[],
+): Pick<Doc, K>[] | Loading | NotFound;
+/**
+ * read subscription that returns the alias
+ * @param query ReadQuery
+ * @param aliasEnum '::alias'
+ * @returns Alias for the query
+ */
+function useRead<Doc extends PathId>(
+  query: Omit<ReadQuery, 'id'>,
+  alias: '::alias',
+): string;
+/**
+ * read from cache
+ * @param alias string
+ * @returns Alias for the query
+ */
+function useRead<Doc extends PathId>(alias: string): Doc[] | undefined;
+/**
+ * read from cache
+ * @param alias string
+ * @param field field of doc
+ * @returns Select keys from doc
+ */
+export function useRead<Doc extends PathId>(
+  alias: string,
+  field: K,
+): Doc[K][] | Loading | NotFound;
+/**
+ * read from cache
+ * @param alias string
+ * @param fields keys of doc
+ * @returns Select keys from doc
+ */
+export function useRead<Doc extends PathId>(
+  alias: string,
+  fields: K[],
+): Pick<Doc, K>[] | Loading | NotFound;
+
+// -- useCache reads from cache
+
+/**
+ * reads single doc from cahce
+ * @param query ReadQuery
+ * @returns Docs
+ */
+function useCache<Doc extends PathId>(pathId: PathId): Doc;
+/**
+ * read single value from cache
+ * @param pathId PathId
+ * @param field keyof Doc
+ * @returns Value of key
+ */
+function useCache<Doc extends PathId>(pathId: PathId, field: K): Doc[K];
+/**
+ * read single value from cache
+ * @param pathId PathId
+ * @param field keyof Doc
+ * @returns Value of key
+ */
+function useRead<Doc extends PathId>(
+  pathId: PathId,
+  fields: K[],
+): Pick<Doc, K> | undefined;
+/**
+ * read from cache
+ * @param alias string
+ * @returns Alias for the query
+ */
+function useCache<Doc extends PathId>(alias: string): Doc[] | undefined;
+/**
+ * read from cache
+ * @param alias string
+ * @param field field of doc
+ * @returns Select keys from doc
+ */
+export function useCache<Doc extends PathId>(
+  alias: string,
+  field: K,
+): Doc[K][] | undefined;
+/**
+ * read from cache
+ * @param alias string
+ * @param fields keys of doc
+ * @returns Select keys from doc
+ */
+export function useCache<Doc extends PathId>(
+  alias: string,
+  fields: K[],
+): Pick<Doc, K>[] | undefined;
+
+// -- setCache for storybook
+
+export function setCache(aliases: Record<string, any>, middlewares?: any): any;
+
+export function shouldPass(actionCreatorFnc: any): any;
+export function shouldPass(testname: string, actionCreatorFnc: any): any;
+export function shouldFail(actionCreatorFnc: any): any;
+export function shouldFail(testname: string, actionCreatorFnc: any): any;
 
 /**
  * A redux store enhancer that adds store.firebase (passed to React component
@@ -163,6 +465,11 @@ export function getFirestore(
   otherConfig?: Partial<Config>,
 ): Firebase.default.firestore & { mutate: mutate };
 
+export function getFirebase(
+  firebaseInstance: typeof Firebase,
+  otherConfig?: Partial<Config>,
+): Firebase.default.firebase;
+
 /**
  * Reducer for Firestore state
  * @param state - Current Firebase Redux State (state.firestore)
@@ -176,6 +483,11 @@ export function firestoreReducer<Schema extends Record<string, any> = {}>(
   state: any,
   action: any,
 ): Reducer<FirestoreReducer.State<Schema>>;
+
+export function firebaseReducer<Schema extends Record<string, any> = {}>(
+  state: any,
+  action: any,
+): Reducer<FirebaseReducer.State<Schema>>;
 
 /**
  * Create a firestore instance that has helpers attached for dispatching actions
@@ -198,6 +510,13 @@ export namespace firestoreReducer {
  */
 export namespace reduxFirestore {
   const prototype: {};
+}
+
+export namespace FirebaseReducer {
+  const prototype: {};
+  export interface Reducer<Schema extends Record<string, any> = {}> {
+    profile: any;
+  }
 }
 
 export namespace FirestoreReducer {
@@ -239,8 +558,6 @@ export namespace FirestoreReducer {
       byQuery: any[];
     };
     listeners: Listeners;
-    data: FirestoreData<Schema>;
-    ordered: OrderedData<Schema>;
     queries: Data<ReduxFirestoreQuerySetting & (Dictionary<any> | any)>;
     cache: CachedData<Schema> & {
       database: CacheDatabase<Schema>;

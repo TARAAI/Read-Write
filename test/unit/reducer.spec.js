@@ -2,25 +2,25 @@ import reducer from 'reducer';
 
 describe('reducer', () => {
   it('is exported', () => {
-    expect(reducer).to.exist;
+    expect(reducer).not.toBeNull();
   });
   it('is a function', () => {
-    expect(reducer).to.exist;
+    expect(reducer).not.toBeNull();
   });
   it('returns state for undefined actionType', () => {
-    expect(reducer({}, {})).to.exist;
+    expect(reducer({}, {})).not.toBeNull();
   });
 });
 
 describe('reducers', () => {
   describe('errors reducer', () => {
     it('returns state for undefined actionType', () => {
-      expect(reducer({}, {})).to.have.property('errors');
+      expect(reducer({}, {})).toHaveProperty('errors');
     });
   });
   describe('status reducer', () => {
     it('returns state for undefined actionType', () => {
-      expect(reducer({}, {})).to.have.property('status');
+      expect(reducer({}, {})).toHaveProperty('status');
     });
   });
 });

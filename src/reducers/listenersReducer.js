@@ -14,6 +14,7 @@ import { combineReducers } from '../utils/reducers';
  * @private
  */
 function listenersById(state = {}, { type, path, payload }) {
+  if (!(payload && payload.name)) return state;
   switch (type) {
     case actionTypes.SET_LISTENER:
       return {
@@ -40,6 +41,7 @@ function listenersById(state = {}, { type, path, payload }) {
  * @private
  */
 function allListeners(state = [], { type, payload }) {
+  if (!(payload && payload.name)) return state;
   switch (type) {
     case actionTypes.SET_LISTENER:
       return [...state, payload.name];

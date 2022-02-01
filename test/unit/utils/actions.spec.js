@@ -1,15 +1,14 @@
-import { expect } from 'chai';
 import { wrapInDispatch } from 'utils/actions';
 
 let dispatchSpy;
 describe('actions utils', () => {
   beforeEach(() => {
-    dispatchSpy = sinon.spy();
+    dispatchSpy = jest.fn();
   });
 
   describe('wrapInDispatch', () => {
     it('is exported', () => {
-      expect(wrapInDispatch).to.be.a('function');
+      expect(typeof wrapInDispatch).toBe('function');
     });
 
     it('calls dispatch', () => {
@@ -18,7 +17,7 @@ describe('actions utils', () => {
         types: ['test', 'test'],
         method: 'test',
       });
-      expect(dispatchSpy).to.have.been.calledOnce;
+      expect(dispatchSpy).toHaveBeenCalled();
     });
 
     it('handles Object action types', () => {
@@ -27,7 +26,7 @@ describe('actions utils', () => {
         types: [{ type: 'test' }, { type: 'test' }],
         method: 'test',
       });
-      expect(dispatchSpy).to.have.been.calledOnce;
+      expect(dispatchSpy).toHaveBeenCalled();
     });
 
     it('handles function payload types', () => {
@@ -37,7 +36,7 @@ describe('actions utils', () => {
         method: 'test',
       };
       wrapInDispatch(dispatchSpy, opts);
-      expect(dispatchSpy).to.have.been.calledOnce;
+      expect(dispatchSpy).toHaveBeenCalled();
     });
 
     it('dispatches success with preserve parameter', async () => {
@@ -52,47 +51,48 @@ describe('actions utils', () => {
         method: 'test',
       };
       await wrapInDispatch(dispatchSpy, opts);
-      expect(dispatchSpy).to.have.nested.property(
-        'firstCall.args.0.type',
-        'test',
-      );
-      expect(dispatchSpy).to.have.nested.property(
-        'secondCall.args.0.preserve.some',
-        preserve.some,
-      );
+      expect(dispatchSpy).toHaveBeenCalledWith({
+        meta: 'meta',
+        payload: undefined,
+        type: 'test',
+      });
+      expect(dispatchSpy).toHaveBeenLastCalledWith({
+        meta: 'meta',
+        payload: 'some',
+        preserve: { some: 'thing' },
+        type: 'test2',
+      });
     });
 
     it('handles rejection', () => {
       const opts = {
-        ref: { test: () => Promise.reject(new Error('test')) },
+        ref: { test: () => Promise.reject(new Error('test rejection')) },
         types: [{ type: 'test' }, { type: 'test', payload: () => ({}) }],
         method: 'test',
       };
 
-      wrapInDispatch(dispatchSpy, opts).catch((err) =>
-        expect(err).to.be.a('Error'),
+      expect(() => wrapInDispatch(dispatchSpy, opts)).rejects.toThrowError(
+        'test rejection',
       );
-
-      expect(dispatchSpy).to.have.been.calledOnce;
     });
 
     it('handles mutate action types', () => {
-      const set = sinon.spy(() => Promise.resolve());
-      const doc = sinon.spy(() => ({
+      const set = jest.fn(() => Promise.resolve());
+      const doc = jest.fn(() => ({
         set,
         id: 'id',
         parent: { path: 'path' },
       }));
-      const collection = sinon.spy(() => ({ doc }));
-      const firestore = sinon.spy(() => ({ collection, doc }));
+      const collection = jest.fn(() => ({ doc }));
+      const firestore = jest.fn(() => ({ collection, doc }));
       wrapInDispatch(dispatchSpy, {
         ref: { firestore },
         types: ['mutate', 'mutate', 'mutate'],
         args: [{ collection: '/collection/path', doc: 'doc', data: { a: 1 } }],
         method: 'mutate',
       });
-      expect(doc).to.have.been.calledOnceWith('/collection/path/doc');
-      expect(set).to.have.been.calledOnceWith({ a: 1 });
+      expect(doc).toHaveBeenCalledWith('/collection/path/doc');
+      expect(set).toHaveBeenCalledWith({ a: 1 }, { merge: true });
     });
   });
 });

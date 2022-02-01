@@ -1,142 +1,231 @@
-# redux-firestore
+# Read-Write-Web3
 
+The fastest, production-ready DX & UX for Firestore.
+
+---
+- **instant UI.** All data mutations run synchronously, optimistic in-memory.
+- **zero Redux boilerplate.** no reducers, no slices, no selectors, no entity mappers, no normalization
+- **data-driven testing.** no boilerplate, no mocks, no spys, seemlessly switch between unit & integation tests
+- **offline-first NoSQL.** with live subscriptions
+
+
+[![License][license-image]][license-url]
+
+<!-- TODO: insert badges here 
 [![NPM version][npm-image]][npm-url]
 [![NPM downloads][npm-downloads-image]][npm-url]
-[![License][license-image]][license-url]
 [![Code Style][code-style-image]][code-style-url]
-[![Dependency Status][daviddm-image]][daviddm-url]
-[![Build Status][travis-image]][travis-url]
 [![Code Coverage][coverage-image]][coverage-url]
+-->
 
-[![Gitter][gitter-image]][gitter-url]
+# API Basics
 
-<!-- [![Quality][quality-image]][quality-url] -->
+## Read
 
-> Redux bindings for Firestore. Provides low-level API used in other libraries such as [react-redux-firebase](https://github.com/prescottprue/react-redux-firebase)
+`useRead({ path, ...query })` 
 
-## Installation
+Query & load & subscribe to live updates from Firestore.
 
-```sh
-npm install redux-firestore --save
+```ts
+const tasks = useRead({ 
+  path: 'tasks', 
+  where: [
+    ['status', '==', 'done'],
+    ['assignee', '==', myUID]
+  ],
+  orderBy: ['createdAt', 'desc'],
+});
+```
+[@see Advanced Read](./docs/read.md#advanced-read)
+
+
+## Write
+
+`createMutate({ action, read, write })` 
+
+Create a Redux action creator to create, update & delete data. Mutations synchrnously update the Redux store making React components feel instant. 
+
+```ts
+const archiveTask = createMutate({ 
+  action: 'ArchiveTask', 
+
+  read: (taskId) => ({ taskId: () => taskId }), 
+  
+  write: ({ taskId }) => ({ 
+    path:'tasks', 
+    id: taskId, 
+    archived: true 
+  }),
+});
+```
+[@see Advanced Write](./docs/write.md#advanced-write)
+
+Action creators return a promise when Firestore accepts or rejects your mutation. 
+
+```ts
+useDispatch(archiveTask('task-one'))
+  .then(() => alert('task archived.'));
 ```
 
-This assumes you are using [npm](https://www.npmjs.com/) as your package manager.
+## Test (Jest Unit + Jest Integration)
 
-If you're not, you can access the library on [unpkg](https://unpkg.com/redux-firestore@latest/dist/redux-firestore.min.js), download it, or point your package manager to it. Theres more on this in the [Builds section below](#builds)
+`it.each([{ payload, mutation, returned }])(...shouldPass)`
 
-## Complementary Package
+`it.each([{ payload, returned }])(...shouldFail)`
 
-Most likely, you'll want react bindings, for that you will need [react-redux-firebase](https://github.com/prescottprue/react-redux-firebase). You can install the current version it by running:
+Zero bolierplate testing. No mocks or spies; just data. Instantly switch between unit & integration tests.
 
-```sh
-npm install --save react-redux-firebase
+```ts
+import { archiveTask } from '../mutations';
+
+const RUN_AS_INTEGRATION = false; // 'true' runs loads/saves to Firestore in parallel
+
+it.each({
+  payload: { taskId: '99' },
+
+  setup: [{ 
+    id: '99', 
+    path: 'tasks', 
+    archived: false, 
+    title: 'sample' 
+  }],
+  
+  results: [{ 
+    id: '99', 
+    path: 'tasks', 
+    archived: true, 
+    title: 'sample' 
+  }],
+ })(...shouldPass(archiveTask, RUN_AS_INTEGRATION));
+ 
+
+it.each([{
+  payload: { taskId: 'not-valid-id' },
+
+  returned: new Error('Document not found.'),
+}])(...shouldFail(archiveTask, RUN_AS_INTEGRATION));
+```
+[@see Jest Test](./docs/test.md#jest)
+
+## StoryBook
+`setCache({[alias]: [DocumentOne, DocumentTwo]});`
+
+Storybook tests are as simple as providing the data that should return to the useRead & useCache calls. 
+
+```tsx
+const cache = setCache({
+  myAlias: [
+    { path:'tasks', id:'task-one', title: 'test task' }
+  ],
+});
+
+export const Default = (): JSX.Element => (
+  <Provider store={cache}>
+    <TaskList />
+  </Provider>
+);
+```
+[@see Storybook Test](./docs/test.md#storybook)
+
+# Documentation
+
+**API Documentation**
+- [Read](./docs/read.md)
+- [Write](./docs/write.md)
+- [Test](./docs/test.md)
+- [Setup](./docs/getting-started.md)
+
+**Code deep-dives**
+- [Breaking down Optimistic Updates](./docs/cache-reducer.md)
+- [Translating Firesore to Mutations](./docs/mutate.md)
+- [No-Redux Redux](./docs/performance.md)
+
+**Design Fundamentals**
+
+- [What's DoD (Data Oriented Design)?](https://gamesfromwithin.com/data-oriented-design)  
+- [Code Is Data; Data Is Code](https://medium.com/linebyline/choosing-clojure-part-1-code-is-data-8932f333e734)
+- [Fact-based Queries](https://docs.datomic.com/on-prem/query/query.html)
+- [Transducers](https://clojure.org/guides/faq#transducers_vs_seqs)
+
+
+# Setup
+
+1. Add the libraries to your project.
+```
+yarn add read-write-web3 firebase @reduxjs/toolkit redux
 ```
 
-[react-redux-firebase](https://github.com/prescottprue/react-redux-firebase) provides [`withFirestore`](http://react-redux-firebase.com/docs/api/withFirestore.html) and [`firestoreConnect`](http://react-redux-firebase.com/docs/api/firestoreConnect.html) higher order components, which handle automatically calling `redux-firestore` internally based on component's lifecycle (i.e. mounting/un-mounting)
+2. Include the firestore/firebase reducers and thunk middleware.
+```javascript
+import { configureStore, ThunkAction, Action } from '@reduxjs/toolkit';
+import {
+  getFirebase,
+  getFirestore,
+  firebaseReducer,
+  firestoreReducer,
+} from 'read-write-firestore';
+import thunk from 'redux-thunk';
 
-# Overview
+import firebase from 'firebase/compat/app';
 
-- [Getting Started](./docs/getting-started.md)
-  - [Components](./docs/getting-started.md#components)
-  - [Functional Components](./docs/getting-started.md#functional-components)
-  - [Class Components](./docs/getting-started.md#class-components)
-- API
-  - [Mutate](./docs/saving.md)
-    - [Optimistic Writes](./docs/saving.md#optimistic-writes)
-    - [Creation](./docs/saving.md#creation)
-    - [Updates](./docs/saving.md#updates)
-    - [Batches](./docs/saving.md#batching)
-    - [Transactions](./docs/saving.md#transactions)
-    - [Atomic Updates](./docs/saving.md#atomic-updates)
-    - [Not Supported](./docs/saving.md#not-supported)
-  - [Query](./docs/query.md)
-    - [Syntax](./docs/query.md#syntax)
-    - [Types](./docs/query.md#types)
-    - [Population](./docs/query.md#population)
-    - [Config Options](./docs/query.md#config-options)
-  - [Cache Reducer](./docs/cache.md)
-   - [Structure](./docs/cache.md#structure)
+// Create store with reducers and initial state
+export const store = configureStore({
+  // Add Firebase to reducers
+  reducer: combineReducers({ 
+    firebase: firebaseReducer,
+    firestore: firestoreReducer,
+  }),
+  middleware: [
+    thunk.withExtraArgument({
+      getFirestore,
+      getFirebase,
+    }),
+  ],
+});
 
-## API Quick Start
+export type AppDispatch = typeof store.dispatch;
+export type RootState = ReturnType<typeof store.getState>;
+export type AppThunk<ReturnType = void> = ThunkAction<
+  ReturnType,
+  RootState,
+  unknown,
+  Action<string>
+>;
+```
 
-#### Load data
-
-Construct a Firestore query, attach listeners for updates and get the data from the selector.
+3. Initialize Firebase and pass store to your component's context using [react-redux's `Provider`](https://github.com/reactjs/react-redux/blob/master/docs/api.md#provider-store):
 
 ```js
-const MyController = () => {
-  // 1. construct query
-  const taskQuery = {
-    collection: `workspace/MySpace/tasks`,
-    where:[
-      ['status', '<', 1],
-      ['deleted', '==', false]
-    ],
-    orderBy: ['createdAt', 'desc'],
-    storeAs: 'tasksStarted',
-  }
-  
-  // 2. load & attached listeners for document changes
-  useFirestoreConnect([taskQuery]);
+import React from 'react';
+import { render } from 'react-dom';
+import App from './App';
+import { store } from './app/store';
+import { Provider } from 'react-redux';
+import {
+  ReactReduxFirebaseProvider,
+  createFirestoreInstance,
+} from 'read-write-firestore';
 
-  // 3. Get results
-  const tasks = useSelector(state => 
-    state.firestore.cache['tasksStarted'].docs
-  );
-  
-  // 4. Display when the data returns
-  return (<ol>
-    {tasks && tasks.map(({id, title}) => (
-      <li key={id}>title</li>
-    ))}
-  </ol>);
-};
+import firebase from 'firebase/compat/app';
+import 'firebase/compat/firestore';
+import 'firebase/compact/auth';
+
+const firebaseApp = firebase.initializeApp({
+  authDomain: process.env.REACT_APP_FIREBASE_authDomain,
+  databaseURL: process.env.REACT_APP_FIREBASE_databaseUrl,
+  projectId: process.env.REACT_APP_FIREBASE_projectId,
+});
+
+render(
+  <Provider store={store}>
+      <ReactReduxFirebaseProvider
+        firebase={firebaseApp}
+        dispatch={store.dispatch}
+        createFirestoreInstance={createFirestoreInstance}
+      >
+        <App />
+      </ReactReduxFirebaseProvider>
+    </Provider>,
+  document.querySelector('body'),
+);
 ```
-
-#### Saving Data
-
-Use redux-firestore's mutate function to queue changes to Firestore
-and see the optimitic results instantly in the UI.
-
-```js
-const MyController = (task) => {
-  const changeTitle = useCallback(({id, path, title}) => {
-    dispatch(
-      createMutate({
-        doc: id, 
-        collection: path, 
-        title
-      }))
-      .catch((error) => { alert(error) });
-  })
-  
-  return (<TaskView onSave={changeTitle} />);
-};
-```
-
-## Roadmap
-
-- Automatic support for documents that have a parameter and a subcollection with the same name (currently requires `storeAs`)
-- Support for Passing a Ref to `setListener` in place of `queryConfig` object or string
-
-Post an issue with a feature suggestion if you have any ideas!
-
-[npm-image]: https://img.shields.io/npm/v/redux-firestore.svg?style=flat-square
-[npm-url]: https://npmjs.org/package/redux-firestore
-[npm-downloads-image]: https://img.shields.io/npm/dm/redux-firestore.svg?style=flat-square
-[quality-image]: http://npm.packagequality.com/shield/redux-firestore.svg?style=flat-square
-[quality-url]: https://packagequality.com/#?package=redux-firestore
-[travis-image]: https://img.shields.io/travis/prescottprue/redux-firestore/master.svg?style=flat-square
-[travis-url]: https://travis-ci.org/prescottprue/redux-firestore
-[daviddm-image]: https://img.shields.io/david/prescottprue/redux-firestore.svg?style=flat-square
-[daviddm-url]: https://david-dm.org/prescottprue/redux-firestore
-[climate-image]: https://img.shields.io/codeclimate/github/prescottprue/redux-firestore.svg?style=flat-square
-[climate-url]: https://codeclimate.com/github/prescottprue/redux-firestore
-[coverage-image]: https://img.shields.io/codecov/c/github/prescottprue/redux-firestore.svg?style=flat-square
-[coverage-url]: https://codecov.io/gh/prescottprue/redux-firestore
-[license-image]: https://img.shields.io/npm/l/redux-firestore.svg?style=flat-square
-[license-url]: https://github.com/prescottprue/redux-firestore/blob/master/LICENSE
-[code-style-image]: https://img.shields.io/badge/code%20style-airbnb-blue.svg?style=flat-square
-[code-style-url]: https://github.com/airbnb/javascript
-[gitter-image]: https://img.shields.io/gitter/room/redux-firestore/gitter.svg?style=flat-square
-[gitter-url]: https://gitter.im/redux-firestore/Lobby

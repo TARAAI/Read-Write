@@ -1,15 +1,4 @@
-import {
-  isObject,
-  isNumber,
-  isEmpty,
-  trim,
-  forEach,
-  has,
-  map,
-  get,
-  set,
-  cloneDeep,
-} from 'lodash';
+import { isObject, isNumber, isEmpty, trim, cloneDeep, has } from 'lodash';
 import { actionTypes } from '../constants';
 
 export const snapshotCache = new WeakMap();
@@ -136,9 +125,9 @@ function handleSubcollections(ref, subcollectionList) {
  * Create a Cloud Firestore reference for a collection or document
  * @param {object} firebase - Internal firebase object
  * @param {object} meta - Metadata
- * @param {string} meta.collection - Collection name
+ * @param {string} meta.path - Collection name
  * @param {string} meta.collectionGroup - Collection Group name
- * @param {string} meta.doc - Document name
+ * @param {string} meta.id - Document name
  * @param {Array} meta.where - List of argument arrays
  * @returns {firebase.firestore.Reference} Resolves with results of add call
  */
@@ -163,18 +152,29 @@ export function firestoreRef(firebase, meta) {
   } = meta;
   let ref = firebase.firestore();
   // TODO: Compare other ways of building ref
+  const isInvalidGroup = collectionGroup ? path || collection : false;
+  const isInvalidQuery = !(doc || id) ? !path && !collection : false;
 
-  if (collection && collectionGroup) {
+  if (isInvalidGroup) {
     throw new Error(
-      'Reference cannot contain both Collection and CollectionGroup.',
+      `Reference cannot contain both Path and CollectionGroup.` +
+        ` (recieved: ${JSON.stringify(meta)})`,
     );
   }
+
+  if (!collectionGroup && isInvalidQuery) {
+    throw new Error(
+      `Query References must include a 'path' property.` +
+        ` (recieved: ${JSON.stringify(meta)})`,
+    );
+  }
+
   const { globalDataConvertor } =
     (firebase && firebase._ && firebase._.config) || {};
-
   if (path || collection) ref = ref.collection(path || collection);
   if (collectionGroup) ref = ref.collectionGroup(collectionGroup);
   if (id || doc) ref = ref.doc(id || doc);
+
   ref = handleSubcollections(ref, subcollections);
   if (where) ref = addWhereToRef(ref, where);
   if (orderBy) ref = addOrderByToRef(ref, orderBy);
@@ -184,6 +184,7 @@ export function firestoreRef(firebase, meta) {
   if (endAt) ref = ref.endAt(...arrayify(endAt));
   if (endBefore) ref = ref.endBefore(...arrayify(endBefore));
   if (globalDataConvertor) ref = ref.withConverter(globalDataConvertor);
+
   return ref;
 }
 
@@ -194,13 +195,20 @@ export function firestoreRef(firebase, meta) {
  * @returns {string} String representing where settings for use in query name
  */
 function arrayToStr(key, value) {
+  if (value instanceof Date || has(value, '_seconds')) {
+    return `${key}=${new Intl.DateTimeFormat('en-US', {
+      dateStyle: 'short',
+      timeStyle: 'short',
+      hour12: false,
+    }).format(has(value, '_seconds') ? new Date(value * 1000) : value)}`;
+  }
   if (typeof value === 'string' || value instanceof String || isNumber(value)) {
     return `${key}=${value}`;
   }
   if (typeof value[0] === 'string' || value[0] instanceof String) {
     return `${key}=${value.join(':')}`;
   }
-  if (value && typeof value.toString === 'function') {
+  if (value && !Array.isArray(value) && typeof value.toString === 'function') {
     return `${key}=${value.toString()}`;
   }
 
@@ -262,9 +270,7 @@ export function getQueryName(meta) {
     ...remainingMeta
   } = meta;
   if (!path && !collection && !collectionGroup) {
-    throw new Error(
-      'Collection or Collection Group is required to build query name',
-    );
+    throw new Error('Path or Collection Group is required to build query name');
   }
 
   if (storeAs) {
@@ -276,11 +282,6 @@ export function getQueryName(meta) {
     basePath = basePath.concat(`/${id || doc}`);
   }
   if ((path || collection) && subcollections) {
-    /* eslint-disable no-console */
-    console.error(
-      'Queries with subcollections must use "storeAs" to prevent invalid store updates. This closley matches the upcoming major release (v1), which stores subcollections at the top level by default.',
-    );
-    /* eslint-enable no-console */
     const mappedCollections = subcollections.map((subcollection) =>
       getQueryName(subcollection),
     );
@@ -295,6 +296,7 @@ export function getQueryName(meta) {
     }
     basePath = basePath.concat('?', serialize(queryParams));
   }
+
   return basePath;
 }
 
@@ -320,9 +322,7 @@ export function getBaseQueryName(meta) {
     ...remainingMeta
   } = meta;
   if (!path && !collection && !collectionGroup) {
-    throw new Error(
-      'Collection or Collection Group is required to build query name',
-    );
+    throw new Error('Path or Collection Group is required to build query name');
   }
   let basePath = path || collection || collectionGroup;
 
@@ -360,18 +360,6 @@ function confirmMetaAndConfig(firebase, meta) {
       'Internal Firebase object required to attach listener. Confirm that reduxFirestore enhancer was added when you were creating your store',
     );
   }
-}
-
-/**
- * Get whether or not a listener is attached at the provided path
- * @param {object} firebase - Internal firebase object
- * @param {object} meta - Metadata object
- * @returns {boolean} Whether or not listener exists
- */
-export function listenerExists(firebase, meta) {
-  confirmMetaAndConfig(firebase, meta);
-  const name = getQueryName(meta);
-  return !!firebase._.listeners[name];
 }
 
 /**
@@ -451,9 +439,15 @@ export function getQueryConfig(query) {
     return queryStrToObj(query);
   }
   if (isObject(query)) {
-    if (!query.collection && !query.collectionGroup && !query.doc) {
+    if (
+      !query.path &&
+      !query.id &&
+      !query.collection &&
+      !query.collectionGroup &&
+      !query.doc
+    ) {
       throw new Error(
-        'Collection, Collection Group and/or Doc are required parameters within query definition object.',
+        'Path, Collection Group and/or Id are required parameters within query definition object.',
       );
     }
     return query;
@@ -560,6 +554,7 @@ export function dataByIdSnapshot(snap) {
 
 /**
  * @private
+ * @deprecated - populates is non-performant.
  * Create an array of promises for population of an object or list
  * @param {object} firebase - Internal firebase object
  * @param {object} populate - Object containing root to be populate
@@ -567,174 +562,11 @@ export function dataByIdSnapshot(snap) {
  * @param {string} id - String id
  * @returns {Promise} Resolves with populate child data
  */
+/* istanbul ignore next: populates is deprecated and should not be used. */
 export function getPopulateChild(firebase, populate, id) {
   return firestoreRef(firebase, { collection: populate.root, doc: id })
     .get()
     .then((snap) => ({ id, ...snap.data() }));
-}
-
-/**
- * @private
- * Populate list of data
- * @param {object} firebase - Internal firebase object
- * @param {object} originalObj - Object to have parameter populated
- * @param {object} p - Object containing populate information
- * @param {object} results - Object containing results of population from other populates
- * @returns {Promise} Resolves with populated list
- */
-export function populateList(firebase, originalObj, p, results) {
-  // Handle root not being defined
-  if (!results[p.root]) {
-    set(results, p.root, {});
-  }
-  return Promise.all(
-    map(originalObj, (id, childKey) => {
-      // handle list of keys
-      const populateKey = id === true || p.populateByKey ? childKey : id;
-      return getPopulateChild(firebase, p, populateKey).then((pc) => {
-        if (pc) {
-          // write child to result object under root name if it is found
-          return set(results, `${p.root}.${populateKey}`, pc);
-        }
-        return results;
-      });
-    }),
-  );
-}
-
-/**
- * @private
- * Create standardized populate object from strings or objects
- * @param {string|object} str - String or Object to standardize into populate object
- * @returns {object} Populate object
- */
-function getPopulateObj(str) {
-  if (typeof str === 'string' || str instanceof String) {
-    return str;
-  }
-  const strArray = str.split(':');
-  // TODO: Handle childParam
-  return { child: strArray[0], root: strArray[1] };
-}
-
-/**
- * @private
- * Create standardized populate object from strings or objects
- * @param {Array} arr - Array of items to get populate objects for
- * @returns {Array} Array of populate objects
- */
-function getPopulateObjs(arr) {
-  if (!Array.isArray(arr)) {
-    return arr;
-  }
-  return arr.map((o) => (isObject(o) ? o : getPopulateObj(o)));
-}
-
-/**
- * @private
- * Create an array of promises for population of an object or list
- * @param {object} firebase - Internal firebase object
- * @param {object} dataKey - Object to have parameter populated
- * @param {object} originalData - String containg population data
- * @param {object|Function} populatesIn - Populates setting
- * @returns {Promise} Resolves with results of population
- */
-export function promisesForPopulate(
-  firebase,
-  dataKey,
-  originalData,
-  populatesIn,
-) {
-  // TODO: Handle selecting of parameter to populate with (i.e. displayName of users/user)
-  const promisesArray = [];
-  const results = {};
-
-  // test if data is a single object, try generating populates and looking for the child
-  const populatesForData = getPopulateObjs(
-    typeof populatesIn === 'function'
-      ? populatesIn(dataKey, originalData)
-      : populatesIn,
-  );
-
-  const dataHasPopulateChilds = populatesForData.some((populate) =>
-    has(originalData, populate.child),
-  );
-  if (dataHasPopulateChilds) {
-    // Data is a single object, resolve populates directly
-    populatesForData.forEach((p) => {
-      const childDataVal = get(originalData, p.child);
-      if (typeof childDataVal === 'string' || childDataVal instanceof String) {
-        return promisesArray.push(
-          getPopulateChild(firebase, p, childDataVal).then((v) => {
-            // write child to result object under root name if it is found
-            if (v) {
-              set(
-                results,
-                `${p.storeAs ? p.storeAs : p.root}.${childDataVal}`,
-                v,
-              );
-            }
-          }),
-        );
-      }
-
-      // Single Parameter is list
-      return promisesArray.push(
-        populateList(firebase, childDataVal, p, results),
-      );
-    });
-  } else {
-    // Data is a list of objects, each value has parameters to be populated
-    // { '1': {someobject}, '2': {someobject} }
-    forEach(originalData, (d, key) => {
-      // generate populates for this data item if a fn was passed
-      const populatesForDataItem = getPopulateObjs(
-        typeof populatesIn === 'function' ? populatesIn(key, d) : populatesIn,
-      );
-
-      // resolve each populate for this data item
-      forEach(populatesForDataItem, (p) => {
-        // get value of parameter to be populated (key or list of keys)
-        const idOrList = get(d, p.child);
-
-        /* eslint-disable consistent-return */
-        // Parameter/child of list item does not exist
-        if (!idOrList) {
-          return;
-        }
-
-        // Parameter of each list item is single ID
-        if (typeof idOrList === 'string' || idOrList instanceof String) {
-          return promisesArray.push(
-            // eslint-disable-line
-            getPopulateChild(firebase, p, idOrList).then((v) => {
-              // write child to result object under root name if it is found
-              if (v) {
-                set(
-                  results,
-                  `${p.storeAs ? p.storeAs : p.root}.${idOrList}`,
-                  v,
-                );
-              }
-              return results;
-            }),
-          );
-        }
-
-        // Parameter of each list item is a list of ids
-        if (Array.isArray(idOrList) || isObject(idOrList)) {
-          // Create single promise that includes a promise for each child
-          return promisesArray.push(
-            // eslint-disable-line
-            populateList(firebase, idOrList, p, results),
-          );
-        }
-      });
-    });
-  }
-
-  // Return original data after population promises run
-  return Promise.all(promisesArray).then(() => results);
 }
 
 const changeTypeToEventType = {
@@ -752,6 +584,7 @@ const changeTypeToEventType = {
  */
 function docChangeEvent(change, originalMeta = {}) {
   const meta = { ...cloneDeep(originalMeta), path: change.doc.ref.parent.path };
+
   if (originalMeta.subcollections && !originalMeta.storeAs) {
     meta.subcollections[0] = { ...meta.subcollections[0], doc: change.doc.id };
   } else {
@@ -783,7 +616,7 @@ function docChangeEvent(change, originalMeta = {}) {
  */
 export function dispatchListenerResponse({
   dispatch,
-  docData,
+  docData = {},
   meta,
   firebase,
 }) {
@@ -793,7 +626,7 @@ export function dispatchListenerResponse({
     mergeOrderedCollectionUpdates,
   } = firebase._.config || {};
   const fromCache =
-    typeof docData.metadata?.fromCache === 'boolean'
+    docData && typeof docData.metadata.fromCache === 'boolean'
       ? docData.metadata.fromCache
       : true;
   const docChanges =
@@ -824,40 +657,4 @@ export function dispatchListenerResponse({
       },
     });
   }
-}
-
-/**
- * Get list of actions for population queries
- * @private
- * @param {object} opts - Options object
- * @param {object} opts.firebase - Firebase instance
- * @param {object} opts.docData - Data object from document
- * @param {object} opts.meta - Meta data
- * @returns {Promise} Resolves with a list of populate actions containing data
- */
-export function getPopulateActions({ firebase, docData, meta }) {
-  // Run promises for population
-  return promisesForPopulate(
-    firebase,
-    docData.id,
-    dataByIdSnapshot(docData),
-    meta.populates,
-  )
-    .then((populateResults) =>
-      // Listener results for each child collection
-      Object.keys(populateResults).map((resultKey) => ({
-        // TODO: Handle population of subcollection queries
-        meta: { collection: resultKey },
-        payload: {
-          data: populateResults[resultKey],
-          // TODO: Write ordered here
-        },
-        requesting: false,
-        requested: true,
-      })),
-    )
-    .catch((populateErr) => {
-      console.error('Error with populate:', populateErr, meta); // eslint-disable-line no-console
-      return Promise.reject(populateErr);
-    });
 }

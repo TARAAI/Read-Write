@@ -1,9 +1,18 @@
-import { chunk, cloneDeep, flatten, isFunction, mapValues } from 'lodash';
+import {
+  chunk,
+  cloneDeep,
+  flatten,
+  isFunction,
+  isPlainObject,
+  mapValues,
+  isEmpty,
+  has,
+} from 'lodash';
 import debug from 'debug';
 import { firestoreRef } from './query';
 import mark from './profiling';
 
-const info = debug('rrf:mutate');
+const info = debug('w3:mutate');
 
 const docRef = (firestore, collection, doc) =>
   firestore.doc(`${collection}/${doc}`);
@@ -17,16 +26,30 @@ const promiseAllObject = async (object) =>
     ),
   );
 
+const isAsync = (fnc) => fnc.constructor.name === 'AsyncFunction';
+
 const isBatchedWrite = (operations) => Array.isArray(operations);
-const isDocRead = ({ doc, id } = {}) =>
+
+export const isDocRead = ({ doc, id } = {}) =>
   typeof id === 'string' || typeof doc === 'string';
-const isProviderRead = (read) => isFunction(read);
+export const isProviderRead = (read) =>
+  has(read, '::w3Provider') || isFunction(read);
+export const getRead = (read) => {
+  if (has(read, '::w3Provider')) return read['::w3Provider'];
+  if (isFunction(read)) return read();
+  return read;
+};
+
 const isSingleWrite = ({ collection, path } = {}) =>
   typeof path === 'string' || typeof collection === 'string';
+
 const hasNothing = (snapshot) =>
   !snapshot ||
-  (snapshot.empty && snapshot.empty()) ||
-  (snapshot.exists && snapshot.exists());
+  (has(snapshot, 'empty') && snapshot.empty()) ||
+  (has(snapshot, 'exists') && snapshot.exists);
+
+const getFieldValue = (firebase) =>
+  firebase.firestore.FieldValue || firebase.firebase.firestore.FieldValue;
 
 // ----- FieldValue support -----
 
@@ -37,22 +60,21 @@ const primaryValue = (arr) =>
 
 const arrayUnion = (firebase, key, ...val) => {
   if (key !== '::arrayUnion') return null;
-  return firebase.firestore.FieldValue.arrayUnion(...val);
+  return getFieldValue(firebase).arrayUnion(...val);
 };
 
 const arrayRemove = (firebase, key, ...val) => {
   if (key !== '::arrayRemove') return null;
-  return firebase.firestore.FieldValue.arrayRemove(...val);
+  return getFieldValue(firebase).arrayRemove(...val);
 };
 
 const increment = (firebase, key, val) =>
   key === '::increment' &&
   typeof val === 'number' &&
-  firebase.firestore.FieldValue.increment(val);
+  getFieldValue(firebase).increment(val);
 
 const serverTimestamp = (firebase, key) =>
-  key === '::serverTimestamp' &&
-  firebase.firestore.FieldValue.serverTimestamp();
+  key === '::serverTimestamp' && getFieldValue(firebase).serverTimestamp();
 
 /**
  * Process Mutation to a vanilla JSON
@@ -78,9 +100,19 @@ function atomize(firebase, operation) {
         arrayRemove(firebase, val[0], val[1]) ||
         increment(firebase, val[0], val[1]);
 
-      if (Array.isArray(val) && val.length > 0) {
+      if (Array.isArray(val) && val.length > 0 && isPlainObject(val[0])) {
+        clone[key] = val.map((obj) => {
+          const [object, update] = atomize(firebase, obj);
+          if (update) requiresUpdate = true;
+          return object;
+        });
+      } else if (Array.isArray(val) && val.length > 0) {
         // eslint-disable-next-line no-param-reassign
         clone[key] = value;
+      } else if (isPlainObject(val)) {
+        const [object, update] = atomize(firebase, val);
+        clone[key] = object;
+        if (update) requiresUpdate = true;
       }
       return clone;
     }, cloneDeep(operation)),
@@ -96,16 +128,28 @@ function atomize(firebase, operation) {
  * @param {object} firebase
  * @param {Mutation_v1 | Mutation_v2} operation
  * @param {Batch | Transaction} writer
- * @returns {Promise | Doc} - Batch & Transaction .set returns null
+ * @returns {Promise | Doc} - Batch & Transaction .set/update change internal state & returns null
  */
 function write(firebase, operation = {}, writer = null) {
+  if (isEmpty(operation)) return Promise.resolve();
   const { collection, path, doc, id, data, ...rest } = operation;
   const ref = docRef(firebase.firestore(), path || collection, id || doc);
   const [changes, requiresUpdate = false] = atomize(firebase, data || rest);
 
   if (writer) {
     const writeType = writer.commit ? 'Batching' : 'Transaction.set';
-    info(writeType, { id: ref.id, path: ref.parent.path, ...changes });
+    if (info.enabled) {
+      /* istanbul ignore next */
+      info(
+        writeType,
+        JSON.stringify(
+          { id: ref.id, path: ref.parent.path, ...changes },
+          null,
+          2,
+        ),
+      );
+    }
+
     if (requiresUpdate) {
       writer.update(ref, changes);
     } else {
@@ -113,7 +157,18 @@ function write(firebase, operation = {}, writer = null) {
     }
     return { id: ref.id, path: ref.parent.path, ...changes };
   }
-  info('Writing', { id: ref.id, path: ref.parent.path, ...changes });
+  if (info.enabled) {
+    /* istanbul ignore next */
+    info(
+      'Writing',
+      JSON.stringify(
+        { id: ref.id, path: ref.parent.path, ...changes },
+        null,
+        2,
+      ),
+    );
+  }
+
   if (requiresUpdate) {
     return ref.update(changes);
   }
@@ -142,6 +197,7 @@ const MAX_BATCH_COUNT = 500;
  */
 async function writeInBatch(firebase, operations) {
   const done = mark('mutate.writeInBatch');
+
   const committedBatchesPromised = chunk(operations, MAX_BATCH_COUNT).map(
     (operationsChunk) => {
       const batch = firebase.firestore().batch();
@@ -154,6 +210,7 @@ async function writeInBatch(firebase, operations) {
   );
 
   done();
+
   return Promise.all(committedBatchesPromised).then(flatten);
 }
 
@@ -169,30 +226,42 @@ async function writeInTransaction(firebase, operations) {
         ? null
         : { ...doc.data(), id: doc.ref.id, path: doc.ref.parent.path };
     const getter = (ref) => {
-      info('Transaction.get ', { id: ref.id, path: ref.parent.path });
+      if (info.enabled) {
+        /* istanbul ignore next */
+        info('Transaction.get ', { id: ref.id, path: ref.parent.path });
+      }
+
       return transaction.get(ref);
     };
 
     const done = mark('mutate.writeInTransaction:reads');
     const readsPromised = mapValues(operations.reads, async (read) => {
-      if (!read) return read;
-
-      if (isProviderRead(read)) return read();
+      if (isProviderRead(read)) {
+        return getRead(read);
+      }
 
       if (isDocRead(read)) {
         const doc = firestoreRef(firebase, read);
         const snapshot = await getter(doc);
-        return serialize(snapshot.exsits === false ? null : snapshot);
+        return serialize(hasNothing(snapshot) ? null : snapshot);
       }
 
-      // else query (As of 7/2021, Firestore doesn't include queries in client-side transactions)
-      const coll = firestoreRef(firebase, read);
-      const snapshot = await coll.get();
-      if (hasNothing(snapshot) || snapshot.docs.length === 0) return [];
-      const unserializedDocs = await Promise.all(
-        snapshot.docs.map(({ ref }) => getter(ref)),
+      // else query
+      const query = firestoreRef(firebase, read);
+
+      // (As of 7/2021, client-side Firestore doesn't include queries in transactions)
+      const nonTransactionQuery = await query.get();
+      if (
+        hasNothing(nonTransactionQuery) ||
+        nonTransactionQuery.docs.length === 0
+      )
+        return [];
+
+      // followed by transactional get on each document in the result
+      const transactionDocs = await Promise.all(
+        nonTransactionQuery.docs.map(({ ref }) => getter(ref)),
       );
-      return unserializedDocs.map(serialize);
+      return transactionDocs.map(serialize);
     });
 
     done();
@@ -201,7 +270,9 @@ async function writeInTransaction(firebase, operations) {
     const writes = [];
 
     operations.writes.forEach((writeFnc) => {
-      if (!writeFnc) return;
+      if (isAsync(writeFnc))
+        throw new Error('Writes must be synchronous, unary functions.');
+
       const complete = mark('mutate.writeInTransaction:writes');
       const operation =
         typeof writeFnc === 'function' ? writeFnc(reads) : writeFnc;
@@ -209,7 +280,7 @@ async function writeInTransaction(firebase, operations) {
       if (Array.isArray(operation)) {
         operation.map((op) => write(firebase, op, transaction));
         writes.push(operation);
-      } else if (operation) {
+      } else {
         writes.push(write(firebase, operation, transaction));
       }
 
@@ -222,7 +293,22 @@ async function writeInTransaction(firebase, operations) {
   });
 }
 
+export function convertReadProviders(mutations) {
+  const shouldMakeProvidesIdempotent = mutations.reads;
+  if (!shouldMakeProvidesIdempotent) return;
+
+  Object.keys(mutations.reads).forEach((key) => {
+    const read = mutations.reads[key];
+    const isReadProvider = isFunction(read);
+    if (isAsync(read))
+      throw new Error('Read Providers must be synchronous, nullary functions.');
+    mutations.reads[key] = isReadProvider ? { '::w3Provider': read() } : read;
+  }, mutations);
+}
+
 /**
+ * @public
+ * Write any data to Firestore.
  * @param {object} firestore
  * @param {object} operations
  * @returns {Promise}
@@ -236,5 +322,7 @@ export default function mutate(firestore, operations) {
     return writeInBatch(firestore, operations);
   }
 
-  return writeInTransaction(firestore, operations).then((val) => val);
+  convertReadProviders(operations);
+
+  return writeInTransaction(firestore, operations);
 }

@@ -11,7 +11,6 @@ import { actionTypes } from './constants';
  * @returns {any} Response from firestore method call
  */
 function callFirestore(firebaseInstance, callInfoObj) {
-  // console.log('calling devshare:', callInfoObj, Devshare)
   const { method } = callInfoObj;
   let { modelArgs, methodArgs } = callInfoObj;
   // Start call chain

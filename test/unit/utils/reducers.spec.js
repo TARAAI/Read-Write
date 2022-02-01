@@ -13,66 +13,62 @@ let config;
 describe('reducer utils', () => {
   describe('getSlashStrPath', () => {
     it('is exported', () => {
-      expect(getSlashStrPath).to.be.a('function');
+      expect(typeof getSlashStrPath).toBe('function');
     });
     it('converts dot path to slash path', () => {
-      expect(getSlashStrPath('some.other.thing')).to.equal('some/other/thing');
+      expect(getSlashStrPath('some.other.thing')).toBe('some/other/thing');
     });
     it('removes leading .', () => {
-      expect(getSlashStrPath('.some.other.thing')).to.equal('some/other/thing');
+      expect(getSlashStrPath('.some.other.thing')).toBe('some/other/thing');
     });
     it('returns empty string for undefined input', () => {
-      expect(getSlashStrPath()).to.equal('');
+      expect(getSlashStrPath()).toBe('');
     });
   });
 
   describe('getDotStrPath', () => {
     it('is exported', () => {
-      expect(getDotStrPath).to.be.a('function');
+      expect(typeof getDotStrPath).toBe('function');
     });
     it('converts slash path to dot path', () => {
-      expect(getDotStrPath('some/other/thing')).to.equal('some.other.thing');
+      expect(getDotStrPath('some/other/thing')).toBe('some.other.thing');
     });
     it('removes leading /', () => {
-      expect(getDotStrPath('/some/other/thing')).to.equal('some.other.thing');
+      expect(getDotStrPath('/some/other/thing')).toBe('some.other.thing');
     });
     it('returns empty string for undefined input', () => {
-      expect(getDotStrPath()).to.equal('');
+      expect(getDotStrPath()).toBe('');
     });
   });
 
   describe('pathFromMeta', () => {
     it('is exported', () => {
-      expect(pathFromMeta).to.be.a('function');
+      expect(typeof pathFromMeta).toBe('function');
     });
 
     it('throws for no meta data passed (first argument)', () => {
-      expect(() => pathFromMeta()).to.throw(
+      expect(() => pathFromMeta()).toThrowError(
         'Action meta is required to build path for reducers.',
       );
     });
 
     it('returns undefined if provided nothing', () => {
-      expect(() => pathFromMeta({})).to.throw(
+      expect(() => pathFromMeta({})).toThrowError(
         'Collection or Collection Group is required to construct reducer path.',
       );
     });
 
     it('returns collection if provided', () => {
-      expect(pathFromMeta({ collection: 'test' })).to.have.property(0, 'test');
+      expect(pathFromMeta({ collection: 'test' })).toStrictEqual(['test']);
     });
 
     it('returns collection group if provided', () => {
-      expect(pathFromMeta({ collectionGroup: 'test' })).to.have.property(
-        0,
-        'test',
-      );
+      expect(pathFromMeta({ collectionGroup: 'test' })).toStrictEqual(['test']);
     });
 
     it('returns collection doc combined into dot path if both provided', () => {
       const result = pathFromMeta({ collection: 'first', doc: 'second' });
-      expect(result).to.have.property(0, 'first');
-      expect(result).to.have.property(1, 'second');
+      expect(result).toStrictEqual(['first', 'second']);
     });
 
     it('uses storeAs as path if provided', () => {
@@ -80,16 +76,16 @@ describe('reducer utils', () => {
     });
 
     it('uses path as path if provided', () => {
-      expect(pathFromMeta({ path: 'testing' })).to.have.property(0, 'testing');
+      expect(pathFromMeta({ path: 'testing' })).toStrictEqual(['testing']);
     });
 
     describe('updateItemInArray', () => {
       it('is exported', () => {
-        expect(updateItemInArray).to.be.a('function');
+        expect(typeof updateItemInArray).toBe('function');
       });
 
       it('returns an array when no arguments are passed', () => {
-        expect(updateItemInArray([], '123', () => ({}))).to.be.an('array');
+        expect(updateItemInArray([], '123', () => ({}))).toBeInstanceOf(Array);
       });
 
       it('preserves items which do not have matching ids', () => {
@@ -99,7 +95,7 @@ describe('reducer utils', () => {
           testId,
           () => 'test',
         );
-        expect(result[0]).to.have.property('id', 'other');
+        expect(result[0]).toHaveProperty('id');
       });
 
       it('updates item with matching id', () => {
@@ -109,7 +105,7 @@ describe('reducer utils', () => {
           testId,
           () => 'test',
         );
-        expect(result).to.have.property(0, 'test');
+        expect(result).toStrictEqual(['test']);
       });
     });
 
@@ -118,88 +114,88 @@ describe('reducer utils', () => {
         subcollections = [{ collection: 'third' }];
         config = { collection: 'first', doc: 'second', subcollections };
         const result = pathFromMeta(config);
-        expect(result).to.have.property(0, 'first');
-        expect(result).to.have.property(1, 'second');
-        expect(result).to.have.property(2, 'third');
+        expect(result).toStrictEqual(['first', 'second', 'third']);
       });
 
       it('with doc', () => {
-        subcollections = [{ collection: 'third', doc: 'forth' }];
+        subcollections = [{ collection: 'third', doc: 'fourth' }];
         config = { collection: 'first', doc: 'second', subcollections };
         const result = pathFromMeta(config);
-        expect(result).to.have.property(0, 'first');
-        expect(result).to.have.property(1, 'second');
-        expect(result).to.have.property(2, 'third');
-        expect(result).to.have.property(3, 'forth');
+        expect(result).toStrictEqual(['first', 'second', 'third', 'fourth']);
       });
     });
 
     it('supports multiple subcollections', () => {
       subcollections = [
-        { collection: 'third', doc: 'forth' },
+        { collection: 'third', doc: 'fourth' },
         { collection: 'fifth' },
       ];
       config = { collection: 'first', doc: 'second', subcollections };
       const result = pathFromMeta(config);
-      expect(result).to.have.property(0, 'first');
-      expect(result).to.have.property(1, 'second');
-      expect(result).to.have.property(2, 'third');
-      expect(result).to.have.property(4, 'fifth');
+      expect(result).toStrictEqual([
+        'first',
+        'second',
+        'third',
+        'fourth',
+        'fifth',
+      ]);
     });
   });
 
   describe('createReducer', () => {
     it('calls handler mapped to action type', () => {
-      const actionHandler = sinon.spy();
+      const actionHandler = jest.fn();
       const newReducer = createReducer({}, { test: actionHandler });
       newReducer({}, { type: 'test' });
-      expect(actionHandler).to.have.been.calledOnce;
+      expect(actionHandler).toHaveBeenCalledTimes(1);
     });
 
     it('returns state for action types not within handlers', () => {
       const newReducer = createReducer({}, {});
       const state = {};
-      expect(newReducer(state, { type: 'testing' })).to.equal(state);
+      expect(newReducer(state, { type: 'testing' })).toStrictEqual(state);
     });
   });
 
   describe('preserveValuesFromState', () => {
     it('is exported', () => {
-      expect(preserveValuesFromState).to.be.a('function');
+      expect(typeof preserveValuesFromState).toBe('function');
     });
 
     describe('passing boolean', () => {
       it('returns original state for true', () => {
         const result = preserveValuesFromState({}, true);
-        expect(result).to.be.an('object');
-        expect(result).to.be.empty;
+        expect(typeof result).toBe('object');
+        expect(result).toStrictEqual({});
       });
 
       it('extends state with next state if provided', () => {
         const testVal = 'val';
         const result = preserveValuesFromState({}, true, { testVal });
-        expect(result).to.have.property('testVal', testVal);
+        expect(result).toHaveProperty('testVal');
       });
     });
 
     describe('passing function', () => {
       it('returns original state for true', () => {
         const result = preserveValuesFromState({}, () => ({}));
-        expect(result).to.be.an('object');
-        expect(result).to.be.empty;
+        expect(typeof result).toBe('object');
+        expect(result).toStrictEqual({});
       });
     });
 
     describe('passing an array of keys', () => {
       it('returns original state for true', () => {
         const result = preserveValuesFromState({ some: 'val' }, ['some']);
-        expect(result).to.have.property('some', 'val');
+        expect(result).toHaveProperty('some');
       });
     });
 
     describe('passing invalid preserve option', () => {
       it('throws', () => {
-        expect(() => preserveValuesFromState({ some: 'val' }, 'some')).to.throw(
+        expect(() =>
+          preserveValuesFromState({ some: 'val' }, 'some'),
+        ).toThrowError(
           'Invalid preserve parameter. It must be an Object or an Array.',
         );
       });

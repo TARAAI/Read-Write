@@ -27,7 +27,7 @@ function makePayload({ payload }, valToPass) {
  */
 export function wrapInDispatch(
   dispatch,
-  { ref, meta = {}, method, args = [], types },
+  { ref = {}, meta = {}, method, args = [], types },
 ) {
   if (!isFunction(dispatch)) {
     throw new Error('dispatch is not a function');
@@ -51,6 +51,9 @@ export function wrapInDispatch(
     }
     dispatch(startAction);
   });
+
+  if (((ref && ref.options && ref.options.databaseURL) || null) === null)
+    return Promise.resolve();
 
   const saved =
     method === 'mutate' ? mutate(ref, ...args) : ref[method](...args);
@@ -84,7 +87,7 @@ export function wrapInDispatch(
         meta,
         payload: err,
       });
-      return Promise.reject(err);
+      return err;
     });
 
   return new Promise((done, error) => {
@@ -128,6 +131,7 @@ export function mapWithFirebaseAndDispatch(
     firebase,
     dispatch,
   );
+
   return {
     ...mapValues(actions, withFirebaseAndDispatch),
     ...aliases.reduce(

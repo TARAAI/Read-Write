@@ -1,18 +1,13 @@
 {
-  "name": "redux-firestore",
+  "name": "read-write-firestore",
   "platforms": [
     "Web",
     "iOS",
     "Android"
   ],
   "content": "README.md",
-  "related": [
-    "prescottprue/react-redux-firebase",
-    "prescottprue/generator-react-firebase",
-    "invertase/react-native-firebase"
-  ],
   "tabs": [
-    { "title": "NPM", "href": "https://npmjs.com/package/redux-firestore" },
-    { "title": "API Reference", "href": "https://github.com/prescottprue/redux-firestore/blob/master/README.md" }
+    { "title": "NPM", "href": "https://npmjs.com/package/read-write-firestore" },
+    { "title": "API Reference", "href": "https://github.com/TARAAI/read-write-firestore/blob/main/README.md" }
   ]
 }

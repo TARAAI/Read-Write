@@ -16,27 +16,19 @@ describe('statusReducer', () => {
   });
 
   it('is exported', () => {
-    expect(statusReducer).to.exist;
+    expect(statusReducer).not.toBeNull();
   });
 
   it('is a function', () => {
-    expect(statusReducer).to.be.a('function');
-  });
-
-  it('returns state for undefined actionType', () => {
-    expect(statusReducer({}, {})).to.have.keys([
-      'requesting',
-      'requested',
-      'timestamps',
-    ]);
+    expect(typeof statusReducer).toBe('function');
   });
 
   it('returns state slices (requesting, requested, timestampes)', () => {
-    expect(statusReducer({}, {})).to.have.keys([
-      'requesting',
-      'requested',
-      'timestamps',
-    ]);
+    expect(statusReducer({}, {})).toStrictEqual({
+      requested: {},
+      requesting: {},
+      timestamps: {},
+    });
   });
 
   describe('actionTypes', () => {
@@ -44,7 +36,7 @@ describe('statusReducer', () => {
       it('returns state if payload is not defined', () => {
         action = { meta: { collection }, type: actionTypes.LISTENER_RESPONSE };
         result = statusReducer(state, action);
-        expect(result.requesting).to.have.property(collection, false);
+        expect(result.requesting).toHaveProperty(collection);
       });
 
       it('returns state if payload does not contain data', () => {
@@ -54,7 +46,7 @@ describe('statusReducer', () => {
           type: actionTypes.LISTENER_RESPONSE,
         };
         result = statusReducer(state, action);
-        expect(result.requesting).to.have.property(collection, false);
+        expect(result.requesting).toHaveProperty(collection);
       });
     });
 
@@ -63,15 +55,13 @@ describe('statusReducer', () => {
         meta = { collection };
         payload = {};
         action = { meta, payload, type: actionTypes.SET_LISTENER };
-        expect(statusReducer(state, action).requesting).to.have.property(
+        expect(statusReducer(state, action).requesting).toHaveProperty(
           collection,
-          true,
         );
-        expect(statusReducer(state, action).requested).to.have.property(
+        expect(statusReducer(state, action).requested).toHaveProperty(
           collection,
-          false,
         );
-        expect(statusReducer(state, action).timestamps).to.have.property(
+        expect(statusReducer(state, action).timestamps).toHaveProperty(
           collection,
         );
       });
@@ -82,14 +72,14 @@ describe('statusReducer', () => {
         meta = { collection };
         action = { meta, type: actionTypes.LISTENER_ERROR };
         result = statusReducer(state, action);
-        expect(result.requesting).to.have.property(collection, false);
+        expect(result.requesting).toHaveProperty(collection);
       });
     });
 
     describe('UNSET_LISTENER', () => {
       it('sets requesting status to false when unsetting listener', () => {
         action = { meta: 'test', type: actionTypes.UNSET_LISTENER };
-        expect(statusReducer(state, action).requesting).to.deep.equal({
+        expect(statusReducer(state, action).requesting).toStrictEqual({
           test: false,
         });
       });

@@ -6,25 +6,28 @@ let state;
 
 describe('errorsReducer', () => {
   it('is exported', () => {
-    expect(errorsReducer).to.exist;
+    expect(errorsReducer).not.toBeNull();
   });
   it('is a function', () => {
-    expect(errorsReducer).to.be.a('function');
+    expect(typeof errorsReducer).toBe('function');
   });
   it('returns state for undefined actionType', () => {
-    expect(errorsReducer({}, {})).to.exist;
+    expect(errorsReducer({}, {})).toStrictEqual({ allIds: [], byQuery: {} });
   });
 
   describe('allIds sub-reducer', () => {
     describe('actionTypes', () => {
       describe('LISTENER_ERROR', () => {
-        it('returns state if payload is not defined', () => {
+        it('returns state if payload is defined', () => {
           action = {
             meta: { collection: 'test' },
             type: actionTypes.LISTENER_ERROR,
           };
           state = { allIds: [], byId: {} };
-          expect(errorsReducer(state, action).allIds).to.have.length(1);
+          expect(errorsReducer(state, action)).toStrictEqual({
+            allIds: ['test'],
+            byQuery: { test: undefined },
+          });
         });
 
         it('has id if error is passed in payload', () => {
@@ -34,10 +37,10 @@ describe('errorsReducer', () => {
             payload: { error: 'message' },
           };
           state = { allIds: [], byId: {} };
-          expect(errorsReducer(state, action).allIds).to.have.property(
-            0,
-            'test',
-          );
+          expect(errorsReducer(state, action)).toStrictEqual({
+            allIds: ['test'],
+            byQuery: { test: { error: 'message' } },
+          });
         });
       });
     });
@@ -52,10 +55,7 @@ describe('errorsReducer', () => {
             type: actionTypes.LISTENER_ERROR,
           };
           state = { allIds: [], byQuery: {} };
-          expect(errorsReducer(state, action).byQuery).to.have.property(
-            'test',
-            undefined,
-          );
+          expect(errorsReducer(state, action).byQuery).toHaveProperty('test');
         });
 
         it('has id if error is passed in payload', () => {
@@ -66,10 +66,7 @@ describe('errorsReducer', () => {
             payload,
           };
           state = { allIds: [], byQuery: {} };
-          expect(errorsReducer(state, action).byQuery).to.have.property(
-            'test',
-            payload,
-          );
+          expect(errorsReducer(state, action).byQuery).toHaveProperty('test');
         });
 
         describe('CLEAR_ERROR', () => {
@@ -79,7 +76,7 @@ describe('errorsReducer', () => {
               type: actionTypes.CLEAR_ERROR,
             };
             state = { allIds: ['test'] };
-            expect(errorsReducer(state, action).allIds).to.have.length(0);
+            expect(errorsReducer(state, action).allIds).toHaveLength(0);
           });
 
           it('does not remove other errors from state', () => {
@@ -89,7 +86,7 @@ describe('errorsReducer', () => {
               type: actionTypes.CLEAR_ERROR,
             };
             state = { allIds: [collection, 'other'] };
-            expect(errorsReducer(state, action).allIds).to.have.length(1);
+            expect(errorsReducer(state, action).allIds).toHaveLength(1);
           });
         });
 
@@ -99,7 +96,7 @@ describe('errorsReducer', () => {
               type: actionTypes.CLEAR_ERRORS,
             };
             state = { allIds: ['test'] };
-            expect(errorsReducer(state, action).allIds).to.have.length(0);
+            expect(errorsReducer(state, action).allIds).toHaveLength(0);
           });
 
           it('remove multiple errors from state', () => {
@@ -107,7 +104,7 @@ describe('errorsReducer', () => {
               type: actionTypes.CLEAR_ERRORS,
             };
             state = { allIds: ['test', 'other'] };
-            expect(errorsReducer(state, action).allIds).to.have.length(0);
+            expect(errorsReducer(state, action).allIds).toHaveLength(0);
           });
         });
       });
@@ -119,10 +116,7 @@ describe('errorsReducer', () => {
             type: actionTypes.ERROR,
           };
           state = { allIds: [], byQuery: {} };
-          expect(errorsReducer(state, action).byQuery).to.have.property(
-            'test',
-            undefined,
-          );
+          expect(errorsReducer(state, action).byQuery).toHaveProperty('test');
         });
 
         it('has id if error is passed in payload', () => {
@@ -133,10 +127,7 @@ describe('errorsReducer', () => {
             payload,
           };
           state = { allIds: [], byQuery: {} };
-          expect(errorsReducer(state, action).byQuery).to.have.property(
-            'test',
-            payload,
-          );
+          expect(errorsReducer(state, action).byQuery).toHaveProperty('test');
         });
 
         it('has id if error is passed in payload', () => {
@@ -147,10 +138,7 @@ describe('errorsReducer', () => {
             payload,
           };
           state = { allIds: [], byQuery: {} };
-          expect(errorsReducer(state, action).byQuery).to.have.property(
-            'test',
-            payload,
-          );
+          expect(errorsReducer(state, action).byQuery).toHaveProperty('test');
         });
 
         it('does not add the listener path if it already exists in state', () => {
@@ -161,10 +149,7 @@ describe('errorsReducer', () => {
             payload,
           };
           state = { allIds: ['test'], byQuery: {} };
-          expect(errorsReducer(state, action).byQuery).to.have.property(
-            'test',
-            payload,
-          );
+          expect(errorsReducer(state, action).byQuery).toHaveProperty('test');
         });
       });
 
@@ -175,10 +160,7 @@ describe('errorsReducer', () => {
             type: actionTypes.CLEAR_ERROR,
           };
           state = { allIds: ['test'], byQuery: {} };
-          expect(errorsReducer(state, action).byQuery).to.have.property(
-            'test',
-            null,
-          );
+          expect(errorsReducer(state, action).byQuery).toHaveProperty('test');
         });
       });
     });

@@ -20,12 +20,19 @@ import {
   isEmpty,
   identity,
 } from 'lodash';
-import { actionTypes } from '../constants';
-import { getBaseQueryName } from '../utils/query';
-import mark from '../utils/profiling';
-import { getFirestore } from '../createFirestoreInstance';
 
-const info = debug('rrf:cache');
+import { getFirestore } from '../createFirestoreInstance';
+import { actionTypes } from '../constants';
+import { getQueryName } from '../utils/query';
+import { getRead, isDocRead, isProviderRead } from '../utils/mutate';
+import {
+  mutationWriteOutput,
+  mutationProduceWrites,
+  mutationReadFromCache,
+} from './utils/mutate';
+import mark from '../utils/profiling';
+
+const info = debug('w3:cache');
 const verbose = debug('rrfVerbose:cache');
 
 /**
@@ -105,8 +112,6 @@ const formatTimestamp = ({ seconds } = {}) =>
   new Intl.DateTimeFormat('en-US', { dateStyle: 'short' }).format(
     new Date(seconds * 1000),
   );
-const isDocRead = ({ doc, id } = {}) =>
-  typeof id === 'string' || typeof doc === 'string';
 
 const PROCESSES = {
   '<': (a, b) => a < b,
@@ -147,6 +152,7 @@ const PROCESSES_TIMESTAMP = {
 const xfVerbose = (title) =>
   partialRight(map, (data) => {
     if (verbose.enabled) {
+      /* istanbul ignore next */
       verbose(title, JSON.parse(JSON.stringify(data)));
     }
     return data;
@@ -304,9 +310,12 @@ const xfPaginate = (query, getDoc) => {
     else if (endAt) prop = 'endAt';
     else if (endBefore) prop = 'endBefore';
 
+    /* istanbul ignore next */
     verbose(
       `paginate ${prop}:${formatTimestamp(needsPagination)} ` +
-        `order:[${query?.orderBy?.[0]}, ${query?.orderBy?.[1]}] ` +
+        `order:[${query && query.orderBy && query.orderBy[0]}, ${
+          query && query.orderBy && query.orderBy[1]
+        }] ` +
         `via:${via}`,
     );
   }
@@ -328,9 +337,11 @@ const xfPaginate = (query, getDoc) => {
       const isMatched = compare(document[field], value);
       if (isMatched) {
         if (verbose.enabled) {
+          /* istanbul ignore next */
           const val = isTime
             ? formatTimestamp(document[field])
             : document[field];
+          /* istanbul ignore next */
           verbose(`${prop}: ${document.id}.${field} = ${val}`);
         }
         return true;
@@ -381,12 +392,13 @@ function processOptimistic(query, state) {
 
   const getDoc = (path, id) => {
     const data = db[id] || {};
-    const override = dbo?.[id];
+    const override = dbo && dbo[id];
 
     return override ? { ...data, ...override } : data;
   };
 
   if (verbose.enabled) {
+    /* istanbul ignore next */
     verbose(JSON.parse(JSON.stringify(query)));
   }
 
@@ -437,7 +449,7 @@ function reprocessQueries(draft, path) {
   const queries = [];
 
   const paths = Array.isArray(path) ? path : [path];
-  const overrides = draft.databaseOverrides?.[path];
+  const overrides = draft.databaseOverrides && draft.databaseOverrides[path];
   Object.keys(draft).forEach((key) => {
     if (['database', 'databaseOverrides'].includes(key)) return;
     if (!paths.includes(draft[key].collection)) return;
@@ -450,7 +462,7 @@ function reprocessQueries(draft, path) {
 
     if (
       !draft[key].ordered ||
-      (ordered ?? []).toString() !== (draft[key].ordered ?? []).toString()
+      (ordered || []).toString() !== (draft[key].ordered || []).toString()
     ) {
       set(draft, [key, 'ordered'], ordered);
       set(draft, [key, 'via'], !isEmpty(overrides) ? 'optimistic' : 'memory');
@@ -473,70 +485,6 @@ function reprocessQueries(draft, path) {
 // --- Mutate support ---
 
 /**
- * Not a Mutate, just an array
- * @param {Array} arr
- * @returns Null | Array
- */
-const primaryValue = (arr) =>
-  typeof arr[0] === 'string' && arr[0].indexOf('::') === 0 ? null : arr;
-
-/**
- * Mutate Nested Object
- * @param {*} obj - data
- * @param {*} key - nested key path
- * @param {*} val - value to be set
- * @returns Null | object
- */
-const nestedMap = (obj, key, val) => {
-  // eslint-disable-next-line no-param-reassign
-  delete obj[key];
-  const fields = key.split('.');
-  fields.reduce((deep, field, idx) => {
-    // eslint-disable-next-line no-param-reassign
-    if (deep[field] === undefined) deep[field] = {};
-    // eslint-disable-next-line no-param-reassign
-    if (idx === fields.length - 1) deep[field] = val;
-    return deep[field];
-  }, obj);
-  return obj;
-};
-
-const arrayUnion = (key, val, cached) =>
-  key !== '::arrayUnion' ? null : (cached() || []).concat([val]);
-
-const arrayRemove = (key, val, cached) =>
-  key === '::arrayRemove' && (cached() || []).filter((item) => item !== val);
-
-const increment = (key, val, cached) =>
-  key === '::increment' && typeof val === 'number' && (cached() || 0) + val;
-
-const serverTimestamp = (key) =>
-  key === '::serverTimestamp' && getFirestore().Timestamp.now();
-
-/**
- * Process Mutation to a vanilla JSON
- * @param {*} mutation - payload mutation
- * @param {Function} cached - function that returns in-memory cached instance
- * @returns
- */
-function atomize(mutation, cached) {
-  return Object.keys(mutation).reduce((data, key) => {
-    const val = data[key];
-    if (key.includes('.')) {
-      nestedMap(data, key, val);
-    } else if (Array.isArray(val) && val.length > 0) {
-      // eslint-disable-next-line no-param-reassign
-      data[key] =
-        primaryValue(val) ||
-        serverTimestamp(val[0]) ||
-        arrayUnion(val[0], val[1], () => cached(key)) ||
-        arrayRemove(val[0], val[1], () => cached(key)) ||
-        increment(val[0], val[1], () => cached(key));
-    }
-    return data;
-  }, JSON.parse(JSON.stringify(mutation)));
-}
-/**
  * Translate mutation to a set of database overrides
  * @param {MutateAction} action - Standard Redux action
  * @param {object.<FirestorePath, object<FirestoreDocumentId, Doc>>} db - in-memory database
@@ -552,74 +500,34 @@ function translateMutationToOverrides({ payload }, db = {}, dbo = {}) {
     writes = [writes];
   }
 
-  // grab reads sync from in-memory database
-  let optimistic = {};
-  if (reads) {
-    optimistic = Object.keys(reads).reduce((result, key) => {
-      if (isFunction(reads[key])) {
-        return { ...result, [key]: reads[key]() };
-      }
+  const optimisticRead = mutationReadFromCache(reads, { db, dbo });
 
-      const path = reads[key]?.path || reads[key]?.collection;
-      const id = reads[key]?.id || reads[key]?.doc;
+  const instructions = mutationProduceWrites(optimisticRead, writes);
 
-      const collection = db[path] || {};
-      const overrides = dbo[path] || {};
+  const overrides = mutationWriteOutput(instructions, { db, dbo });
 
-      if (!isDocRead(reads[key])) {
-        const pathIds = processOptimistic(reads[key], {
-          database: db,
-          databaseOverrides: dbo,
-        });
-        return {
-          ...result,
-          [key]: pathIds.map(([path, id]) => ({
-            id,
-            path,
-            ...collection[id],
-            ...(overrides[id] || {}),
-          })),
-        };
-      }
-
-      return {
-        ...result,
-        [key]: { id, path, ...collection[id], ...(overrides[id] || {}) },
-      };
-    }, {});
-  }
-
-  const overrides = writes
-    .map((writer) => (isFunction(writer) ? writer(optimistic) : writer))
-    .filter((data) => !data || !isEmpty(data))
-    .reduce(
-      (flat, result) => [
-        ...flat,
-        ...(Array.isArray(result) ? result : [result]),
-      ],
-      [],
-    )
-    .map((write) => {
-      const { collection, path, doc, id, data, ...rest } = write;
-
-      const coll = path || collection;
-      const docId = id || doc;
-      return {
-        path: coll,
-        id: docId,
-        ...atomize(collection ? data : rest, (key) => {
-          const database = Object.keys(db).length > 0 ? db : {};
-          const location = database[coll] || {};
-          return (location[docId] || {})[key];
-        }),
-      };
-    });
-
-  if (debug.enabled('rrf:mutate')) {
-    debug('rrf:mutate')('optimistic write', {
-      input: { reads, writes },
-      output: { optimistic, overrides },
-    });
+  if (debug.enabled('w3:mutate')) {
+    /* istanbul ignore next */
+    debug('w3:mutate')(
+      'Optimistic Cache',
+      JSON.stringify(
+        {
+          'input-read': Object.keys(reads).reduce(
+            (clone, key) => (
+              {
+                ...clone,
+                [key]: getRead(reads[key]),
+              },
+              JSON.parse(JSON.stringify(reads))
+            ),
+          ),
+          'input-write-args': optimistic,
+          'output-writes': overrides,
+        },
+        null,
+        2,
+      ),
+    );
   }
 
   return overrides;
@@ -684,7 +592,9 @@ const initialize = (state, { action, key, path }) =>
       set(draft, ['database'], {});
       set(draft, ['databaseOverrides'], {});
     }
-    const hasOptimistic = !isEmpty(draft.databaseOverrides?.[path]);
+    const hasOptimistic = !isEmpty(
+      draft.databaseOverrides && draft.databaseOverrides[path],
+    );
 
     const via = {
       undefined: hasOptimistic ? 'optimistic' : 'memory',
@@ -692,7 +602,7 @@ const initialize = (state, { action, key, path }) =>
       false: 'server',
     }[action.payload.fromCache];
 
-    // 35%
+    // 35% of the CPU time
     if (action.payload.data) {
       Object.keys(action.payload.data).forEach((id) => {
         setWith(draft, ['database', path, id], action.payload.data[id], Object);
@@ -702,18 +612,18 @@ const initialize = (state, { action, key, path }) =>
     }
 
     // set the query
-    const ordered =
-      action.payload.ordered?.map(({ path: _path, id }) => [_path, id]) ||
-      processOptimistic(action.meta, draft);
+    const ordered = action.payload.ordered
+      ? action.payload.ordered.map(({ path: _path, id }) => [_path, id])
+      : processOptimistic(action.meta, draft);
 
-    // 20%
-    set(draft, [action.meta.storeAs], {
+    // 20% of the CPU time
+    set(draft, [action.meta.storeAs || getQueryName(action.meta)], {
       ordered,
       ...action.meta,
       via,
     });
 
-    // 15%
+    // 15% of the CPU time
     reprocessQueries(draft, path);
 
     done();
@@ -918,14 +828,18 @@ const mutation = (state, { action, key, path }) => {
       }
 
       done();
-      _promise?.resolve();
+      if (_promise && _promise.resolve) {
+        _promise.resolve();
+      }
 
       return draft;
     });
 
     return result;
   } catch (error) {
-    _promise?.reject(error);
+    if (_promise && _promise.reject) {
+      _promise.reject(error);
+    }
     return state;
   }
 };
@@ -963,10 +877,10 @@ export default function cacheReducer(state = {}, action) {
   if (!fnc) return state;
 
   const key =
-    !action.meta || !action.meta.collection
+    !action.meta || !(action.meta.path || action.meta.collection)
       ? null
-      : action.meta.storeAs || getBaseQueryName(action.meta);
-  const path = !action.meta ? null : action.meta.collection;
+      : action.meta.storeAs || getQueryName(action.meta);
+  const path = !action.meta ? null : action.meta.path || action.meta.collection;
 
   return fnc(state, { action, key, path });
 }

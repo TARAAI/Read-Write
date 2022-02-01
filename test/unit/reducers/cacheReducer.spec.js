@@ -1,4 +1,3 @@
-/* eslint-disable prettier/prettier */
 /* eslint-disable no-console */
 import reducer from 'reducer';
 import { actionTypes } from 'constants';
@@ -6,7 +5,14 @@ import { benchmark } from 'kelonio';
 import { debug } from 'debug';
 import largeAction from './__stubs__/one_mb_action.json';
 import appState from './__stubs__/app_state.json';
-// import * as mutate from 'utils/mutate';
+
+const firestoreModule = require('createFirestoreInstance');
+
+jest.mock('createFirestoreInstance');
+
+firestoreModule.getFirestore.mockReturnValue({
+  FieldValue: { serverTimestamp: () => 'serverTimestamp' },
+});
 
 const collection = 'testCollection';
 const another = 'anotherCollection';
@@ -104,7 +110,8 @@ describe('cacheReducer', () => {
 
       const pass1 = reducer(initialState, action1);
 
-      expect(pass1.cache.testStoreAs.ordered).to.eql(undefined);
+      expect(pass1.cache.testStoreAs.ordered).toEqual(undefined);
+      expect(pass1.cache.testStoreAs.via).toEqual('memory');
     });
 
     it('SET_LISTENER returns data if in memory', () => {
@@ -126,7 +133,7 @@ describe('cacheReducer', () => {
       const pass1 = reducer(initialState, action1);
       const pass2 = reducer(pass1, action2);
 
-      expect(pass2.cache.testStoreAs2.ordered).to.eql([
+      expect(pass2.cache.testStoreAs2.ordered).toEqual([
         ['testCollection', 'testDocId1'],
       ]);
     });
@@ -148,8 +155,8 @@ describe('cacheReducer', () => {
       const pass1 = reducer(initialState, action1);
       const pass2 = reducer(pass1, action2);
 
-      expect(pass2.cache.testStoreAs2.ordered.length).to.eql(1);
-      expect(pass2.cache.testStoreAs2.ordered[0][1]).to.eql('testDocId0');
+      expect(pass2.cache.testStoreAs2.ordered.length).toEqual(1);
+      expect(pass2.cache.testStoreAs2.ordered[0][1]).toEqual('testDocId0');
     });
 
     it('SET_LISTENER returns greater filtered date', () => {
@@ -172,8 +179,8 @@ describe('cacheReducer', () => {
       const pass1 = reducer(initialState, action1);
       const pass2 = reducer(pass1, action2);
 
-      expect(pass2.cache.testStoreAs2.ordered.length).to.eql(1);
-      expect(pass2.cache.testStoreAs2.ordered[0][1]).to.eql('testDocId1');
+      expect(pass2.cache.testStoreAs2.ordered.length).toEqual(1);
+      expect(pass2.cache.testStoreAs2.ordered[0][1]).toEqual('testDocId1');
     });
 
     it('SET_LISTENER returns smaller or equal filtered date', () => {
@@ -196,9 +203,9 @@ describe('cacheReducer', () => {
       const pass1 = reducer(initialState, action1);
       const pass2 = reducer(pass1, action2);
 
-      expect(pass2.cache.testStoreAs2.ordered.length).to.eql(2);
-      expect(pass2.cache.testStoreAs2.ordered[0][1]).to.eql('testDocId0');
-      expect(pass2.cache.testStoreAs2.ordered[1][1]).to.eql('testDocId1');
+      expect(pass2.cache.testStoreAs2.ordered.length).toEqual(2);
+      expect(pass2.cache.testStoreAs2.ordered[0][1]).toEqual('testDocId0');
+      expect(pass2.cache.testStoreAs2.ordered[1][1]).toEqual('testDocId1');
     });
 
     it('SET_LISTENER returns greater or equal filtered date', () => {
@@ -221,9 +228,9 @@ describe('cacheReducer', () => {
       const pass1 = reducer(initialState, action1);
       const pass2 = reducer(pass1, action2);
 
-      expect(pass2.cache.testStoreAs2.ordered.length).to.eql(2);
-      expect(pass2.cache.testStoreAs2.ordered[0][1]).to.eql('testDocId1');
-      expect(pass2.cache.testStoreAs2.ordered[1][1]).to.eql('testDocId3');
+      expect(pass2.cache.testStoreAs2.ordered.length).toEqual(2);
+      expect(pass2.cache.testStoreAs2.ordered[0][1]).toEqual('testDocId1');
+      expect(pass2.cache.testStoreAs2.ordered[1][1]).toEqual('testDocId3');
     });
 
     it('SET_LISTENER returns exact filtered date', () => {
@@ -246,8 +253,8 @@ describe('cacheReducer', () => {
       const pass1 = reducer(initialState, action1);
       const pass2 = reducer(pass1, action2);
 
-      expect(pass2.cache.testStoreAs2.ordered.length).to.eql(1);
-      expect(pass2.cache.testStoreAs2.ordered[0][1]).to.eql('testDocId1');
+      expect(pass2.cache.testStoreAs2.ordered.length).toEqual(1);
+      expect(pass2.cache.testStoreAs2.ordered[0][1]).toEqual('testDocId1');
     });
 
     it('SET_LISTENER pagination with startAt', () => {
@@ -263,7 +270,7 @@ describe('cacheReducer', () => {
       stateAsc.meta.orderBy = ['dateKey'];
 
       const passA = reducer(primedState, stateDesc);
-      expect(passA.cache.testStoreAs).to.eql({
+      expect(passA.cache.testStoreAs).toEqual({
         ordered: [
           ['testCollection', 'testDocId1'],
           ['testCollection', 'testDocId0'],
@@ -277,7 +284,7 @@ describe('cacheReducer', () => {
       });
 
       const passB = reducer(primedState, stateAsc);
-      expect(passB.cache.testStoreAs).to.eql({
+      expect(passB.cache.testStoreAs).toEqual({
         ordered: [
           ['testCollection', 'testDocId3'],
           ['testCollection', 'testDocId4'],
@@ -304,7 +311,7 @@ describe('cacheReducer', () => {
       stateAsc.meta.orderBy = ['dateKey', 'asc'];
 
       const passA = reducer(primedState, stateDesc);
-      expect(passA.cache.testStoreAs).to.eql({
+      expect(passA.cache.testStoreAs).toEqual({
         ordered: [
           ['testCollection', 'testDocId1'],
           ['testCollection', 'testDocId0'],
@@ -318,7 +325,7 @@ describe('cacheReducer', () => {
       });
 
       const passB = reducer(primedState, stateAsc);
-      expect(passB.cache.testStoreAs).to.eql({
+      expect(passB.cache.testStoreAs).toEqual({
         ordered: [
           ['testCollection', 'testDocId3'],
           ['testCollection', 'testDocId4'],
@@ -342,7 +349,7 @@ describe('cacheReducer', () => {
       stateAsc.meta.orderBy = ['dateKey', 'asc'];
 
       const passA = reducer(primedState, stateDesc);
-      expect(passA.cache.testStoreAs).to.eql({
+      expect(passA.cache.testStoreAs).toEqual({
         ordered: [
           ['testCollection', 'testDocId4'],
           ['testCollection', 'testDocId3'],
@@ -356,7 +363,7 @@ describe('cacheReducer', () => {
       });
 
       const passB = reducer(primedState, stateAsc);
-      expect(passB.cache.testStoreAs).to.eql({
+      expect(passB.cache.testStoreAs).toEqual({
         ordered: [
           ['testCollection', 'testDocId0'],
           ['testCollection', 'testDocId1'],
@@ -383,7 +390,7 @@ describe('cacheReducer', () => {
       stateAsc.meta.orderBy = ['dateKey'];
 
       const passA = reducer(primedState, stateDesc);
-      expect(passA.cache.testStoreAs).to.eql({
+      expect(passA.cache.testStoreAs).toEqual({
         ordered: [
           ['testCollection', 'testDocId4'],
           ['testCollection', 'testDocId3'],
@@ -397,7 +404,7 @@ describe('cacheReducer', () => {
       });
 
       const passB = reducer(primedState, stateAsc);
-      expect(passB.cache.testStoreAs).to.eql({
+      expect(passB.cache.testStoreAs).toEqual({
         ordered: [
           ['testCollection', 'testDocId0'],
           ['testCollection', 'testDocId1'],
@@ -444,10 +451,10 @@ describe('cacheReducer', () => {
       const pass1 = reducer(initialState, action1);
       const pass2 = reducer(pass1, action2);
 
-      expect(pass1.cache.testStoreAs.ordered[0][1]).to.eql(doc1.id);
-      expect(pass2.cache.testStoreAs.ordered[0][1]).to.eql(doc1.id);
-      expect(pass2.cache.database[collection][doc1.id]).to.eql(doc1);
-      expect(pass2.cache.databaseOverrides[collection][doc1.id]).to.eql(doc2);
+      expect(pass1.cache.testStoreAs.ordered[0][1]).toEqual(doc1.id);
+      expect(pass2.cache.testStoreAs.ordered[0][1]).toEqual(doc1.id);
+      expect(pass2.cache.database[collection][doc1.id]).toEqual(doc1);
+      expect(pass2.cache.databaseOverrides[collection][doc1.id]).toEqual(doc2);
     });
 
     it('override a document add synchronously', () => {
@@ -480,13 +487,13 @@ describe('cacheReducer', () => {
       const pass1 = reducer(initialState, action1);
       const pass2 = reducer(pass1, action2);
 
-      expect(pass1.cache.testStoreAs.ordered[0][1]).to.eql(doc1.id);
-      expect(pass1.cache.testStoreAs.ordered[1]).to.eql(undefined);
-      expect(pass2.cache.database[collection][doc1.id]).to.eql(doc1);
-      expect(pass2.cache.databaseOverrides[collection][doc2.id]).to.eql(doc2);
+      expect(pass1.cache.testStoreAs.ordered[0][1]).toEqual(doc1.id);
+      expect(pass1.cache.testStoreAs.ordered[1]).toEqual(undefined);
+      expect(pass2.cache.database[collection][doc1.id]).toEqual(doc1);
+      expect(pass2.cache.databaseOverrides[collection][doc2.id]).toEqual(doc2);
 
-      expect(pass1.cache.testStoreAs.ordered[1]).to.eql(undefined);
-      expect(pass2.cache.testStoreAs.ordered[1]).to.eql([doc2.path, doc2.id]);
+      expect(pass1.cache.testStoreAs.ordered[1]).toEqual(undefined);
+      expect(pass2.cache.testStoreAs.ordered[1]).toEqual([doc2.path, doc2.id]);
     });
 
     it('remove a document override synchronously', () => {
@@ -526,12 +533,11 @@ describe('cacheReducer', () => {
       const pass2 = reducer(pass1, action2);
       const pass3 = reducer(pass2, action3);
 
-      expect(pass1.cache.testStoreAs.ordered[0][1]).to.eql(doc1.id);
-      expect(pass2.cache.testStoreAs.ordered[0][1]).to.eql(doc2.id);
-      expect(pass3.cache.testStoreAs.ordered[0][1]).to.eql(doc1.id);
+      expect(pass1.cache.testStoreAs.ordered[0][1]).toEqual(doc1.id);
+      expect(pass2.cache.testStoreAs.ordered[0][1]).toEqual(doc2.id);
+      expect(pass3.cache.testStoreAs.ordered[0][1]).toEqual(doc1.id);
 
-      // overrides must be cleared
-      expect(pass2.cache.databaseOverrides).to.eql({
+      expect(pass2.cache.databaseOverrides).toEqual({
         testCollection: {
           testDocId1: {
             id: 'testDocId1',
@@ -541,7 +547,7 @@ describe('cacheReducer', () => {
           },
         },
       });
-      expect(pass3.cache.databaseOverrides).to.eql({});
+      expect(pass3.cache.databaseOverrides).toEqual({});
     });
 
     it('overrides synchronously moves to new query', () => {
@@ -584,12 +590,11 @@ describe('cacheReducer', () => {
       const pass2 = reducer(pass1, action2);
       const pass3 = reducer(pass2, action3);
 
-      expect(pass2.cache.testOne.ordered[0][1]).to.eql(first.id);
-      expect(pass2.cache.testTwo.ordered[0]).to.eql(undefined);
+      expect(pass2.cache.testOne.ordered[0][1]).toEqual(first.id);
+      expect(pass2.cache.testTwo.ordered[0]).toEqual(undefined);
 
-      // doc moved from testOne to testTwo query
-      expect(pass3.cache.testOne.ordered[0]).to.eql(undefined);
-      expect(pass3.cache.testTwo.ordered[0][1]).to.eql(second.id);
+      expect(pass3.cache.testOne.ordered[0]).toEqual(undefined);
+      expect(pass3.cache.testTwo.ordered[0][1]).toEqual(second.id);
     });
   });
 
@@ -634,7 +639,7 @@ describe('cacheReducer', () => {
       const pass2 = reducer(pass1, action2);
       const pass3 = reducer(pass2, action3);
 
-      expect(pass2.cache.testOne).to.eql({
+      expect(pass2.cache.testOne).toEqual({
         ordered: [['testCollection', 'testDocId1']],
         collection: 'testCollection',
         storeAs: 'testOne',
@@ -642,7 +647,7 @@ describe('cacheReducer', () => {
         via: 'cache',
       });
 
-      expect(pass2.cache.testTwo).to.eql({
+      expect(pass2.cache.testTwo).toEqual({
         ordered: [],
         collection: 'testCollection',
         storeAs: 'testTwo',
@@ -650,15 +655,14 @@ describe('cacheReducer', () => {
         via: 'cache',
       });
 
-      // doc moved from testOne to testTwo query
-      expect(pass3.cache.testOne).to.eql({
+      expect(pass3.cache.testOne).toEqual({
         ordered: [],
         collection: 'testCollection',
         storeAs: 'testOne',
         where: [['key1', '<=', 1]],
         via: 'optimistic',
       });
-      expect(pass3.cache.testTwo).to.eql({
+      expect(pass3.cache.testTwo).toEqual({
         ordered: [['testCollection', 'testDocId1']],
         collection: 'testCollection',
         storeAs: 'testTwo',
@@ -707,14 +711,14 @@ describe('cacheReducer', () => {
       const pass2 = reducer(pass1, action2);
       const pass3 = reducer(pass2, action3);
 
-      expect(pass2.cache.testOne).to.eql({
+      expect(pass2.cache.testOne).toEqual({
         ordered: [['testCollection', 'testDocId1']],
         collection: 'testCollection',
         storeAs: 'testOne',
         where: [['key1', '<', 2]],
         via: 'cache',
       });
-      expect(pass2.cache.testTwo).to.eql({
+      expect(pass2.cache.testTwo).toEqual({
         ordered: [],
         collection: 'testCollection',
         storeAs: 'testTwo',
@@ -722,15 +726,14 @@ describe('cacheReducer', () => {
         via: 'cache',
       });
 
-      // doc moved from testOne to testTwo query
-      expect(pass3.cache.testOne).to.eql({
+      expect(pass3.cache.testOne).toEqual({
         ordered: [],
         collection: 'testCollection',
         storeAs: 'testOne',
         where: [['key1', '<', 2]],
         via: 'optimistic',
       });
-      expect(pass3.cache.testTwo).to.eql({
+      expect(pass3.cache.testTwo).toEqual({
         ordered: [['testCollection', 'testDocId1']],
         collection: 'testCollection',
         storeAs: 'testTwo',
@@ -779,14 +782,14 @@ describe('cacheReducer', () => {
       const pass2 = reducer(pass1, action2);
       const pass3 = reducer(pass2, action3);
 
-      expect(pass2.cache.testOne).to.eql({
+      expect(pass2.cache.testOne).toEqual({
         ordered: [['testCollection', 'testDocId1']],
         collection: 'testCollection',
         storeAs: 'testOne',
         where: [['key1', '!=', 2]],
         via: 'cache',
       });
-      expect(pass2.cache.testTwo).to.eql({
+      expect(pass2.cache.testTwo).toEqual({
         ordered: [],
         collection: 'testCollection',
         storeAs: 'testTwo',
@@ -794,15 +797,14 @@ describe('cacheReducer', () => {
         via: 'cache',
       });
 
-      // doc moved from testOne to testTwo query
-      expect(pass3.cache.testOne).to.eql({
+      expect(pass3.cache.testOne).toEqual({
         ordered: [],
         collection: 'testCollection',
         storeAs: 'testOne',
         where: [['key1', '!=', 2]],
         via: 'optimistic',
       });
-      expect(pass3.cache.testTwo).to.eql({
+      expect(pass3.cache.testTwo).toEqual({
         ordered: [['testCollection', 'testDocId1']],
         collection: 'testCollection',
         storeAs: 'testTwo',
@@ -855,14 +857,14 @@ describe('cacheReducer', () => {
       const pass2 = reducer(pass1, action2);
       const pass3 = reducer(pass2, action3);
 
-      expect(pass2.cache.notTwo).to.eql({
+      expect(pass2.cache.notTwo).toEqual({
         ordered: [['testCollection', 'testDocId1']],
         collection: 'testCollection',
         storeAs: 'notTwo',
         where: [['key1', 'not-in', [2]]],
         via: 'cache',
       });
-      expect(pass2.cache.isIdMatch).to.eql({
+      expect(pass2.cache.isIdMatch).toEqual({
         ordered: [['testCollection', 'testDocId1']],
         collection: 'testCollection',
         storeAs: 'isIdMatch',
@@ -870,15 +872,14 @@ describe('cacheReducer', () => {
         via: 'cache',
       });
 
-      // doc moved from testOne to testTwo query
-      expect(pass3.cache.notTwo).to.eql({
+      expect(pass3.cache.notTwo).toEqual({
         ordered: [],
         collection: 'testCollection',
         storeAs: 'notTwo',
         where: [['key1', 'not-in', [2]]],
         via: 'optimistic',
       });
-      expect(pass3.cache.isIdMatch).to.eql({
+      expect(pass3.cache.isIdMatch).toEqual({
         ordered: [['testCollection', 'testDocId1']],
         collection: 'testCollection',
         storeAs: 'isIdMatch',
@@ -927,14 +928,14 @@ describe('cacheReducer', () => {
       const pass2 = reducer(pass1, action2);
       const pass3 = reducer(pass2, action3);
 
-      expect(pass2.cache.testOne).to.eql({
+      expect(pass2.cache.testOne).toEqual({
         ordered: [['testCollection', 'testDocId1']],
         collection: 'testCollection',
         storeAs: 'testOne',
         where: [['key1.val', 'array-contains', 1]],
         via: 'cache',
       });
-      expect(pass2.cache.testTwo).to.eql({
+      expect(pass2.cache.testTwo).toEqual({
         ordered: [],
         collection: 'testCollection',
         storeAs: 'testTwo',
@@ -942,15 +943,14 @@ describe('cacheReducer', () => {
         via: 'cache',
       });
 
-      // doc moved from testOne to testTwo query
-      expect(pass3.cache.testOne).to.eql({
+      expect(pass3.cache.testOne).toEqual({
         ordered: [],
         collection: 'testCollection',
         storeAs: 'testOne',
         where: [['key1.val', 'array-contains', 1]],
         via: 'optimistic',
       });
-      expect(pass3.cache.testTwo).to.eql({
+      expect(pass3.cache.testTwo).toEqual({
         ordered: [['testCollection', 'testDocId1']],
         collection: 'testCollection',
         storeAs: 'testTwo',
@@ -998,9 +998,9 @@ describe('cacheReducer', () => {
       const pass1 = reducer(initialState, action1);
       const pass2 = reducer(pass1, action2);
 
-      expect(pass1.cache.testStoreAs.ordered[0][1]).to.eql(doc1.id);
-      expect(pass2.cache.testStoreAs.ordered[0][1]).to.eql(doc2.id);
-      expect(pass2.cache.testStoreAs.ordered[1][1]).to.eql(doc1.id);
+      expect(pass1.cache.testStoreAs.ordered[0][1]).toEqual(doc1.id);
+      expect(pass2.cache.testStoreAs.ordered[0][1]).toEqual(doc2.id);
+      expect(pass2.cache.testStoreAs.ordered[1][1]).toEqual(doc1.id);
     });
 
     it('Firestore added document removes override', () => {
@@ -1048,15 +1048,15 @@ describe('cacheReducer', () => {
       const pass2 = reducer(pass1, action2);
       const pass3 = reducer(pass2, action3);
 
-      expect(pass1.cache.testStoreAs.ordered[0][1]).to.eql(doc1.id);
-      expect(pass2.cache.testStoreAs.ordered[0][1]).to.eql(doc2.id);
-      expect(pass3.cache.testStoreAs.ordered[0][1]).to.eql(doc2.id);
+      expect(pass1.cache.testStoreAs.ordered[0][1]).toEqual(doc1.id);
+      expect(pass2.cache.testStoreAs.ordered[0][1]).toEqual(doc2.id);
+      expect(pass3.cache.testStoreAs.ordered[0][1]).toEqual(doc2.id);
 
-      expect(pass1.cache.databaseOverrides).to.eql({});
-      expect(pass2.cache.databaseOverrides[collection]).to.eql({
+      expect(pass1.cache.databaseOverrides).toEqual({});
+      expect(pass2.cache.databaseOverrides[collection]).toEqual({
         [change.id]: change,
       });
-      expect(pass3.cache.databaseOverrides).to.eql({});
+      expect(pass3.cache.databaseOverrides).toEqual({});
     });
 
     it('Firestore added document multiple overrides', () => {
@@ -1129,29 +1129,27 @@ describe('cacheReducer', () => {
       const pass3 = reducer(pass2, action3);
       const pass4 = reducer(pass3, action4);
 
-      // docs
-      expect(pass1.cache.testStoreAs.ordered[0][1]).to.eql(doc1.id);
-      expect(pass2.cache.testStoreAs.ordered[0][1]).to.eql(doc1a.id);
+      expect(pass1.cache.testStoreAs.ordered[0][1]).toEqual(doc1.id);
+      expect(pass2.cache.testStoreAs.ordered[0][1]).toEqual(doc1a.id);
 
-      expect(pass3.cache.testStoreAs.ordered).to.eql([
+      expect(pass3.cache.testStoreAs.ordered).toEqual([
         [path, doc1a.id],
         [path, doc2.id],
       ]);
-      expect(pass4.cache.testStoreAs.ordered).to.eql([
+      expect(pass4.cache.testStoreAs.ordered).toEqual([
         [path, doc1a.id],
         [path, doc2.id],
       ]);
 
-      // overrides
-      expect(pass1.cache.databaseOverrides).to.eql({});
-      expect(pass2.cache.databaseOverrides[collection]).to.eql({
+      expect(pass1.cache.databaseOverrides).toEqual({});
+      expect(pass2.cache.databaseOverrides[collection]).toEqual({
         [change1.id]: change1,
       });
-      expect(pass3.cache.databaseOverrides[collection]).to.eql({
+      expect(pass3.cache.databaseOverrides[collection]).toEqual({
         [change1.id]: change1,
         [doc2.id]: doc2,
       });
-      expect(pass4.cache.databaseOverrides[collection]).to.eql({
+      expect(pass4.cache.databaseOverrides[collection]).toEqual({
         [doc2.id]: doc2,
       });
     });
@@ -1196,14 +1194,13 @@ describe('cacheReducer', () => {
       const pass1 = reducer(initialState, action1);
       const pass2 = reducer(pass1, action2);
 
-      expect(pass1.cache.lessThanTwo.ordered[0][1]).to.eql(doc2.id);
-      expect(pass1.cache.lessThanTwo.ordered[1][1]).to.eql(doc1.id);
+      expect(pass1.cache.lessThanTwo.ordered[0][1]).toEqual(doc2.id);
+      expect(pass1.cache.lessThanTwo.ordered[1][1]).toEqual(doc1.id);
 
-      expect(pass2.cache.lessThanTwo.ordered[0][1]).to.eql(doc1.id);
-      expect(pass2.cache.lessThanTwo.ordered[1]).to.eql(undefined);
+      expect(pass2.cache.lessThanTwo.ordered[0][1]).toEqual(doc1.id);
+      expect(pass2.cache.lessThanTwo.ordered[1]).toEqual(undefined);
 
-      // Removing from query !== deleting. Other queries could have the result
-      expect(pass1.cache.database.testCollection.testDocId2).to.eql(doc2);
+      expect(pass1.cache.database.testCollection.testDocId2).toEqual(doc2);
     });
 
     it('Firestore deletes document', () => {
@@ -1243,13 +1240,12 @@ describe('cacheReducer', () => {
       const pass1 = reducer(initialState, action1);
       const pass2 = reducer(pass1, action2);
 
-      expect(pass1.cache.testStoreAs.ordered[0][1]).to.eql(doc2.id);
-      expect(pass1.cache.testStoreAs.ordered[1][1]).to.eql(doc1.id);
-      expect(pass2.cache.testStoreAs.ordered[0][1]).to.eql(doc1.id);
-      expect(pass2.cache.testStoreAs.ordered[1]).to.eql(undefined);
+      expect(pass1.cache.testStoreAs.ordered[0][1]).toEqual(doc2.id);
+      expect(pass1.cache.testStoreAs.ordered[1][1]).toEqual(doc1.id);
+      expect(pass2.cache.testStoreAs.ordered[0][1]).toEqual(doc1.id);
+      expect(pass2.cache.testStoreAs.ordered[1]).toEqual(undefined);
 
-      // Removing from query !== deleting. Other queries could have the result
-      expect(pass1.cache.database.testCollection.testDocId2).to.eql(doc2);
+      expect(pass1.cache.database.testCollection.testDocId2).toEqual(doc2);
     });
   });
 
@@ -1284,12 +1280,12 @@ describe('cacheReducer', () => {
       };
 
       const pass1 = reducer(initialState, action1);
-      expect(pass1.cache.testStoreAs.ordered[0][1]).to.eql(doc1.id);
-      expect(pass1.cache.database[collection]).to.eql({ [doc1.id]: doc1 });
+      expect(pass1.cache.testStoreAs.ordered[0][1]).toEqual(doc1.id);
+      expect(pass1.cache.database[collection]).toEqual({ [doc1.id]: doc1 });
 
       const pass2 = reducer(pass1, action2);
-      expect(pass2.cache.testStoreAs).to.eql(undefined);
-      expect(pass2.cache.database[collection]).to.eql({ [doc1.id]: doc1 });
+      expect(pass2.cache.testStoreAs).toEqual(undefined);
+      expect(pass2.cache.database[collection]).toEqual({ [doc1.id]: doc1 });
     });
 
     it('unset preserves query and maintains in database cache (preserve mode)', () => {
@@ -1322,12 +1318,12 @@ describe('cacheReducer', () => {
       };
 
       const pass1 = reducer(initialState, action1);
-      expect(pass1.cache.testStoreAs.ordered[0][1]).to.eql(doc1.id);
-      expect(pass1.cache.database[collection]).to.eql({ [doc1.id]: doc1 });
+      expect(pass1.cache.testStoreAs.ordered[0][1]).toEqual(doc1.id);
+      expect(pass1.cache.database[collection]).toEqual({ [doc1.id]: doc1 });
 
       const pass2 = reducer(pass1, action2);
-      expect(pass2.cache.testStoreAs.ordered[0][1]).to.eql(doc1.id);
-      expect(pass2.cache.database[collection]).to.eql({ [doc1.id]: doc1 });
+      expect(pass2.cache.testStoreAs.ordered[0][1]).toEqual(doc1.id);
+      expect(pass2.cache.database[collection]).toEqual({ [doc1.id]: doc1 });
     });
 
     it('handles a null payload.data', () => {
@@ -1342,7 +1338,7 @@ describe('cacheReducer', () => {
       };
       const pass1 = reducer(initialState, action1);
 
-      expect(pass1.cache.testStoreAs.ordered).to.eql([]);
+      expect(pass1.cache.testStoreAs.ordered).toEqual([]);
     });
   });
 
@@ -1394,14 +1390,14 @@ describe('cacheReducer', () => {
       const pass1 = reducer(initialState, action1);
       const pass2 = reducer(pass1, action2);
 
-      expect(pass2.cache.testStoreAs).to.eql({
+      expect(pass2.cache.testStoreAs).toEqual({
         ordered: [['testCollection', 'testDocId1']],
         collection: 'testCollection',
         where: ['key1', '==', 'value1'],
         storeAs: 'testStoreAs',
         via: 'cache',
       });
-      expect(pass2.cache.database).to.eql({
+      expect(pass2.cache.database).toEqual({
         testCollection: {
           testDocId1: {
             path: 'testCollection',
@@ -1412,7 +1408,7 @@ describe('cacheReducer', () => {
           },
         },
       });
-      expect(pass2.cache.databaseOverrides).to.eql({
+      expect(pass2.cache.databaseOverrides).toEqual({
         testCollection: {
           testDocId1: {
             path: 'testCollection',
@@ -1471,21 +1467,21 @@ describe('cacheReducer', () => {
           timestamp: '999',
         },
         payload: {
-          data: [{ ...updates }],
+          data: [[{ ...updates }]],
         },
       };
 
       const pass1 = reducer(initialState, action1);
       const pass2 = reducer(pass1, action2);
 
-      expect(pass2.cache.testStoreAs).to.eql({
+      expect(pass2.cache.testStoreAs).toEqual({
         ordered: [['testCollection', 'testDocId1']],
         collection: 'testCollection',
         where: ['key1', '==', 'value1'],
         storeAs: 'testStoreAs',
         via: 'cache',
       });
-      expect(pass2.cache.database).to.eql({
+      expect(pass2.cache.database).toEqual({
         testCollection: {
           testDocId1: {
             path: 'testCollection',
@@ -1498,7 +1494,7 @@ describe('cacheReducer', () => {
         },
       });
 
-      expect(pass2.cache.databaseOverrides).to.eql({
+      expect(pass2.cache.databaseOverrides).toEqual({
         testCollection: {
           testDocId1: {
             path: 'testCollection',
@@ -1579,14 +1575,14 @@ describe('cacheReducer', () => {
       const pass1 = reducer(initialState, action1);
       const pass2 = reducer(pass1, action2);
 
-      expect(pass2.cache.testStoreAs).to.eql({
+      expect(pass2.cache.testStoreAs).toEqual({
         ordered: [['testCollection', 'testDocId1']],
         collection: 'testCollection',
         storeAs: 'testStoreAs',
         via: 'cache',
       });
 
-      expect(pass2.cache.database).to.eql({
+      expect(pass2.cache.database).toEqual({
         testCollection: {
           testDocId1: {
             path: 'testCollection',
@@ -1600,7 +1596,7 @@ describe('cacheReducer', () => {
         },
       });
 
-      expect(pass2.cache.databaseOverrides).to.eql({
+      expect(pass2.cache.databaseOverrides).toEqual({
         testCollection: {
           testDocId1: {
             path: 'testCollection',
@@ -1681,7 +1677,7 @@ describe('cacheReducer', () => {
       const pass1 = reducer(initialState, action1);
       const pass2 = reducer(pass1, action2);
 
-      expect(pass2.cache.testStoreAs).to.eql({
+      expect(pass2.cache.testStoreAs).toEqual({
         ordered: [['testCollection', 'testDocId1']],
         collection: 'testCollection',
         storeAs: 'testStoreAs',
@@ -1689,7 +1685,7 @@ describe('cacheReducer', () => {
         via: 'cache',
       });
 
-      expect(pass2.cache.database).to.eql({
+      expect(pass2.cache.database).toEqual({
         testCollection: {
           testDocId1: {
             path: 'testCollection',
@@ -1703,7 +1699,7 @@ describe('cacheReducer', () => {
         },
       });
 
-      expect(pass2.cache.databaseOverrides).to.eql({
+      expect(pass2.cache.databaseOverrides).toEqual({
         testCollection: {
           testDocId1: {
             path: 'testCollection',
@@ -1767,16 +1763,13 @@ describe('cacheReducer', () => {
       try {
         reducer(pass1, action2);
       } catch (err) {
-        expect(err).to.be.a('Error');
+        expect(err).toBeInstanceOf('Error');
       }
     });
   });
 
   describe('MUTATE_FAILURE', () => {
     it('Remove overrides on Firestore failures', () => {
-      // console.log('mutate---', mutate);
-      // sinon.replace(mutate, 'default', () => Promise.resolve());
-
       const doc1 = {
         path,
         id: 'testDocId1',
@@ -1805,8 +1798,13 @@ describe('cacheReducer', () => {
       };
 
       // mutate
+      let passes;
+      const passPromise = new Promise(
+        (resolve, reject) => (passes = { resolve, reject }),
+      );
       const action2 = {
         type: actionTypes.MUTATE_START,
+        _promise: passes,
         meta: {
           collection,
           doc: updates.id,
@@ -1821,9 +1819,14 @@ describe('cacheReducer', () => {
         },
       };
 
-      // mutate
+      // mutate failue
+      let fails;
+      const failedPromise = new Promise(
+        (resolve, reject) => (fails = { resolve, reject }),
+      );
       const action3 = {
         type: actionTypes.ADD_FAILURE,
+        _promise: fails,
         meta: {
           collection,
           doc: updates.id,
@@ -1841,12 +1844,17 @@ describe('cacheReducer', () => {
       const pass2 = reducer(pass1, action2);
       const pass3 = reducer(pass2, action3);
 
-      // database should never changes. It's a perfect mirror of firestore.
-      expect(pass1.cache.database.testCollection.testDocId1).to.eql(doc1);
-      expect(pass2.cache.database.testCollection.testDocId1).to.eql(doc1);
-      expect(pass3.cache.database.testCollection.testDocId1).to.eql(doc1);
+      expect(pass1.cache.database.testCollection.testDocId1).toStrictEqual(
+        doc1,
+      );
+      expect(pass2.cache.database.testCollection.testDocId1).toStrictEqual(
+        doc1,
+      );
+      expect(pass3.cache.database.testCollection.testDocId1).toStrictEqual(
+        doc1,
+      );
 
-      expect(pass2.cache.testStoreAs).to.eql({
+      expect(pass2.cache.testStoreAs).toStrictEqual({
         ordered: [['testCollection', 'testDocId1']],
         collection: 'testCollection',
         where: ['key1', '==', 'value1'],
@@ -1854,7 +1862,7 @@ describe('cacheReducer', () => {
         via: 'cache',
       });
 
-      expect(pass2.cache.database).to.eql({
+      expect(pass2.cache.database).toStrictEqual({
         testCollection: {
           testDocId1: {
             path: 'testCollection',
@@ -1864,7 +1872,7 @@ describe('cacheReducer', () => {
         },
       });
 
-      expect(pass2.cache.databaseOverrides).to.eql({
+      expect(pass2.cache.databaseOverrides).toStrictEqual({
         testCollection: {
           testDocId1: {
             path: 'testCollection',
@@ -1874,8 +1882,7 @@ describe('cacheReducer', () => {
         },
       });
 
-      // overrides were deleted
-      expect(pass3.cache.database).to.eql({
+      expect(pass3.cache.database).toStrictEqual({
         testCollection: {
           testDocId1: {
             path: 'testCollection',
@@ -1885,111 +1892,10 @@ describe('cacheReducer', () => {
         },
       });
 
-      expect(pass3.cache.databaseOverrides).to.eql({});
+      expect(pass3.cache.databaseOverrides).toStrictEqual({});
 
-      expect(pass3.cache.mutations).to.eql({
-        999: {
-          testCollection: {
-            testDocId1: {
-              path: 'testCollection',
-              id: 'testDocId1',
-              vanilla: 'some-data',
-            },
-          },
-        },
-      });
-    });
-  });
-  describe('Speed test (on 2015 Dual-core 1.5Ghz i5 w/ 8GB 1600 DDR3)', () => {
-    let namespaces;
-    before(() => {
-      namespaces = debug.disable();
-    });
-    after(() => {
-      if (namespaces) debug.enable(namespaces);
-    });
-
-    it('<36ms processing large action and large state', async function () {
-      // eslint-disable-next-line no-invalid-this
-      this.timeout(5_000);
-
-      const manyActions = new Array(1).fill(null).map(() => largeAction);
-
-      await benchmark.record(
-        () => manyActions.forEach((action) => reducer(appState, action)),
-        {
-          iterations: 90,
-          meanUnder: 36,
-          standardDeviationUnder: 10,
-        },
-      );
-    });
-
-    it('<18ms to process stores 2,000 docs', async function () {
-      // eslint-disable-next-line no-invalid-this
-      this.timeout(5_000);
-
-      const generate = (limit) =>
-        new Array(limit).fill(null).map(() => ({
-          path,
-          id: `testDocId${Math.random()}`,
-          key1: 'value1',
-          number: 11,
-          multipled: 3,
-          dateKey: { seconds: 1, nanoseconds: 1 },
-          array: [1, 2, 3, 4],
-          obj: { a: 1, b: { x: 0 }, c: { z: 9 } },
-        }));
-
-      const action = {
-        meta: whereKey1IsValue1,
-        payload: setPayload(generate(2_000)),
-        type: actionTypes.LISTENER_RESPONSE,
-      };
-
-      await benchmark.record(() => reducer(appState, action), {
-        iterations: 50,
-        meanUnder: 18,
-      });
-    });
-
-    it('<24ms to process 100 mutates', async function () {
-      // eslint-disable-next-line no-invalid-this
-      this.timeout(5_000);
-
-      const actions = {
-        type: actionTypes.MUTATE_START,
-        payload: {
-          meta: { collection: testDocId0.path, doc: testDocId0.id },
-          data: [
-            {
-              path: testDocId0.path,
-              id: testDocId0.id,
-              dateKey: { seconds: 99, nanoseconds: 99 },
-            },
-          ],
-        },
-      };
-
-      const manyActions = new Array(100).fill(null).map(() => actions);
-
-      await benchmark.record(
-        () => manyActions.forEach((action) => reducer(appState, action)),
-        {
-          iterations: 125,
-          meanUnder: 24,
-        },
-      );
-    });
-
-    it('<4ms to process 1MB action', async function () {
-      // eslint-disable-next-line no-invalid-this
-      this.timeout(5_000);
-
-      await benchmark.record(() => reducer(primedState, largeAction), {
-        iterations: 1_000,
-        meanUnder: 4,
-      });
+      expect(passPromise).resolves.toBeUndefined();
+      expect(failedPromise).rejects.toMatch('error');
     });
   });
 });

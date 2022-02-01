@@ -22,9 +22,10 @@ export default function createFirestoreInstance(firebase, configs, dispatch) {
     // Extend default config with provided config
     config: { ...defaultConfig, ...configs },
   };
+  // console.log(firebase);
 
   // extend existing firebase internals (using redux-firestore along with redux-firebase)
-  firebase._ = merge(defaultInternals, firebase._); // eslint-disable-line no-param-reassign
+  // firebase._ = merge(defaultInternals, firebase._); // eslint-disable-line no-param-reassign
 
   // Aliases for methods
   const aliases = [
@@ -42,19 +43,24 @@ export default function createFirestoreInstance(firebase, configs, dispatch) {
 
   // Only include specific methods from Firestore since other methods
   // are extended (list in constants)
+  // const firestore = firebase.firestore();
+
   const methodsFromFirestore = methodsToAddFromFirestore.reduce(
     (acc, methodName) =>
-      firebase.firestore &&
       typeof firebase.firestore()[methodName] === 'function'
         ? {
             ...acc,
-            [methodName]: firebase
-              .firestore()
-              [methodName].bind(firebase.firestore()),
+            // [methodName]: firestore[methodName].bind(firestore),
+            // -- TODO: memory leak seems to be here
+            [methodName]: function () {
+              const fs = firebase.firestore();
+              return fs[methodName].call(fs, ...arguments);
+            },
           }
         : acc,
     {},
   );
+  methodsFromFirestore.mutate = methods.mutate;
 
   firestoreInstance = Object.assign(
     methodsFromFirestore,

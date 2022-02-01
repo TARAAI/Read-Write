@@ -4,8 +4,13 @@
 import { noop } from 'lodash';
 import debug from 'debug';
 
-const info = debug('rrf:profile');
-
+const info = debug('w3:profile');
+if (info.enabled && debug.enabled('w3:cache')) {
+  info(
+    `Capturing Reducer & Firestore load times. 
+See results with 'w3Stats()'.`,
+  );
+}
 let win;
 
 try {
@@ -27,20 +32,20 @@ const perf = win && win.performance;
  * @returns {Function}
  */
 export default function mark(marker, context = '') {
-  if (!debug.enabled('rrf:cache') || !debug.enabled('rrf:profile') || !perf) {
+  if (!debug.enabled('w3:cache') || !debug.enabled('w3:profile') || !perf) {
     return noop;
   }
 
   /* istanbul ignore next */
   try {
     const now = perf.now();
-    const start = `@rrf/${marker}-${now}`;
+    const start = `@w3/${marker}-${now}`;
     perf.mark(start);
     if (context) {
       info(`${marker}.${context}`);
     }
     return () => {
-      perf.measure(`@rrf/${marker}`, start);
+      perf.measure(`@w3/${marker}`, start);
     };
   } catch (err) {
     // ensure timings never impact the user
@@ -53,18 +58,21 @@ export default function mark(marker, context = '') {
  * @param {*} marker
  * @returns
  */
-export function resource(marker) {
-  if (!debug.enabled('rrf:cache') || !debug.enabled('rrf:profile') || !perf) {
+export function resource(meta, stringify) {
+  if (!debug.enabled('w3:cache') || !debug.enabled('w3:profile') || !perf) {
     return noop;
   }
 
   /* istanbul ignore next */
   try {
     const now = perf.now();
-    const start = `@rrf.load/${marker}-${now}`;
+    const marker = stringify(meta);
+    let start = `@w3.load/${marker}-${now}`;
     perf.mark(start);
     return (count = '') => {
-      perf.measure(`@rrf.load/${marker}.|${count}|`, start);
+      if (!start) return;
+      perf.measure(`@w3.load/${marker}.|${count}|`, start);
+      start = null; // ensure only first load for each query
     };
   } catch (err) {
     // ensure timings never impact the user
@@ -74,13 +82,13 @@ export function resource(marker) {
 
 /* istanbul ignore next */
 if (win) {
-  win.rrfStats = (force = false) => {
-    if (!debug.enabled('rrf:cache') || !debug.enabled('rrf:profile') || !perf) {
-      if (force) debug.enable(typeof force === 'string' ? force : 'rrf:*');
+  win.w3Stats = (force = false) => {
+    if (!debug.enabled('w3:cache') || !debug.enabled('w3:profile') || !perf) {
+      if (force) debug.enable(typeof force === 'string' ? force : 'w3:*');
       return;
     }
-    const getMarks = ({ name }) => name.indexOf('@rrf/') === 0;
-    const getLoads = ({ name }) => name.indexOf('@rrf.load/') === 0;
+    const getMarks = ({ name }) => name.indexOf('@w3/') === 0;
+    const getLoads = ({ name }) => name.indexOf('@w3.load/') === 0;
     const duration = (stats, { duration, name }) => {
       if (stats[name]) {
         stats[name].push(duration);
@@ -90,9 +98,14 @@ if (win) {
       }
       return stats;
     };
+    const formatTime = (seconds) => {
+      if (seconds < 1000) return seconds + 'ms';
+      if (seconds < 1000 * 60) return (seconds / 1000).toFixed(3) + 's';
+      return (seconds / (1000 * 60)).toFixed(3) + ' minutes';
+    };
 
     const logStats = (grouped) => {
-      console.group(`Redux Firestore Profiling`);
+      console.group(`Read Write Web3 Profiling`);
       console.table(
         Object.keys(grouped)
           .map((name) => {
@@ -134,7 +147,7 @@ if (win) {
           name,
           start: parseFloat(startTime.toFixed(2)),
           phase,
-          duration: parseFloat(duration.toFixed(2)),
+          duration: formatTime(parseFloat(duration.toFixed(2))),
           loaded: (/\|(\d+)\|/g.exec(name) || [0, 0])[1],
         };
         // eslint-disable-next-line no-param-reassign
@@ -179,44 +192,46 @@ if (win) {
   };
 }
 
-Object.size = (obj) => {
-  let bytes = 0;
+if (!Object.size) {
+  Object.size = (obj) => {
+    let bytes = 0;
 
-  const sizeOf = (obj) => {
-    if (obj !== null && obj !== undefined) {
-      // eslint-disable-next-line default-case
-      switch (typeof obj) {
-        case 'number':
-          bytes += 8;
-          break;
-        case 'string':
-          bytes += obj.length * 2;
-          break;
-        case 'boolean':
-          bytes += 4;
-          break;
-        case 'object':
-          const objClass = Object.prototype.toString.call(obj).slice(8, -1);
-          if (objClass === 'Object' || objClass === 'Array') {
-            // eslint-disable-next-line no-restricted-syntax
-            for (const key in obj) {
-              // eslint-disable-next-line no-continue,no-prototype-builtins
-              if (!obj.hasOwnProperty(key)) continue;
-              sizeOf(obj[key]);
-            }
-          } else bytes += obj.toString().length * 2;
-          break;
+    const sizeOf = (obj) => {
+      if (obj !== null && obj !== undefined) {
+        // eslint-disable-next-line default-case
+        switch (typeof obj) {
+          case 'number':
+            bytes += 8;
+            break;
+          case 'string':
+            bytes += obj.length * 2;
+            break;
+          case 'boolean':
+            bytes += 4;
+            break;
+          case 'object':
+            const objClass = Object.prototype.toString.call(obj).slice(8, -1);
+            if (objClass === 'Object' || objClass === 'Array') {
+              // eslint-disable-next-line no-restricted-syntax
+              for (const key in obj) {
+                // eslint-disable-next-line no-continue,no-prototype-builtins
+                if (!obj.hasOwnProperty(key)) continue;
+                sizeOf(obj[key]);
+              }
+            } else bytes += obj.toString().length * 2;
+            break;
+        }
       }
-    }
-    return bytes;
-  };
+      return bytes;
+    };
 
-  const formatByteSize = (total) => {
-    if (total < 1024) return total + ' bytes';
-    if (total < 1048576) return (total / 1024).toFixed(3) + ' KiB';
-    if (total < 1073741824) return (total / 1048576).toFixed(3) + ' MiB';
-    return (total / 1073741824).toFixed(3) + ' GiB';
-  };
+    const formatByteSize = (total) => {
+      if (total < 1024) return total + ' bytes';
+      if (total < 1048576) return (total / 1024).toFixed(3) + ' KiB';
+      if (total < 1073741824) return (total / 1048576).toFixed(3) + ' MiB';
+      return (total / 1073741824).toFixed(3) + ' GiB';
+    };
 
-  return formatByteSize(sizeOf(obj));
-};
+    return formatByteSize(sizeOf(obj));
+  };
+}
