@@ -100,21 +100,21 @@
     ]
   },
   "license": "MIT",
-  "homepage": "https://github.com/taraai/read-write-firestore#basic-api",
+  "homepage": "https://github.com/taraai/read-write-web",
   "keywords": [
     "firestore",
+    "firebase",
     "redux",
+    "react",
+    "read-write-web",
     "react-firestore",
     "react-redux-firebase",
     "redux-firebase",
-    "react-firebase",
-    "firebase",
-    "read-write-web3",
-    "read-write-firestore"
+    "react-firebase"
   ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/taraai/redux-firestore.git"
+    "url": "git+https://github.com/taraai/read-write-web.git"
   },
   "npmFileMap": [
     {
