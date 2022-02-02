@@ -1,5 +1,5 @@
 {
-  "name": "read-write-firestore",
+  "name": "read-write-web",
   "platforms": [
     "Web",
     "iOS",
@@ -7,7 +7,7 @@
   ],
   "content": "README.md",
   "tabs": [
-    { "title": "NPM", "href": "https://npmjs.com/package/read-write-firestore" },
-    { "title": "API Reference", "href": "https://github.com/TARAAI/read-write-firestore/blob/main/README.md" }
+    { "title": "NPM", "href": "https://npmjs.com/package/read-write-web" },
+    { "title": "API Reference", "href": "https://github.com/TARAAI/read-write-web/blob/main/README.md" }
   ]
 }
