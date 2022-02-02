@@ -1,22 +1,11 @@
 {
-  "name": "redux-firestore",
-  "version": "1.1.5",
-  "description": "Redux bindings for Firestore.",
+  "name": "read-write-web",
+  "version": "1.0.0",
+  "description": "The fastest, production-ready DX & UX for Firestore.",
   "main": "lib/index.js",
   "module": "es/index.js",
   "jsnext:main": "es/index.js",
-  "unpkg": "dist/redux-firestore.min.js",
-  "typings": "./index.d.ts",
-  "files": [
-    "dist",
-    "lib",
-    "es",
-    "src",
-    "index.d.ts"
-  ],
-  "browserslist": [
-    "> 2%"
-  ],
+  "unpkg": "dist/read-write-web.min.js",
   "scripts": {
     "autotest": "concurrently --kill-others \"yarn test:watch shouldPassFail\" \"yarn --cwd ./examples/read-write-notes start:firestore\"",
     "clean": "rimraf lib dist",
