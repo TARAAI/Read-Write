@@ -13,11 +13,22 @@ Be advised that if your tests are run as an integration test and running paralle
 
 #### shouldPass
 
-`it.each([{ payload, mutation, globals }])(...shouldPass)`
+`it.each([{ payload, setup, globals, writes, results, returned }])(...shouldPass)`
 
 ```ts
 import { shouldPass } from 'read-write-firestore';
 
+const USE_EMULATOR = false;
+
+it.each([{
+  setup:    [{ path: 'orgs/my-org/tasks', id: 'task-one', archived: false, title: 'sample' }],
+  globals:   { orgId: () => 'my-org' },
+  payload:   { taskId: '999' },
+  writes:    { path: 'orgs/my-org/tasks', id: 'task-one', archived: true },
+  results:  [{ id: '999', path: 'orgs/my-org/tasks', archived: true, title: 'sample' }],
+  returned: undefined,
+ }])(...shouldPass(archiveTask, USE_EMULATOR));
+ 
 it.each([{
     setup: [generate('Task', {archived: false})], // cache & firestore setup
     payload: 'task-one', // createMutate payload
@@ -55,7 +66,7 @@ it.each([{
 
 #### shouldFail
 
-`it.each([{ payload, returned, globals }])(...shouldFail)`
+`it.each([{ payload, setup, globals, returned }])(...shouldFail)`
 
 Testing for failure cases are similar to passing tests. Use the
 `shouldFail` function. To test a specific error add the 'returned' key.

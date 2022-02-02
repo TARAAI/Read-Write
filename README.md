@@ -69,7 +69,7 @@ useDispatch(archiveTask('task-one'))
 
 ## Test (Jest Unit + Jest Integration)
 
-`it.each([{ payload, mutation, returned }])(...shouldPass)`
+`it.each([{ payload, results }])(...shouldPass)`
 
 `it.each([{ payload, returned }])(...shouldFail)`
 
