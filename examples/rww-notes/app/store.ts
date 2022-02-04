@@ -4,7 +4,7 @@ import {
   getFirestore,
   firebaseReducer,
   firestoreReducer,
-} from 'read-write-web3';
+} from 'read-write';
 import thunk from 'redux-thunk';
 
 export const store = configureStore({

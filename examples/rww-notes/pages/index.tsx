@@ -28,12 +28,12 @@ const Home: NextPage = () => {
             <h1 className={styles.title}>
               Welcome to <a href="https://tara.ai">Read Write Web3!</a>
             </h1>
-            <Editor />
+            <Counter />
           </div>
 
           <iframe
             style={{ flex: '1 1', width: '100%', height: '50vh' }}
-            src="http://localhost:4000/firestore/counter/global"
+            src={`http://localhost:4000/firestore/counter/global`}
           />
         </div>
       </main>

@@ -18,7 +18,7 @@ import { getSnapshotByObject } from './utils/query';
 import createMutate from './utils/createMutate';
 import useRead from './hooks/useRead';
 import useCache from './hooks/useCache';
-
+// import { shouldPass, shouldFail } from './tests/shouldPassFail';
 import setCache from './tests/setCache';
 let isJest = false;
 try {
@@ -52,8 +52,8 @@ export {
   middleware,
   CALL_FIRESTORE,
   createMutate,
-  shouldPass,
-  shouldFail,
+  // shouldPass,
+  // shouldFail,
   setCache,
 };
 
@@ -79,7 +79,7 @@ export default {
   middleware,
   CALL_FIRESTORE,
   createMutate,
-  shouldPass,
-  shouldFail,
+  // shouldPass,
+  // shouldFail,
   setCache,
 };

@@ -11,13 +11,6 @@ const getChanges = (data = [], prevData = []) => {
   return result;
 };
 
-/**
- * set/uset listeners and return a selector to it.
- *
- * @param {*} queries
- * @param {*} selection
- * @return Selector | string
- */
 export default function useRead(queries, selection = null) {
   const firestore = useFirestore();
 

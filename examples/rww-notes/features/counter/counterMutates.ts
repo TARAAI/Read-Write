@@ -1,4 +1,4 @@
-import { createMutate } from 'read-write-web3';
+import { createMutate } from 'read-write';
 
 type CounterDoc = { path: 'counter'; id: 'global'; amount: number };
 

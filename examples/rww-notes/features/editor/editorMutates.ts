@@ -1,4 +1,4 @@
-import { createMutate } from 'read-write-web3';
+import { createMutate } from 'read-write';
 
 export const saveEditor = createMutate({
   action: 'saveEditor',

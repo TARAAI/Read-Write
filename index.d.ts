@@ -123,8 +123,10 @@ export type Read = PathId;
  * a second time in the transaction. This is a best effort. Full
  * Transactional Query support is only available with firebase-admin.
  */
-export type ReadQuery = Omit<ReduxFirestoreQuerySetting, 'storeAs'> &
-  Pick<PathId, 'path'> & { alias: string };
+export type ReadQuery = Partial<Omit<ReduxFirestoreQuerySetting, 'storeAs'>> &
+  Pick<PathId, 'path'> &
+  Partial<Pick<PathId, 'id'>>;
+export type ReadQueryInternal = ReadQuery & { alias: string };
 export type ReadProvides = () => unknown;
 
 export type Write = PathId & { [key: string]: FieldValueTuple | unknown };
@@ -295,97 +297,170 @@ export function useFirestore(): any;
 
 type Loading = undefined;
 type NotFound = null;
+type NoResults = [];
+type AliasEnum = '::alias';
+type ReadAlias = string;
 
 /**
- * read subscription for a single doc
- * @param query ReadQuery
- * @returns Docs
+ * ### Query & subscribe to all results
+ * [@see github.com/TARAAI/Read-Write/docs/read.md](https://github.com/TARAAI/Read-Write/blob/main/docs/read.md) \
+ * **Note: Add a generic to get Typed responses:**
+ * > ```ts
+ * > let docs: MyDoc[] = useRead<MyDoc>(
+ * >   { path: 'some-collection' },
+ * > );
+ * > ```
+ * @param query - ReadQuery
+ * @returns unknown | undefined | []
  */
-function useRead<Doc extends PathId>(pathId: PathId): Doc | Loading | NotFound;
+export function useRead(
+  query: Omit<ReadQuery, 'id'>,
+): unknown | Loading | NoResults;
 /**
- * read single value from cache
- * @param pathId PathId
- * @param field keyof Doc
- * @returns Value of key
+ * ### Query & subscribe to all results
+ * > ```ts
+ * > let docs: MyDocument[] = useRead<MyDocument>({ path: 'coll' });
+ * > ```
+ * @param query - ReadQuery
+ * @returns Doc[] | undefined | []
  */
-function useRead<Doc extends PathId>(
+export function useRead<Doc extends PathId>(
+  query: Omit<ReadQuery, 'id'>,
+): Doc[] | Loading | NoResults;
+/**
+ * ### Query & subscribe (single value)
+ * > ```ts
+ * > let props: (Doc['prop'])[] = useRead<Doc, 'prop'>(
+ * >   { path: 'coll' },
+ * >   'prop'
+ * > );
+ * > ```
+ * @param query - ReadQuery
+ * @param field - keyof Doc
+ * @returns Doc[K][] | undefined | []
+ */
+export function useRead<Doc extends PathId, K extends keyof Doc>(
+  query: Omit<ReadQuery, 'id'>,
+  field: K,
+): Doc[K][] | Loading | NoResults;
+/**
+ * ### Query & subscribe (subset of key/values)
+ * > ```ts
+ * > let subset: Pick<Doc, 'prop'>[] = useRead<Doc, 'prop'>(
+ * >   { path: 'coll' },
+ * >   ['prop']
+ * > );
+ * > ```
+ * @param query - ReadQuery
+ * @param fields - (keyof Doc)[]
+ * @returns Pick<Doc, K>[] | undefined | []
+ */
+export function useRead<Doc extends PathId, K extends keyof Doc>(
+  query: Omit<ReadQuery, 'id'>,
+  fields: K[],
+): Pick<Doc, K>[] | Loading | NoResults;
+/**
+ * ### Query & subscribe (only get alias for later access)
+ * > ```ts
+ * > let myAlias = useRead({ path: 'tasks' }, '::alias');
+ * > let ids = useCache<{ id:string; }, 'id'>({ path: 'tasks' }, 'id');
+ * > ```
+ * @param query - ReadQuery
+ * @param alias - '::alias'
+ * @returns string
+ */
+export function useRead(
+  query: Omit<ReadQuery, 'id'>,
+  alias: AliasEnum,
+): ReadAlias;
+/**
+ * ### Query & subscribe (single document)
+ * > ```ts
+ * > let subset: Doc = useRead<Doc>(
+ * >   { path: 'coll', id: 'doc-id' }
+ * > );
+ * > ```
+ * @param pathId - { path: string; id: string; }
+ * @returns Doc | undefined | null
+ */
+export function useRead<Doc extends PathId>(
+  pathId: PathId,
+): Doc | Loading | NotFound;
+/**
+ * ### Query & subscribe (single value of a single document)
+ * > ```ts
+ * > let myProp: Doc['prop'] = useRead<Doc, 'prop'>(
+ * >   { path: 'coll', id: 'doc-id' },
+ * >   'prop'
+ * > );
+ * > ```
+ * @param pathId - { path: string; id: string; }
+ * @param field - keyof Doc
+ * @returns Doc[keyof Doc] | undefined | null
+ */
+export function useRead<Doc extends PathId, K extends keyof Doc>(
   pathId: PathId,
   field: K,
 ): Doc[K] | Loading | NotFound;
 /**
- * read single value from cache
- * @param pathId PathId
- * @param field keyof Doc
- * @returns Value of key
+ * ### Query & subscribe (subset of a single document)
+ * > ```ts
+ * > let subset: Pick<Doc, 'prop'> = useRead<Doc, 'prop'>(
+ * >   { path: 'coll', id: 'doc-id' },
+ * >   ['prop']
+ * > );
+ * > ```
+ * @param pathId - { path: string; id: string; }
+ * @param fields - (keyof Doc)[]
+ * @returns Pick<Doc, keyof Doc> | undefined | null
  */
-function useRead<Doc extends PathId>(
+export function useRead<Doc extends PathId, K extends keyof Doc>(
   pathId: PathId,
   fields: K[],
 ): Pick<Doc, K> | Loading | NotFound;
 /**
- * read subscription to get docs
- * @param query ReadQuery
- * @returns Docs
- */
-function useRead<Doc extends PathId>(
-  query: Omit<ReadQuery, 'id'>,
-): Doc[] | Loading | NotFound;
-/**
- * read subscription for single value
- * @param query ReadQuery
- * @param field keyof Doc
- * @returns Value of key
- */
-function useRead<Doc extends PathId>(
-  query: Omit<ReadQuery, 'id'>,
-  field: K,
-): Doc[K][] | Loading | NotFound;
-/**
- * read subscription for single value
- * @param query ReadQuery
- * @param field keyof Doc
- * @returns Value of key
- */
-function useRead<Doc extends PathId>(
-  query: Omit<ReadQuery, 'id'>,
-  fields: K[],
-): Pick<Doc, K>[] | Loading | NotFound;
-/**
- * read subscription that returns the alias
- * @param query ReadQuery
- * @param aliasEnum '::alias'
- * @returns Alias for the query
- */
-function useRead<Doc extends PathId>(
-  query: Omit<ReadQuery, 'id'>,
-  alias: '::alias',
-): string;
-/**
- * read from cache
- * @param alias string
- * @returns Alias for the query
- */
-function useRead<Doc extends PathId>(alias: string): Doc[] | undefined;
-/**
- * read from cache
- * @param alias string
- * @param field field of doc
- * @returns Select keys from doc
+ * ### Only access from Redux Store; NO query, NO loading
+ * **NOTE**: If you ment to get a Pick/Partial, add a second \
+ * parameter (ie `useRead<MyDoc, 'prop'>(...);` )
+ * > ```ts
+ * > let docs: Doc[] = useRead<Doc>(someAlias);
+ * > ```
+ * @param alias - string
+ * @returns Doc[] | undefined | []
  */
 export function useRead<Doc extends PathId>(
-  alias: string,
-  field: K,
-): Doc[K][] | Loading | NotFound;
+  alias: ReadAlias,
+): Doc[] | Loading | NoResults;
 /**
- * read from cache
- * @param alias string
- * @param fields keys of doc
- * @returns Select keys from doc
+ * ### Only access from Redux Store; NO query, NO loading
+ * > ```ts
+ * > let props: Doc['prop'][] = useRead<Doc, 'prop'>(someAlias, 'prop');
+ * > ```
+ * @param alias - string
+ * @param field - keyof Doc
+ * @returns Doc[keyof Doc] | undefined | []
  */
-export function useRead<Doc extends PathId>(
-  alias: string,
+export function useRead<Doc extends PathId, K extends keyof Doc>(
+  alias: ReadAlias,
+  field: K,
+): Doc[K] | Loading | NoResults;
+/**
+ * ### Only access from Redux Store; NO query, NO loading
+ * > ```ts
+ * > let subsets: Pick<Doc, 'prop'>[] = useRead<Doc, 'prop'>(
+ * >   someAlias,
+ * >   ['prop']
+ * > );
+ * > ```
+ * @param alias - string
+ * @param fields - (keyof Doc)[]
+ * @returns Pick<Doc, keyof Doc> | undefined | []
+ */
+export function useRead<Doc extends PathId, K extends keyof Doc>(
+  alias: ReadAlias,
   fields: K[],
-): Pick<Doc, K>[] | Loading | NotFound;
+): Pick<Doc, K> | Loading | NoResults;
+export function useRead(args: unknown): any;
 
 // -- useCache reads from cache
 
@@ -408,7 +483,7 @@ function useCache<Doc extends PathId>(pathId: PathId, field: K): Doc[K];
  * @param field keyof Doc
  * @returns Value of key
  */
-function useRead<Doc extends PathId>(
+function useCache<Doc extends PathId>(
   pathId: PathId,
   fields: K[],
 ): Pick<Doc, K> | undefined;

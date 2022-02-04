@@ -5,7 +5,7 @@ import { store } from '../app/store';
 import {
   ReactReduxFirebaseProvider,
   createFirestoreInstance,
-} from 'read-write-web3';
+} from 'read-write';
 
 import firebase from 'firebase/compat/app';
 import 'firebase/compat/firestore';

@@ -1,7 +1,7 @@
 import React from 'react';
 
 import { useAppDispatch } from '../../app/hooks';
-import { useRead } from 'read-write-web3';
+import { useRead } from 'read-write';
 import { unwrapResult } from '@reduxjs/toolkit';
 import { saveEditor } from './editorMutates';
 
@@ -20,10 +20,16 @@ const extensions = () => [
   new MarkdownExtension({ copyAsMarkdown: true }),
 ];
 
+interface EditorDoc {
+  path: string;
+  id: string;
+  text: string
+}
+
 export const Editor = () => {
   const dispatch = useAppDispatch();
 
-  const globalText = useRead({ path: 'editor', id: 'global' }, 'text');
+  const globalText = useRead<EditorDoc, 'text'>({ path: 'editor', id: 'global' }, 'text');
 
   const { manager, state, setState } = useRemirror({
     extensions,

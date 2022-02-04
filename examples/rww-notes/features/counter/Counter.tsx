@@ -9,7 +9,7 @@ import {
   incrementIfOdd,
 } from './counterMutates';
 import styles from './Counter.module.css';
-import { useRead } from 'read-write-web3';
+import { useRead } from 'read-write';
 import { unwrapResult } from '@reduxjs/toolkit';
 
 type Counter = {
@@ -24,27 +24,29 @@ export function Counter() {
   const [transactionStatus, setTransactionStatus] = useState('Add Async');
 
   /* return partial docs */
-  const counters = useRead<Counter>(
-    {
-      path: 'counter',
-      where: ['amount', '>', 0],
-    },
-    ['amount'],
-  );
-  const [{ amount: counter } = { amount: -1 }] = counters || [];
-
-  // /* return single values */
-  // const counters = useRead<Counter>(
+  // var counters = useRead<Counter, 'amount'>(
   //   {
   //     path: 'counter',
   //     where: ['amount', '>', 0],
   //   },
   //   'amount',
   // );
-  // const [counter = 0] = counters || [];
+  // var [{ amount: counter } = {
+  //   amount: -1
+  // }] = counters || [];
+
+  // /* return single values */
+  var counters = useRead<Counter, 'amount'>(
+    {
+      path: 'counter',
+      where: ['amount', '>', 0],
+    },
+    'amount',
+  );
+  var [counter = 0] = counters || [];
 
   // /* return single doc value */
-  // const counters = useRead<Counter>(
+  // const counters = useRead2<Counter>(
   //   {
   //     path: 'counter',
   //     id: 'global',
@@ -54,14 +56,14 @@ export function Counter() {
   // const counter = counters || 0;
 
   // /* return full single doc */
-  // const counters = useRead<Counter>({
+  // const counters = useRead2<Counter>({
   //   path: 'counter',
   //   id: 'global',
   // });
   // const { amount: counter } = counters || { amount: 0 };
 
   // /* return single doc */
-  // const counterDoc = useRead<Counter>(
+  // const counterDoc = useRead2<Counter>(
   //   {
   //     path: 'counter',
   //     id: 'global',
@@ -78,7 +80,7 @@ export function Counter() {
   //   },
   //   '::alias',
   // );
-  // const counterDocs = useRead<Counter>(alias);
+  // const counterDocs = useRead2<Counter>(alias);
   // const [{ amount: counter } = { amount: 0 }] = counterDocs || [];
 
   const incrementValue = Number(incrementAmount) || 0;

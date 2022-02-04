@@ -1,7 +1,7 @@
 const path = require('path');
 const TerserPlugin = require('terser-webpack-plugin');
 
-const libraryName = 'read-write-firestore';
+const libraryName = 'read-write';
 const isProduction = process.env.NODE_ENV === 'production';
 
 const config = {
@@ -10,7 +10,7 @@ const config = {
   output: {
     path: path.join(__dirname, 'dist'),
     filename: libraryName + (isProduction ? '.min.js' : '.js'),
-    library: 'ReadWriteWeb3',
+    library: 'ReadWrite',
     libraryTarget: 'umd',
     umdNamedDefine: true,
   },
