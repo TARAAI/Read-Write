@@ -1,6 +1,6 @@
-# Read-Write-Web3
+# Read/Write
 
-The fastest, production-ready DX & UX for Firestore.
+The fastest, production-ready DX & UX for NoSQL Firestore.
 
 ---
 - **instant UI.** All data mutations run synchronously, optimistic in-memory.
@@ -67,13 +67,13 @@ useDispatch(archiveTask('task-one'))
   .then(() => alert('task archived.'));
 ```
 
-## Test (Jest Unit + Jest Integration)
+## Test (Both Unit and Integration)
 
 `it.each([{ payload, results }])(...shouldPass)`
 
 `it.each([{ payload, returned }])(...shouldFail)`
 
-Zero bolierplate testing. No mocks or spies; just data. Instantly switch between unit & integration tests.
+Zero bolierplate testing. No mocks or spies; just data. Unit tests can instantly run as parallelized integration tests.
 
 ```ts
 import { archiveTask } from '../mutations';
