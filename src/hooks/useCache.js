@@ -1,5 +1,5 @@
 import { has, isEqual, isPlainObject, pick } from 'lodash';
-import { useRef, useMemo, useEffect, useCallback } from 'react';
+import { useMemo, useEffect, useState, useCallback } from 'react';
 import { useSelector } from 'react-redux';
 
 const document = ({ databaseOverrides = {}, database = {} }, [path, id]) => {
@@ -51,35 +51,35 @@ const selectAlias = (state, alias) =>
  */
 export default function useCache(alias, selection = null) {
   const value = typeof selection === 'string' ? selection : null;
-  const fields = Array.isArray(selection) ? selection : value;
+  const [fields, setFields] = useState(Array.isArray(selection) ? selection : value);
   const postFnc =
     typeof selection === 'function' ? useCallback(selection) : null;
 
-  const aliasRef = useRef(alias);
-
+  const [localAlias, setAlias] = useState(alias);
+  
   useEffect(() => {
-    if (!alias) return;
-
-    if (!isEqual(alias, aliasRef.current)) {
-      console.log('alias change', alias, aliasRef.current);
-      aliasRef.current = alias;
+    if (!isEqual(alias, localAlias)) {
+      setAlias(alias)
     }
-  }, [alias]);
+    if (!isEqual(fields, Array.isArray(selection) ? selection : value)) {
+      setFields(Array.isArray(selection) ? selection : value)
+    }
+  }, [alias, selection, value]);
 
   const selector = useMemo(
     () =>
       function readSelector(state) {
         const { firestore: { cache } = {} } = state || {};
-        if (!cache || !aliasRef.current) return undefined;
+        if (!cache || !localAlias) return undefined;
 
-        const aliases = aliasRef.current;
+        const aliases = localAlias;
 
-        const isPathId = has(aliasRef.current, 'path');
+        const isPathId = has(localAlias, 'path');
         if (isPathId) {
           return selectDocument(
             cache,
-            aliasRef.current.id,
-            aliasRef.current.path,
+            localAlias.id,
+            localAlias.path,
             fields,
           );
         }
@@ -102,7 +102,7 @@ export default function useCache(alias, selection = null) {
 
         return (postFnc ? postFnc(listsAndDocs) : listsAndDocs)[0];
       },
-    [aliasRef.current, postFnc, fields],
+    [localAlias, postFnc, fields],
   );
 
   // All data from firestore is standard JSON except Timestamps
