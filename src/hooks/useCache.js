@@ -55,15 +55,14 @@ export default function useCache(alias, selection = null) {
   const postFnc =
     typeof selection === 'function' ? useCallback(selection) : null;
 
-  const aliasRef = useRef(has(alias, 'path') || alias);
+  const aliasRef = useRef(alias);
 
   useEffect(() => {
     if (!alias) return;
 
-    const newAlias = has(alias, 'path') || alias;
-    if (!isEqual(newAlias, aliasRef.current)) {
-      aliasRef.current = newAlias;
-      console.log('alias change', newAlias, aliasRef.current);
+    if (!isEqual(alias, aliasRef.current)) {
+      console.log('alias change', alias, aliasRef.current);
+      aliasRef.current = alias;
     }
   }, [alias]);
 
