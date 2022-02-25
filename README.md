@@ -1,12 +1,14 @@
 # Read/Write
 
+**[dark launch: pre-release]**
+
 The fastest, production-ready DX & UX for NoSQL Firestore.
 
 ---
-- **instant UI.** All data mutations run synchronously, optimistic in-memory.
-- **zero Redux boilerplate.** no reducers, no slices, no selectors, no entity mappers, no normalization
-- **data-driven testing.** no boilerplate, no mocks, no spys, seemlessly switch between unit & integation tests
-- **offline-first NoSQL.** with live subscriptions
+- **Instant UI.** All data mutations run synchronously with in-memory optimistic commits.
+- **Zero Redux boilerplate.** No reducers, no slices, no selectors, no entity mappers, no normalization.
+- **Data-driven testing.** No boilerplate, no mocks, no spys, seemlessly switch between unit & integation tests or generate Haskell-style check tests.
+- **Offline-first NoSQL.** Firestore ACID-compliant transactions with live subscriptions.
 
 
 [![License][license-image]][license-url]
@@ -127,6 +129,14 @@ export const Default = (): JSX.Element => (
 ```
 [@see Storybook Test](./docs/test.md#storybook)
 
+# Alternate Firestore libraries
+
+Looking for options to work with Firestore? Check out these other libraries:
+
+- [Offical Google SDK](https://github.com/firebase/firebase-js-sdk)
+- [ReactFire](https://github.com/FirebaseExtended/reactfire)
+- [redux-firestore](https://github.com/prescottprue/redux-firestore)
+
 # Documentation
 
 **API Documentation**
@@ -152,7 +162,7 @@ export const Default = (): JSX.Element => (
 
 1. Add the libraries to your project.
 ```
-yarn add read-write-web3 firebase @reduxjs/toolkit redux
+yarn add read-write firebase @reduxjs/toolkit redux
 ```
 
 2. Include the firestore/firebase reducers and thunk middleware.
