@@ -465,6 +465,21 @@ export function useRead(args: unknown): any;
 // -- useCache reads from cache
 
 /**
+ * ### Read from the cache
+ * [@see https://github.com/TARAAI/Read-Write/blob/main/docs/read.md#advanced-usage](https://github.com/TARAAI/Read-Write/blob/main/docs/read.md#advanced-usage)
+ * **Note: Add a generic to get Typed responses:**
+ * > ```ts
+ * > let docs: MyDoc[] = useCache<MyDoc>(
+ * >   { path: 'some-collection' },
+ * > );
+ * > ```
+ * @param query - ReadQuery
+ * @returns - unknown | undefined | []
+ */
+export function useCache(
+  query: Omit<ReadQuery, 'id'>,
+): unknown | Loading | NoResults;
+/**
  * ### Read from the cache (single document)
  * > ```ts
  * > let subset: Doc = useCache<Doc>(
@@ -497,8 +512,8 @@ export function useCache<Doc extends PathId, K extends keyof Doc>(
  * ### Read from the cache (subset of a single document)
  * > ```ts
  * > let subset: Pick<Doc, 'prop'> = useCache<Doc, 'prop'>(
- * > { path: 'collection', id: 'doc-id' },
- * > ['prop']
+ * >   { path: 'collection', id: 'doc-id' },
+ * >   ['prop']
  * > );
  * @param pathId { path: string; id: string; }
  * @param field (keyof Doc)[]
@@ -548,6 +563,7 @@ export function useCache<Doc extends PathId, K extends keyof Doc>(
   alias: string,
   fields: K[],
 ): Pick<Doc, K>[] | undefined;
+export function useCache(args: unknown): any;
 
 // -- setCache for storybook
 
