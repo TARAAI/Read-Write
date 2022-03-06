@@ -73,6 +73,9 @@ const increment = (firebase, key, val) =>
   typeof val === 'number' &&
   getFieldValue(firebase).increment(val);
 
+const deleteField = (firebase, key) =>
+  key === '::delete' && getFieldValue(firebase).delete();
+
 const serverTimestamp = (firebase, key) =>
   key === '::serverTimestamp' && getFieldValue(firebase).serverTimestamp();
 
@@ -98,7 +101,8 @@ function atomize(firebase, operation) {
         serverTimestamp(firebase, val[0]) ||
         arrayUnion(firebase, val[0], val[1]) ||
         arrayRemove(firebase, val[0], val[1]) ||
-        increment(firebase, val[0], val[1]);
+        increment(firebase, val[0], val[1]) || 
+        deleteField(firebase, val[0], val[1]);
 
       if (Array.isArray(val) && val.length > 0 && isPlainObject(val[0])) {
         clone[key] = val.map((obj) => {
