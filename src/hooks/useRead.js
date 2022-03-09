@@ -37,6 +37,8 @@ export default function useRead(queries, selection = null) {
   useEffect(
     () => () => {
       if (firestoreIsEnabled && queryRef.current) {
+        queryRef.current = [];
+        aliasRef.current = undefined;
         firestore.unsetListeners(queryRef.current);
       }
     },
