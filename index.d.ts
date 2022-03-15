@@ -465,54 +465,105 @@ export function useRead(args: unknown): any;
 // -- useCache reads from cache
 
 /**
- * reads single doc from cahce
- * @param query ReadQuery
- * @returns Docs
+ * ### Read from the cache
+ * [@see https://github.com/TARAAI/Read-Write/blob/main/docs/read.md#advanced-usage](https://github.com/TARAAI/Read-Write/blob/main/docs/read.md#advanced-usage)
+ * **Note: Add a generic to get Typed responses:**
+ * > ```ts
+ * > let docs: MyDoc[] = useCache<MyDoc>(
+ * >   { path: 'some-collection' },
+ * > );
+ * > ```
+ * @param query - ReadQuery
+ * @returns - unknown | undefined | []
  */
-function useCache<Doc extends PathId>(pathId: PathId): Doc;
+export function useCache(
+  query: Omit<ReadQuery, 'id'>,
+): unknown | Loading | NoResults;
 /**
- * read single value from cache
- * @param pathId PathId
- * @param field keyof Doc
- * @returns Value of key
+ * ### Read from the cache (single document)
+ * > ```ts
+ * > let subset: Doc = useCache<Doc>(
+ * >   { path: 'colection', id: 'doc-id' }
+ * > )
+ * > ```
+ * @param pathId - { path: string; id: string; }
+ * @returns Doc | undefined | null
  */
-function useCache<Doc extends PathId>(pathId: PathId, field: K): Doc[K];
+export function useCache<Doc extends PathId>(
+  pathId: PathId,
+): Doc | Loading | NotFound;
 /**
- * read single value from cache
- * @param pathId PathId
- * @param field keyof Doc
- * @returns Value of key
+ * ### Read from the cache (single value of a single document)
+ * > ```ts
+ * > let myProp: Doc['prop'] = useCache<Doc, 'prop'>(
+ * >   { path: 'collection', id: 'doc-id' },
+ * >   'prop'
+ * > );
+ * > ```
+ * @param pathId PathId - { path: string; id: string }
+ * @param field - keyof Doc
+ * @returns Doc[keyof Doc] | undefined | null
  */
-function useCache<Doc extends PathId>(
+export function useCache<Doc extends PathId, K extends keyof Doc>(
+  pathId: PathId,
+  field: K,
+): Doc[K] | Loading | NotFound;
+/**
+ * ### Read from the cache (subset of a single document)
+ * > ```ts
+ * > let subset: Pick<Doc, 'prop'> = useCache<Doc, 'prop'>(
+ * >   { path: 'collection', id: 'doc-id' },
+ * >   ['prop']
+ * > );
+ * @param pathId { path: string; id: string; }
+ * @param field (keyof Doc)[]
+ * @returns Pick<Doc, keyof Doc> | undefined | null
+ */
+export function useCache<Doc extends PathId, K extends keyof Doc>(
   pathId: PathId,
   fields: K[],
-): Pick<Doc, K> | undefined;
+): Pick<Doc, K> | Loading | NotFound;
 /**
- * read from cache
- * @param alias string
- * @returns Alias for the query
- */
-function useCache<Doc extends PathId>(alias: string): Doc[] | undefined;
-/**
- * read from cache
- * @param alias string
- * @param field field of doc
- * @returns Select keys from doc
+ * ### Read from the cache (using an alias)
+ * > ```ts
+ * > let docs: Doc[] = useCache<Doc>(someAlias);
+ * > ```
+ * @param alias - string
+ * @returns Doc[] | undefined | []
  */
 export function useCache<Doc extends PathId>(
   alias: string,
-  field: K,
-): Doc[K][] | undefined;
+): Doc[] | Loading | NoResults;
 /**
- * read from cache
+ * ### Read from the cache (single value of a document, using an alias)
+ * > ```ts
+ * > let props: Doc['prop'][] = useCache<Doc, 'prop'>(someAlias, 'prop');
+ * > ```
+ * @param alias - string
+ * @param field - keyof Doc
+ * @returns Doc[keyof Doc] | undefined | []
+ */
+export function useCache<Doc extends PathId, K extends keyof Doc>(
+  alias: string,
+  field: K,
+): Doc[K] | Loading | NoResults;
+/**
+ * ### Read from the cache (a subset of a document, using an alias)
+ * > ```ts
+ * > let subsets: Pick<Doc, 'prop'>[] = useRead<Doc, 'prop'>(
+ * >   someAlias,
+ * >   ['prop']
+ * > );
+ * > ```
  * @param alias string
  * @param fields keys of doc
  * @returns Select keys from doc
  */
-export function useCache<Doc extends PathId>(
+export function useCache<Doc extends PathId, K extends keyof Doc>(
   alias: string,
   fields: K[],
 ): Pick<Doc, K>[] | undefined;
+export function useCache(args: unknown): any;
 
 // -- setCache for storybook
 
