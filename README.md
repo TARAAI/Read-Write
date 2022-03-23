@@ -173,8 +173,7 @@ import {
   getFirestore,
   firebaseReducer,
   firestoreReducer,
-} from 'read-write-firestore';
-import thunk from 'redux-thunk';
+} from 'read-write';
 
 import firebase from 'firebase/compat/app';
 
@@ -185,12 +184,12 @@ export const store = configureStore({
     firebase: firebaseReducer,
     firestore: firestoreReducer,
   }),
-  middleware: [
-    thunk.withExtraArgument({
-      getFirestore,
-      getFirebase,
+  middleware: (getDefaultMiddleware) =>
+    getDefaultMiddleware({
+      thunk: {
+        extraArgument: { getFirestore, getFirebase },
+      },
     }),
-  ],
 });
 
 export type AppDispatch = typeof store.dispatch;
@@ -201,6 +200,14 @@ export type AppThunk<ReturnType = void> = ThunkAction<
   unknown,
   Action<string>
 >;
+```
+`hooks.ts`
+```ts
+import { TypedUseSelectorHook, useDispatch, useSelector } from 'react-redux';
+import type { AppDispatch, RootState } from './store';
+
+export const useAppDispatch = () => useDispatch<AppDispatch>();
+export const useAppSelector: TypedUseSelectorHook<RootState> = useSelector;
 ```
 
 3. Initialize Firebase and pass store to your component's context using [react-redux's `Provider`](https://github.com/reactjs/react-redux/blob/master/docs/api.md#provider-store):
@@ -214,7 +221,7 @@ import { Provider } from 'react-redux';
 import {
   ReactReduxFirebaseProvider,
   createFirestoreInstance,
-} from 'read-write-firestore';
+} from 'read-write';
 
 import firebase from 'firebase/compat/app';
 import 'firebase/compat/firestore';

@@ -5,19 +5,18 @@ import {
   firebaseReducer,
   firestoreReducer,
 } from 'read-write';
-import thunk from 'redux-thunk';
 
 export const store = configureStore({
   reducer: {
     firestore: firestoreReducer,
     firebase: firebaseReducer,
   },
-  middleware: [
-    thunk.withExtraArgument({
-      getFirestore,
-      getFirebase,
+  middleware: (getDefaultMiddleware) =>
+    getDefaultMiddleware({
+      thunk: {
+        extraArgument: { getFirestore, getFirebase },
+      },
     }),
-  ],
 });
 
 export type AppDispatch = typeof store.dispatch;
