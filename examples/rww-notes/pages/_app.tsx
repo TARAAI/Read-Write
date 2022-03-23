@@ -11,7 +11,8 @@ import firebase from 'firebase/compat/app';
 import 'firebase/compat/firestore';
 import 'firebase/auth';
 
-const app = firebase.initializeApp({
+const isWarmBoot = firebase.apps.length !== 0
+const app = isWarmBoot ? firebase.apps[0] : firebase.initializeApp({
   authDomain: process.env.NEXT_PUBLIC_FIREBASE_authDomain,
   databaseURL: process.env.NEXT_PUBLIC_FIREBASE_databaseURL,
   projectId: process.env.NEXT_PUBLIC_FIREBASE_projectId,
@@ -19,7 +20,7 @@ const app = firebase.initializeApp({
 
 const config = { userProfile: 'users', useFirestoreForProfile: true };
 
-if (process.env.NODE_ENV !== 'production') {
+if (!isWarmBoot && process.env.NODE_ENV !== 'production') {
   firebase.firestore().useEmulator('localhost', 8080);
 }
 

@@ -18,11 +18,7 @@ type Counter = {
   amount: number;
 };
 
-export function Counter() {
-  const dispatch = useAppDispatch();
-  const [incrementAmount, setIncrementAmount] = useState('2');
-  const [transactionStatus, setTransactionStatus] = useState('Add Async');
-
+function Count(): JSX.Element {
   /* return partial docs */
   // var counters = useRead<Counter, 'amount'>(
   //   {
@@ -83,6 +79,14 @@ export function Counter() {
   // const counterDocs = useRead2<Counter>(alias);
   // const [{ amount: counter } = { amount: 0 }] = counterDocs || [];
 
+  return <span className={styles.value}>{counter}</span>
+}
+
+export function Counter() {
+  const dispatch = useAppDispatch();
+  const [incrementAmount, setIncrementAmount] = useState('2');
+  const [transactionStatus, setTransactionStatus] = useState('Add Async');
+
   const incrementValue = Number(incrementAmount) || 0;
 
   return (
@@ -91,15 +95,17 @@ export function Counter() {
         <button
           className={styles.button}
           aria-label="Decrement value"
-          onClick={() => dispatch(decrement(null)).catch(console.error)}
+          onClick={() => dispatch(decrement(null)).then(unwrapResult).catch(console.error)}
         >
           -
         </button>
-        <span className={styles.value}>{counter}</span>
+
+        <Count />
+
         <button
           className={styles.button}
           aria-label="Increment value"
-          onClick={() => dispatch(increment(null)).catch(console.error)}
+          onClick={() => dispatch(increment(null)).then(unwrapResult).catch(console.error)}
         >
           +
         </button>
@@ -114,7 +120,7 @@ export function Counter() {
         <button
           className={styles.button}
           onClick={() =>
-            dispatch(incrementByAmount(incrementValue)).catch(console.error)
+            dispatch(incrementByAmount(incrementValue)).then(unwrapResult).catch(console.error)
           }
         >
           Add Amount
@@ -136,7 +142,7 @@ export function Counter() {
         </button>
         <button
           className={styles.button}
-          onClick={() => dispatch(incrementIfOdd(incrementValue))}
+          onClick={() => dispatch(incrementIfOdd(incrementValue)).then(unwrapResult).catch(console.error)}
         >
           Add If Odd
         </button>

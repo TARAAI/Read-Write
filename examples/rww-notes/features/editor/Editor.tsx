@@ -49,7 +49,9 @@ export const Editor = () => {
 
         if (parameter.tr?.docChanged) {
           const markdown = parameter.helpers.getMarkdown();
-          dispatch(saveEditor(markdown)).then(unwrapResult).then(console.log);
+          dispatch(saveEditor(markdown))
+            .then(unwrapResult)
+            .then(console.log);
         }
 
         setState(nextState);
