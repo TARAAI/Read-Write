@@ -1,5 +1,5 @@
 import { filter, isEqual, some } from 'lodash';
-import { useRef, useMemo, useEffect } from 'react';
+import { useRef, useEffect } from 'react';
 import { useFirestore } from 'react-redux-firebase';
 import { getQueryName } from '../utils/query';
 import useCache from './useCache';
@@ -19,28 +19,29 @@ export default function useRead(queries, selection = null) {
   const aliasRef = useRef();
 
   useEffect(() => {
-    if (firestoreIsEnabled && queries && !isEqual(queries, queryRef.current)) {
-      const queryArray = Array.isArray(queries) ? queries : [queries];
-      const changes = getChanges(queryArray, queryRef.current);
+    const queryArray = Array.isArray(queries) ? queries : [queries];
+    if (!firestoreIsEnabled || isEqual(queryArray, queryRef.current)) return;
 
-      queryRef.current = queryArray;
-      aliasRef.current = queryRef.current.map(getQueryName);
+    const changes = getChanges(queryArray, queryRef.current);
 
-      // Remove listeners for inactive subscriptions
-      firestore.unsetListeners(changes.removed);
+    queryRef.current = queryArray;
+    aliasRef.current = queryRef.current.map(getQueryName);
 
-      // Add listeners for new subscriptions
-      firestore.setListeners(changes.added);
-    }
+    // Remove listeners for inactive subscriptions
+    firestore.unsetListeners(changes.removed);
+
+    // Add listeners for new subscriptions
+    firestore.setListeners(changes.added);
   }, [aliasRef.current]);
 
+  // clean up for hot-reloads and mount/unmount
   useEffect(
     () => () => {
-      if (firestoreIsEnabled && queryRef.current) {
-        queryRef.current = [];
-        aliasRef.current = undefined;
-        firestore.unsetListeners(queryRef.current);
-      }
+      if (!firestoreIsEnabled || !queryRef.current) return;
+
+      queryRef.current = [];
+      aliasRef.current = undefined;
+      firestore.unsetListeners(queryRef.current);
     },
     [],
   );

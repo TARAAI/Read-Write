@@ -51,21 +51,24 @@ const selectAlias = (state, alias) =>
  */
 export default function useCache(alias, selection = null) {
   const value = typeof selection === 'string' ? selection : null;
-  const [fields, setFields] = useState(Array.isArray(selection) ? selection : value);
+  const [fields, setFields] = useState(
+    Array.isArray(selection) ? selection : value,
+  );
   const postFnc =
     typeof selection === 'function' ? useCallback(selection) : null;
 
   const [localAlias, setAlias] = useState(alias);
-  
+
   useEffect(() => {
     if (!isEqual(alias, localAlias)) {
-      setAlias(alias)
+      setAlias(alias);
     }
     if (!isEqual(fields, Array.isArray(selection) ? selection : value)) {
-      setFields(Array.isArray(selection) ? selection : value)
+      setFields(Array.isArray(selection) ? selection : value);
     }
   }, [alias, selection, value]);
 
+  // Standard (& Typed) Redux selector. Will recreate if alias or filtering changes
   const selector = useMemo(
     () =>
       function readSelector(state) {
@@ -76,12 +79,7 @@ export default function useCache(alias, selection = null) {
 
         const isPathId = has(localAlias, 'path');
         if (isPathId) {
-          return selectDocument(
-            cache,
-            localAlias.id,
-            localAlias.path,
-            fields,
-          );
+          return selectDocument(cache, localAlias.id, localAlias.path, fields);
         }
 
         const isMultiple = Array.isArray(aliases);
