@@ -2,9 +2,8 @@
 
 **[dark launch: pre-release]**
 
-The fastest, production-ready DX & UX for NoSQL Firestore.
+## The fastest, production-ready DX & UX for NoSQL/Firestore.
 
----
 - **[Instant UI.](#read)** Change data synchronously. No Thunks, no Sagas, no Axios, no GraphQL mutations/subscriptions. 
 - **[Zero-Redux Redux.](#write)** Write Redux without Redux. No reducers, no slices, no selectors, no entity mappers, no normalization.
 - **[The One Test.](#testing)** The One test rules them all. Why write seperate unit, integration, visual/storybook & property-based tests? _The One_ test validates each layer seperately & together. No boilerplate, no stubs, no mocks, no spys.
@@ -45,7 +44,9 @@ const tasks = useRead({
 
 `createMutate({ action, read, write })` 
 
-Create a Redux action creator to create, update & delete data. Mutations synchrnously update the Redux store making React components feel instant. 
+Create a Redux action creator to create, update & delete data. Mutations synchronously 
+update the Redux store. This makes React components feel instant while data 
+persistence are eventually consistent. 
 
 ```ts
 const archiveAction = createMutate({ 
@@ -64,7 +65,7 @@ const archiveAction = createMutate({
 
 `createMutate` returns an Action Creator. When the action creator 
 is dispatched it return a promise that will 
-executre when Firestore accepts or rejects the mutation. 
+execute when Firestore accepts or rejects the mutation. 
 
 ```ts
 import { archiveAction } from './mutations';
@@ -100,7 +101,7 @@ it.each({
 
 `it.each([{ payload, returned }])(...shouldFail)`
 
-Failure tests just need a `returned` check instead of a `results`.
+Switch `results` for `returned` to run failure checks.
 
 ```ts
 it.each([{
@@ -139,7 +140,7 @@ it.each({
 
 ## StoryBook Tests
 
-`it.each([{ payload, results }])(...shouldPass)`
+`it.each([{ payload, component, results }])(...shouldPass)`
 
 Unit tests can generate storybook tests with a pre and a post for
 the mutation by adding a `component` property to the test.
@@ -163,6 +164,8 @@ it.each({
 
 
 ## Typescript QuickCheck Tests
+
+`it.each([{ payload, results }])(...shouldPass)`
 
 Test for the unknown. Unit tests have one major flaw, they can only test the 
 _known; not unknown_ cases. 
@@ -364,11 +367,11 @@ render(
 - [x] tests: support data-driven unit tests
 - [x] tests: data-driven intergration tests with Firestore emulator
 - [x] tests: data-driven storybook tests are written to disk
-- [ ] tests: switch intergration tests to run parallelized 
+- [ ] **todo** tests: switch intergration tests to run parallelized 
 - [x] DX: add _readwrite:cache_ profiling for Redux store changes
 - [x] DX: add _readwrite:profile_ profiling for data load phases timings
-- [-] docs: document public API layer
-- [ ] testing: increase code coverage from 90% to 100%
+- [ ] **in progress** docs: document public API layer
+- [ ] **todo** testing: increase code coverage from 90% to 100%
 
 **future**
 - docs: document internal processes
