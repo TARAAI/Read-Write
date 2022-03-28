@@ -12,7 +12,7 @@ import debug from 'debug';
 import { firestoreRef } from './query';
 import mark from './profiling';
 
-const info = debug('w3:mutate');
+const info = debug('readwrite:mutate');
 
 const docRef = (firestore, collection, doc) =>
   firestore.doc(`${collection}/${doc}`);
@@ -101,7 +101,7 @@ function atomize(firebase, operation) {
         serverTimestamp(firebase, val[0]) ||
         arrayUnion(firebase, val[0], val[1]) ||
         arrayRemove(firebase, val[0], val[1]) ||
-        increment(firebase, val[0], val[1]) || 
+        increment(firebase, val[0], val[1]) ||
         deleteField(firebase, val[0], val[1]);
 
       if (Array.isArray(val) && val.length > 0 && isPlainObject(val[0])) {

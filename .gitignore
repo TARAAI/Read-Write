@@ -53,3 +53,5 @@ yarn-error.log*
 
 # typescript
 *.tsbuildinfo
+/stories
+/.storybook

@@ -18,15 +18,6 @@ import { getSnapshotByObject } from './utils/query';
 import createMutate from './utils/createMutate';
 import useRead from './hooks/useRead';
 import useCache from './hooks/useCache';
-// import { shouldPass, shouldFail } from './tests/shouldPassFail';
-import setCache from './tests/setCache';
-let isJest = false;
-try {
-  isJest = !!jest;
-} catch (e) {}
-const { shouldPass, shouldFail } = isJest
-  ? require('./tests/shouldPassFail')
-  : { shouldPass: () => null, shouldFail: () => null };
 
 // converted with transform-inline-environment-variables
 export const version = process.env.npm_package_version;
@@ -52,9 +43,6 @@ export {
   middleware,
   CALL_FIRESTORE,
   createMutate,
-  // shouldPass,
-  // shouldFail,
-  setCache,
 };
 
 export default {
@@ -79,7 +67,4 @@ export default {
   middleware,
   CALL_FIRESTORE,
   createMutate,
-  // shouldPass,
-  // shouldFail,
-  setCache,
 };

@@ -44,4 +44,41 @@ const config = {
   plugins: [],
 };
 
-module.exports = config;
+const testingConfig = {
+  target: 'node',
+  mode: process.env.NODE_ENV || 'production',
+  entry: [path.join(__dirname, 'src/test.js')],
+  output: {
+    path: path.join(__dirname, 'dist'),
+    filename: libraryName + '-test.js',
+    library: 'ReadWriteTest',
+    libraryTarget: 'umd',
+    umdNamedDefine: true,
+  },
+  resolve: {
+    extensions: ['.tsx', '.ts', '.js'],
+  },
+  externals: {
+    '@reduxjs/toolkit': '@reduxjs/toolkit',
+    firebase: 'firebase',
+    react: 'react',
+  },
+  module: {
+    rules: [
+      {
+        test: /(\.jsx|\.js)$/,
+        use: {
+          loader: 'babel-loader',
+          options: {
+            presets: ['@babel/preset-env'],
+            plugins: ['@babel/transform-runtime'],
+          },
+        },
+        exclude: /node_modules/,
+      },
+    ],
+  },
+  plugins: [],
+};
+
+module.exports = [config, testingConfig];

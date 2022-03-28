@@ -6,7 +6,7 @@
     "dev:firestore": "firebase emulators:start --only firestore,ui --project demo-read-write",
     "dev:lib": "yarn --cwd ../.. watch:dev",
     "build": "next build",
-    "start": "next start",
+    "start": "yarn dev",
     "lint": "next lint",
     "test": "jest --watch",
     "storybook": "concurrently --kill-others \"yarn dev:firestore\" \"yarn start-storybook -s ./public -p 6006\"",

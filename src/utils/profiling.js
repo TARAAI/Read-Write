@@ -4,8 +4,8 @@
 import { noop } from 'lodash';
 import debug from 'debug';
 
-const info = debug('w3:profile');
-if (info.enabled && debug.enabled('w3:cache')) {
+const info = debug('readwrite:profile');
+if (info.enabled && debug.enabled('readwrite:cache')) {
   info(
     `Capturing Reducer & Firestore load times. 
 See results with 'w3Stats()'.`,
@@ -32,20 +32,24 @@ const perf = win && win.performance;
  * @returns {Function}
  */
 export default function mark(marker, context = '') {
-  if (!debug.enabled('w3:cache') || !debug.enabled('w3:profile') || !perf) {
+  if (
+    !debug.enabled('readwrite:cache') ||
+    !debug.enabled('readwrite:profile') ||
+    !perf
+  ) {
     return noop;
   }
 
   /* istanbul ignore next */
   try {
     const now = perf.now();
-    const start = `@w3/${marker}-${now}`;
+    const start = `@readwrite:/${marker}-${now}`;
     perf.mark(start);
     if (context) {
       info(`${marker}.${context}`);
     }
     return () => {
-      perf.measure(`@w3/${marker}`, start);
+      perf.measure(`@readwrite:/${marker}`, start);
     };
   } catch (err) {
     // ensure timings never impact the user
@@ -59,7 +63,11 @@ export default function mark(marker, context = '') {
  * @returns
  */
 export function resource(meta, stringify) {
-  if (!debug.enabled('w3:cache') || !debug.enabled('w3:profile') || !perf) {
+  if (
+    !debug.enabled('readwrite:cache') ||
+    !debug.enabled('readwrite:profile') ||
+    !perf
+  ) {
     return noop;
   }
 
@@ -67,11 +75,11 @@ export function resource(meta, stringify) {
   try {
     const now = perf.now();
     const marker = stringify(meta);
-    let start = `@w3.load/${marker}-${now}`;
+    let start = `@readwrite:.load/${marker}-${now}`;
     perf.mark(start);
     return (count = '') => {
       if (!start) return;
-      perf.measure(`@w3.load/${marker}.|${count}|`, start);
+      perf.measure(`@readwrite:.load/${marker}.|${count}|`, start);
       start = null; // ensure only first load for each query
     };
   } catch (err) {
@@ -83,12 +91,17 @@ export function resource(meta, stringify) {
 /* istanbul ignore next */
 if (win) {
   win.w3Stats = (force = false) => {
-    if (!debug.enabled('w3:cache') || !debug.enabled('w3:profile') || !perf) {
-      if (force) debug.enable(typeof force === 'string' ? force : 'w3:*');
+    if (
+      !debug.enabled('readwrite:cache') ||
+      !debug.enabled('readwrite:profile') ||
+      !perf
+    ) {
+      if (force)
+        debug.enable(typeof force === 'string' ? force : 'readwrite:*');
       return;
     }
-    const getMarks = ({ name }) => name.indexOf('@w3/') === 0;
-    const getLoads = ({ name }) => name.indexOf('@w3.load/') === 0;
+    const getMarks = ({ name }) => name.indexOf('@readwrite:/') === 0;
+    const getLoads = ({ name }) => name.indexOf('@readwrite:.load/') === 0;
     const duration = (stats, { duration, name }) => {
       if (stats[name]) {
         stats[name].push(duration);
@@ -105,7 +118,7 @@ if (win) {
     };
 
     const logStats = (grouped) => {
-      console.group(`Read Write Web3 Profiling`);
+      console.group(`Read Write Profiling`);
       console.table(
         Object.keys(grouped)
           .map((name) => {

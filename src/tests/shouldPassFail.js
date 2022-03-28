@@ -1,5 +1,8 @@
-/* istanbul ignore file */
+/**
+ * @jest-environment jsdom
+ */
 
+/* istanbul ignore file */
 import firebase from 'firebase/compat/app';
 import 'firebase/compat/firestore';
 import 'firebase/auth';
@@ -10,7 +13,22 @@ import firestoreReducer from '../reducer';
 import mutate from '../utils/mutate';
 import thunk from 'redux-thunk';
 import { configureStore, unwrapResult } from '@reduxjs/toolkit';
-import { isEmpty, isFunction, merge, pick } from 'lodash';
+import { isEmpty, isFunction, merge, pick, kebabCase, startCase } from 'lodash';
+import { Provider } from 'react-redux';
+import React from 'react';
+import { prettyDOM, render } from '@testing-library/react';
+import { getQueryConfig, getQueryName } from '../utils/query';
+import { actionTypes } from '../constants';
+import { writeFile, writeSync } from 'fs';
+
+const removeColors =
+  /[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/g;
+
+jest.mock('react-redux-firebase', () => ({
+  ...jest.requireActual('react-redux-firebase'),
+  useFirestore: jest.fn(),
+}));
+const { useFirestore } = require('react-redux-firebase');
 
 jest.mock('../utils/actions', () => ({
   ...jest.requireActual('../utils/actions'),
@@ -28,6 +46,8 @@ const { mutationWriteOutput } = require('../reducers/utils/mutate');
 const { mutationWriteOutput: mutationWriteOutputActual } = jest.requireActual(
   '../reducers/utils/mutate',
 );
+
+const { performance = { now: () => +new Date() } } = require('perf_hooks');
 
 const noop = () => null;
 
@@ -50,6 +70,7 @@ function setupFirestore(databaseURL, enhancers, sideEffects, preload = []) {
               merge(normalized, { [data.path]: { [data.id]: data } }),
             {},
           ),
+          databaseOverrides: {},
         },
       },
     },
@@ -60,21 +81,41 @@ function setupFirestore(databaseURL, enhancers, sideEffects, preload = []) {
     authDomain: 'localhost:9099',
     projectId: 'demo-read-write-web3',
   });
+
   const extendedFirestoreInstance = createFirestoreInstance(
     app,
     { userProfile: 'users', useFirestoreForProfile: true },
     store.dispatch,
   );
 
+  // route useRead request to cache reducer bypassing firestore
+  extendedFirestoreInstance.setListeners = (queryOpts) => {
+    const unsubscribe = () => null;
+    queryOpts.forEach((query) => {
+      const meta = getQueryConfig(query);
+      store.dispatch({
+        type: actionTypes.SET_LISTENER,
+        meta,
+        payload: { name: getQueryName(meta) },
+      });
+    });
+
+    return unsubscribe;
+  };
+  useFirestore.mockReturnValue(extendedFirestoreInstance);
+
   firebase.firestore().useEmulator('localhost', 8080);
 
-  wrapInDispatch.mockImplementation((dispatcher, action) =>
-    sideEffects(dispatcher, store.getState, action),
-  );
+  // spy on mutations
+  wrapInDispatch.mockImplementation((dispatcher, action) => {
+    // console.log('action', action);
+    return sideEffects(dispatcher, store.getState, action);
+  });
 
   return [extendedFirestoreInstance, store, app];
 }
 
+// send data to firestore directly
 async function loadCollection(firestore, messages) {
   let fragment = {};
   await Promise.all(
@@ -163,21 +204,24 @@ async function cleanFirestore(firestore, messages) {
  * #### Action Creator Test
  * ```js
  * it.each([{
- *     setup:    [{ path: 'orgs/my-org/tasks', id: 'task-one', archived: false, title: 'sample' }],
- *     globals:   { orgId: () => 'my-org' },
- *     payload:   { id: '999' },
- *     writes:    { path: 'orgs/my-org/tasks', id: 'task-one', archived: true },
- *     results:  [{ id: '999', path: 'tasks', archived: true }],
+ *     setup:     [{ path: 'orgs/my-org/tasks', id: 'task-one', archived: false, title: 'sample' }],
+ *     globals:    { orgId: () => 'my-org' },
+ *     component:  './path/to/component.tsx or functionalComponent',
+ *     payload:    { id: '999' },
+ *     writes:     { path: 'orgs/my-org/tasks', id: 'task-one', archived: true },
+ *     results:   [{ id: '999', path: 'tasks', archived: true }],
  *     returned: undefined,
  * }])(...shouldPass('Advanced integration test for archiving tasks', archiveTask, true));
  * ```
  */
 function shouldPass(actionCreatorFn, useEmulator = false) {
+  // useEmulator = false will run everything through redux-firestore but skip sending to the firestore DB
   const isIntegration =
-    typeof useEmulator === 'boolean' ? useEmulator : arguments[2] || false;
+    process.env.READWRITE_INTEGRATION ||
+    (typeof useEmulator === 'boolean' ? useEmulator : arguments[2] || false);
 
   const type = isIntegration ? '[intergration]' : '[unit]';
-  const testname =
+  const testSuiteName =
     typeof actionCreatorFn === 'string'
       ? `${type}: ${actionCreatorFn}`
       : `${type}: ${actionCreatorFn.typePrefix || ''} $payload should pass.`;
@@ -185,15 +229,24 @@ function shouldPass(actionCreatorFn, useEmulator = false) {
   const actionCreator = isFunction(useEmulator) ? useEmulator : actionCreatorFn;
 
   return [
-    testname,
+    testSuiteName,
     async ({
       payload,
       writes: writesExpected,
       results: resultsExpected,
       returned: returnExpected,
+      component,
       globals,
       setup,
+      testname,
     }) => {
+      const profiles = [
+        {
+          name: 'start',
+          time: performance.now(),
+          delta: 0,
+        },
+      ];
       if (
         setup &&
         !(
@@ -215,6 +268,7 @@ function shouldPass(actionCreatorFn, useEmulator = false) {
 
       const log = [];
 
+      // wrap dispatch to spy on cache before mutation.
       let cache = {};
       let customDispatcher = (dispatcher, getState, action) => {
         const mutationPromise = dispatchActual(dispatcher, action, {
@@ -228,29 +282,99 @@ function shouldPass(actionCreatorFn, useEmulator = false) {
         return mutationPromise;
       };
 
+      // connect real firestore server or jest in memory
       const [firestore, store, firebaseApp] = setupFirestore(
         databaseURL,
         globals,
         customDispatcher,
         setup,
       );
+      profiles.push({
+        name: 'firestore-init',
+        time: performance.now(),
+        delta: performance.now() - profiles[profiles.length - 1].time,
+      });
 
+      // --- preload data ---
       if (setup) {
         await mutate({ firestore: () => firestore }, setup);
       }
 
+      profiles.push({
+        name: 'firestore-preload',
+        time: performance.now(),
+        delta: performance.now() - profiles[profiles.length - 1].time,
+      });
+
+      // --- setup component ---
+      let element;
+      let elementName;
+      let preComponent;
+      if (component) {
+        const UI =
+          typeof component === 'string'
+            ? require(component).default
+            : component;
+        elementName = component
+          .split('/')
+          .pop()
+          .replace(/\.(tsx|jsx|js|ts)/, '');
+        element = render(
+          <Provider store={store}>
+            <UI />
+          </Provider>,
+        );
+        profiles.push({
+          name: 'component-rendered',
+          time: performance.now(),
+          delta: performance.now() - profiles[profiles.length - 1].time,
+        });
+
+        preComponent = prettyDOM(element.container).replace(removeColors, '');
+      }
+
+      // spy on results returned from mutation
       let writeRecieved;
       mutationWriteOutput.mockImplementation((writes, db) => {
         writeRecieved = Array.isArray(writesExpected) ? writes : writes[0];
         return mutationWriteOutputActual(writes, db);
       });
 
+      // send the test action
       const dispatched = store
         .dispatch(actionCreator(payload))
         .then(unwrapResult);
 
       // Action Creator should not throw errors
       const returnRevieved = await expect(dispatched).resolves.not.toThrow();
+      profiles.push({
+        name: 'action-dispatched',
+        time: performance.now(),
+        delta: performance.now() - profiles[profiles.length - 1].time,
+      });
+
+      const postComponent = prettyDOM(element.container).replace(
+        removeColors,
+        '',
+      );
+      writeFile(
+        `stories/${startCase(elementName)}_${kebabCase(testname)}.stories.tsx`,
+        `import React from 'react';\nexport default {\n\t` +
+          `title: '${startCase(elementName)}',\n};\n\n` +
+          `export const Default = () => (${preComponent});\n\n` +
+          `export const After = () => (${postComponent});`,
+        (done, err) => null,
+      );
+      // console.log(
+      //   `stories/${snakeCase(testname)}_mutation.stories.tsx`,
+      //   `${prettyFormat.format(element.toJSON(), {
+      //     plugins: [prettyFormat.plugins.ReactTestComponent],
+      //     printFunctionName: false,
+      //     highlight: false,
+      //   })}`,
+      //   (done, err) => null,
+      // );
+      // TODO: export visual check
 
       if (writesExpected !== undefined) {
         // Validates the expected results from the writes
@@ -280,7 +404,13 @@ function shouldPass(actionCreatorFn, useEmulator = false) {
             expect(documentExpected).toStrictEqual(documentCached);
           }),
         );
+        profiles.push({
+          name: 'cache-validated',
+          time: performance.now(),
+          delta: performance.now() - profiles[profiles.length - 1].time,
+        });
 
+        // when useEmulator = true, validate documents in firestore
         if (databaseURL) {
           const queries = [];
           Object.keys(diskExpected).forEach((path) => {
@@ -307,6 +437,11 @@ function shouldPass(actionCreatorFn, useEmulator = false) {
             }),
           );
         }
+        profiles.push({
+          name: 'firestore-validated',
+          time: performance.now(),
+          delta: performance.now() - profiles[profiles.length - 1].time,
+        });
       }
 
       if (returnExpected !== undefined) {
@@ -318,13 +453,22 @@ function shouldPass(actionCreatorFn, useEmulator = false) {
         ...(setup || []),
         ...(Array.isArray(writeRecieved) ? writeRecieved : [writeRecieved]),
       ]);
+      profiles.push({
+        name: 'firestore-cleaned',
+        time: performance.now(),
+        delta: performance.now() - profiles[profiles.length - 1].time,
+      });
 
       await firebaseApp.delete();
       for (var i in firestore) {
         firestore[i] = null;
       }
 
-      console.log(firebase.app);
+      console.log(
+        profiles
+          .map(({ name, delta }) => `${name}: ${delta.toFixed(2)}ms `)
+          .join('\n'),
+      );
     },
   ];
 }
@@ -386,5 +530,80 @@ function shouldPass(actionCreatorFn, useEmulator = false) {
 // };
 //
 // export { shouldFail, shouldPass };
+
+/****************
+ *   setCache
+ ****************/
+
+export default function setCache(
+  {
+    firebaseAuth = {
+      isEmpty: true,
+      isLoaded: false,
+    },
+    firebaseProfile = {
+      isEmpty: true,
+      isLoaded: false,
+    },
+    ...documents
+  },
+  middlewares = [],
+) {
+  // TODO: alias are dynamic coming from the useRead calls
+
+  const keys = Object.keys(aliases);
+
+  //--- can add all the docs but don't know the queries,
+  //     need to let store getting intercept the useRead
+  //     and return the preprocess results
+  //  useRead's `setListeners` can be proxied over to get the query
+  documents.map();
+
+  const normalizedDocuments = keys.reduce((obj, key) => {
+    const list = aliases[key];
+    const { path } = list[0];
+
+    list.forEach((item) => {
+      obj[list[0].path] = { [item.id]: item };
+    });
+
+    return obj;
+  }, {});
+
+  const initialState = {
+    firebase: {
+      auth: firebaseAuth,
+      profile: firebaseProfile,
+    },
+    firestore: {
+      cache: {
+        database: normalizedDocuments,
+        databaseOverrides: {},
+        ...keys.reduce(
+          (obj, alias) => ({
+            ...obj,
+            [alias]: {
+              ordered: aliases[alias].map(({ path, id }) => [path, id]),
+              path:
+                (aliases[alias] &&
+                  aliases[alias][0] &&
+                  aliases[alias][0].path) ||
+                'unset',
+              via: 'memory',
+            },
+          }),
+          {},
+        ),
+      },
+    },
+  };
+
+  // getQueryName;
+  // initialState.firestore.cache;
+
+  const store = configureStore(middlewares);
+
+  return store(initialState);
+}
 
 export { shouldPass };

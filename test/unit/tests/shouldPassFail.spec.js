@@ -12,26 +12,30 @@ const sampleAction = createMutate({
   }),
 
   write: ({ myTask, taskId }) => ({
-    id: myTask?.id || taskId,
-    path: myTask?.path || 'orgs/my-org/tasks',
+    id: (myTask && myTask.id) || taskId,
+    path: (myTask && myTask.path) || 'orgs/my-org/tasks',
     archived: true,
   }),
 });
 
 it.each([
   {
+    testname: '@scenario: Test Archived',
+
     setup: [
       {
         path: 'orgs/my-org/tasks',
         id: 'task-one',
         archived: false,
-        title: 'sample',
+        title: 'Read/Write Task Title',
       },
     ],
 
     globals: { orgId: () => 'my-org' },
 
     payload: 'task-one',
+
+    component: '../../test/unit/tests/Test.tsx',
 
     writes: {
       path: 'orgs/my-org/tasks',
@@ -45,7 +49,7 @@ it.each([
       },
     },
   },
-])(...shouldPass(sampleAction, true));
+])(...shouldPass(sampleAction, false));
 
 afterAll(async () => {
   await Promise.all(firebase.apps.map((app) => app.delete()));
@@ -53,6 +57,7 @@ afterAll(async () => {
 
 // 12/30 - full cache works
 // 12/31 - offline emulator fully works
-// TODO: 12/31 - Next steps: clean up DB
+// 12/31 - Next steps: clean up DB
+// 03/24 - intergrate storybook support
 // Later - figure out improper tear down
 // Icebox -  parallelize integration tests by randomly generating root collection

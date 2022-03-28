@@ -576,9 +576,9 @@ export const Default = (): JSX.Element => (
 
 Enable browser debugging to troubleshoot dataflow issues
 ```ts 
-localStore.debug='w3:*'
-localStore.debug='w3:cache'
-localStore.debug='w3:mutate'
+localStore.debug='readwrite:*'
+localStore.debug='readwrite:cache'
+localStore.debug='readwrite:mutate'
 localStore.debug='rrfVerbose:*'
 ```
 

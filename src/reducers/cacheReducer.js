@@ -32,7 +32,7 @@ import {
 } from './utils/mutate';
 import mark from '../utils/profiling';
 
-const info = debug('w3:cache');
+const info = debug('readwrite:cache');
 const verbose = debug('rrfVerbose:cache');
 
 /**
@@ -164,8 +164,9 @@ const xfVerbose = (title) =>
  * @typedef xFormCollection - return a single collection from the fragment database
  * @returns {xFormCollection} - transducer
  */
-const xfAllIds = ({ collection: path }) =>
+const xfAllIds = ({ collection, path: rawPath }) =>
   function allIdsTransducer(state) {
+    const path = rawPath || collection;
     const { database: db = {}, databaseOverrides: dbo = {} } = state;
     const allIds = new Set([
       ...Object.keys(db[path] || {}),
@@ -506,9 +507,9 @@ function translateMutationToOverrides({ payload }, db = {}, dbo = {}) {
 
   const overrides = mutationWriteOutput(instructions, { db, dbo });
 
-  if (debug.enabled('w3:mutate')) {
+  if (debug.enabled('readwrite:mutate')) {
     /* istanbul ignore next */
-    debug('w3:mutate')(
+    debug('readwrite:mutate')(
       'Optimistic Cache',
       JSON.stringify(
         {

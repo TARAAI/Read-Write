@@ -25,6 +25,66 @@ function Count(): JSX.Element {
     id: 'global'
   }, 'amount');
 
+  /* return partial docs */
+  // var counters = useRead<Counter, 'amount'>(
+  //   {
+  //     path: 'counter',
+  //     where: ['amount', '>', 0],
+  //   },
+  //   'amount',
+  // );
+  // var [{ amount: counter } = {
+  //   amount: -1
+  // }] = counters || [];
+
+  /* return single values */
+  // var counters = useRead<Counter, 'amount'>(
+  //   {
+  //     path: 'counter',
+  //     where: ['amount', '>', 0],
+  //   },
+  //   'amount',
+  // );
+  // var [counter = 0] = counters || [];
+
+  // /* return single doc value */
+  // const counters = useRead2<Counter>(
+  //   {
+  //     path: 'counter',
+  //     id: 'global',
+  //   },
+  //   'amount',
+  // );
+  // const counter = counters || 0;
+
+  /* return full single doc */
+  // const counters = useRead2<Counter>({
+  //   path: 'counter',
+  //   id: 'global',
+  // });
+  // const { amount: counter } = counters || { amount: 0 };
+
+  /* return single doc */
+  // const counterDoc = useRead2<Counter>(
+  //   {
+  //     path: 'counter',
+  //     id: 'global',
+  //   },
+  //   ['amount'],
+  // );
+  // const { amount: counter } = counterDoc || { amount: 0 };
+
+  /* return alias */
+  // const alias = useRead(
+  //   {
+  //     path: 'counter',
+  //     where: ['amount', '>', 0],
+  //   },
+  //   '::alias',
+  // );
+  // const counterDocs = useRead2<Counter>(alias);
+  // const [{ amount: counter } = { amount: 0 }] = counterDocs || [];
+
   return <span className={styles.value}>{counter ?? 0}</span>
 }
 

@@ -41,7 +41,7 @@ export default function useRead(queries, selection = null) {
 
       queryRef.current = [];
       aliasRef.current = undefined;
-      firestore.unsetListeners(queryRef.current);
+      firestore.unsetListeners && firestore.unsetListeners(queryRef.current);
     },
     [],
   );
