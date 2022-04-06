@@ -36,17 +36,7 @@ const taskQuery = useRead({
   orderBy: ['createdAt', 'desc'],
 });
 ```
-
-`useCache({ path, id })` 
-
-Select a document directly from the normalized, in-memory Redux store.
-```ts
-const readTask = useCache({ 
-  path: 'tasks', 
-  id: taskOne.id
-});
-```
-[@see Advanced Read](./read.md#advanced-read)
+[@see Read API](./read.md) on [partials](./read.md#partial-reads), [query](./read.md#query-syntax), [indexing](./read.md#firestore-indexes), [pagination](./read.md#pagination) & [advanced strategies](./read.md#advanced-strategies)
 
 ## Write
 
@@ -74,6 +64,7 @@ Action creators return a promise when Firestore accepts or rejects your mutation
 useDispatch(archiveTask('task-one'))
   .then(() => alert('task archived.'));
 ```
+[@see Write API](./write.md)
 
 ## Test
 
@@ -81,7 +72,7 @@ useDispatch(archiveTask('task-one'))
 
 `it.each([{ payload, returned }])(...shouldFail)`
 
-Zero bolierplate testing. No mocks or spies; just data. Instantly switch between unit & integration tests.
+Zero boilerplate testing. No mocks or spies; just data. Instantly switch between unit & integration tests.
 
 ```ts
 const USE_EMULATOR = false;
@@ -100,28 +91,11 @@ it.each([{
   returned: new Error('Document not found.'),
 }])(...shouldFail(archiveTask, USE_EMULATOR));
 ```
-
-`setCache({[alias]: [DocumentOne, DocumentTwo]});`
-
-Storybook tests are as simple as providing the data that should return to the useRead & useCache calls. 
-
-```tsx
-const cache = setCache({
-  myAlias: [
-    { path:'tasks', id:'task-one', title: 'test task' }
-  ],
-});
-
-export const Default = (): JSX.Element => (
-  <Provider store={cache}>
-    <TaskList />
-  </Provider>
-);
-```
+[@see Test](./test.md)
 
 # Documentation
 
-[link to docs]
+[Read/Write API](./docs)
 
 [What's DoD (Data Oriented Design)?](https://gamesfromwithin.com/data-oriented-design)  
 [Rational](https://github.com/TARAAI/read-write-firestore/docs/rational.md)  
