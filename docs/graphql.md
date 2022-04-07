@@ -16,8 +16,9 @@ LevelDB.
 
 ### Does NoSQL mean NoRelationships?
 
-No. All data has relationships. NoSQL models data relationships. The 
-real different is **NoSQL scales with GigaBytes. MySQL scales with GigaHertz**.
+No. All data has relationships. NoSQL models data relationships differently. 
+The real different is 
+**NoSQL scales with GigaBytes. MySQL scales with GigaHertz**.
 
 _RDBMSs_ (MySQL being the most prominent) were built in an era of
 Morse's Law. CPU doubled every 18 months. Data was _normalized_ with 
@@ -28,9 +29,9 @@ new CPU and bought a beefier machine. Upgrading the machine is called
 
 _NoSQL_ allows relationships to be fluid instead of fixed.
 _Demoralization_ of data allows data to be spread over multiple storage 
-locations. As the amount of data grows data is sharded and 
-more machines are added to increase query speed. Adding more machines 
-with more storage is called `horizontal scaling`.
+locations. As the amount of data grows, data is sharded across 
+more machines to increase query speed. Adding more machines to 
+speed up queries is called `horizontal scaling`.
 
 
 ---
