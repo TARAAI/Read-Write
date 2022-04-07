@@ -1,5 +1,5 @@
 {
-  "type": "@@reduxFirestore/LISTENER_RESPONSE",
+  "type": "::readwrite/LISTENER_RESPONSE",
   "meta": {
     "collection": "orgs/tara-ai/tasks",
     "where": [

@@ -33,7 +33,7 @@
       ],
       "types": [
         {
-          "type": "@@reduxFirestore/MUTATE_START",
+          "type": "::readwrite/MUTATE_START",
           "payload": {
             "data": {
               "path": "check-test/first-test/counters",
@@ -42,9 +42,9 @@
             }
           }
         },
-        "@@reduxFirestore/MUTATE_SUCCESS",
+        "::readwrite/MUTATE_SUCCESS",
         {
-          "type": "@@reduxFirestore/MUTATE_FAILURE",
+          "type": "::readwrite/MUTATE_FAILURE",
           "meta": {
             "timestamp": "1641734679915"
           },

@@ -8,7 +8,7 @@ const info = debug('readwrite:profile');
 if (info.enabled && debug.enabled('readwrite:cache')) {
   info(
     `Capturing Reducer & Firestore load times. 
-See results with 'w3Stats()'.`,
+See results with 'readwrite()'.`,
   );
 }
 let win;
@@ -43,13 +43,13 @@ export default function mark(marker, context = '') {
   /* istanbul ignore next */
   try {
     const now = perf.now();
-    const start = `@readwrite:/${marker}-${now}`;
+    const start = `::readwrite/${marker}-${now}`;
     perf.mark(start);
     if (context) {
       info(`${marker}.${context}`);
     }
     return () => {
-      perf.measure(`@readwrite:/${marker}`, start);
+      perf.measure(`::readwrite/${marker}`, start);
     };
   } catch (err) {
     // ensure timings never impact the user
@@ -75,11 +75,11 @@ export function resource(meta, stringify) {
   try {
     const now = perf.now();
     const marker = stringify(meta);
-    let start = `@readwrite:.load/${marker}-${now}`;
+    let start = `::readwrite.load/${marker}-${now}`;
     perf.mark(start);
     return (count = '') => {
       if (!start) return;
-      perf.measure(`@readwrite:.load/${marker}.|${count}|`, start);
+      perf.measure(`::readwrite.load/${marker}.|${count}|`, start);
       start = null; // ensure only first load for each query
     };
   } catch (err) {
@@ -90,7 +90,7 @@ export function resource(meta, stringify) {
 
 /* istanbul ignore next */
 if (win) {
-  win.w3Stats = (force = false) => {
+  win.readwrite = (force = false) => {
     if (
       !debug.enabled('readwrite:cache') ||
       !debug.enabled('readwrite:profile') ||
@@ -100,8 +100,8 @@ if (win) {
         debug.enable(typeof force === 'string' ? force : 'readwrite:*');
       return;
     }
-    const getMarks = ({ name }) => name.indexOf('@readwrite:/') === 0;
-    const getLoads = ({ name }) => name.indexOf('@readwrite:.load/') === 0;
+    const getMarks = ({ name }) => name.indexOf('::readwrite/') === 0;
+    const getLoads = ({ name }) => name.indexOf('::readwrite.load/') === 0;
     const duration = (stats, { duration, name }) => {
       if (stats[name]) {
         stats[name].push(duration);

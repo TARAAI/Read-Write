@@ -85,13 +85,13 @@ describe('firestoreActions', () => {
 
     describe('add', () => {
       it('throws if Firestore is not initialized', () => {
-        const instance = createFirestoreInstance(
-          {},
-          { helpersNamespace: 'test' },
-        );
-        expect(() => instance.test.add({ collection: 'test' })).toThrowError(
-          'Firestore must be required and initalized.',
-        );
+        expect(() => {
+          const instance = createFirestoreInstance(
+            {},
+            { helpersNamespace: 'test' },
+          );
+          instance.test.add({ collection: 'test' });
+        }).toThrow();
       });
 
       it('calls dispatch with correct action types', async () => {
@@ -101,27 +101,28 @@ describe('firestoreActions', () => {
           dispatchSpy,
         );
         await instance.test.add({ collection: 'test' }, { some: 'thing' });
+
         expect(dispatchSpy.mock.calls[0][0]).toHaveProperty(
           'type',
-          '@@reduxFirestore/ADD_REQUEST',
+          '::readwrite/ADD_REQUEST',
         );
         expect(dispatchSpy.mock.calls[1][0]).toHaveProperty(
           'type',
-          '@@reduxFirestore/ADD_SUCCESS',
+          '::readwrite/ADD_SUCCESS',
         );
-        expect(addSpy).toHaveBeenCalled();
+        expect(mockAddSpy).toHaveBeenCalled();
       });
     });
 
     describe('set', () => {
       it('throws if Firestore is not initialized', () => {
-        const instance = createFirestoreInstance(
-          {},
-          { helpersNamespace: 'test' },
-        );
-        expect(() => instance.test.set({ collection: 'test' })).toThrowError(
-          'Firestore must be required and initalized.',
-        );
+        expect(() => {
+          const instance = createFirestoreInstance(
+            {},
+            { helpersNamespace: 'test' },
+          );
+          instance.test.set({ collection: 'test' });
+        }).toThrow();
       });
 
       it('calls dispatch with correct action types', async () => {
@@ -133,7 +134,7 @@ describe('firestoreActions', () => {
         await instance.test.set({ collection: 'test' }, { some: 'thing' });
         expect(dispatchSpy.mock.calls[0][0]).toHaveProperty(
           'type',
-          '@@reduxFirestore/SET_REQUEST',
+          '::readwrite/SET_REQUEST',
         );
         expect(dispatchSpy.mock.calls[1][0]).toHaveProperty(
           'type',
