@@ -32,7 +32,9 @@
 
 In Read/Write subscriptions are turned on by default. Anytime useRead is
 called it automatically listens for any document changes both locally and
-global and will rerender when data changes. As of v1, there is not a single
+globally. When the order changes, docs are added/removed from the query 
+results or the contents of a document are changed, then the hook will fire 
+and this will trigger the React component to rerender. As of v1, there is not a single
 fetching; only a fetch and subscribe for global changes. 
 
 You can minimize when rerender are triggered by selecting a 
