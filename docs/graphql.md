@@ -82,8 +82,13 @@ Loading as well is a high order component to show loading, if needed.
 For details read the [useRead docs](./read.md) or the 
 [deep-dive docs(coming soon)](./deep-dive.md).
 
-<div style='display:flex; gap: 10px;'>
-
+<table>
+  <tr>
+    <td>GraphQL</td>
+    <td>Read/Write</td>
+  </tr>
+  <tr><td>
+    
 ```ts
 import { gql, useQuery } from '@apollo/client';
 
@@ -113,6 +118,10 @@ function Dogs() {
   );
 }
 ```
+
+  </td>
+  <td>
+  
 ```ts
 import { useRead } from 'read-write';
 
@@ -132,7 +141,10 @@ function Dogs() {
   );
 }
 ```
-</div>
+    
+</td>
+</tr>
+</table>
 
 ---
 
@@ -154,7 +166,15 @@ results are finally persisted, or rejected, in the database.
 For details read the [createMutate docs](./write.md) or the 
 [deep-dive docs(coming soon)](./deep-dive.md).
 
-<div style='display:flex; gap: 10px;'>
+
+<table>
+  <tr>
+    <td>GraphQL</td>
+    <td>Read/Write</td>
+  </tr>
+  
+<tr>
+<td>
 
 ```ts
 import { gql, useQuery, useMutation } from '@apollo/client';
@@ -255,6 +275,11 @@ function Dogs() {
   );
 }
 ```
+    
+</td>
+
+<td>
+    
 ```ts
 import { useRead, createMutate } from 'read-write';
 
@@ -301,7 +326,12 @@ function Dogs() {
   );
 }
 ```
-</div>
+
+  </td>
+
+</tr>
+  
+</table>
 
 ---
 
@@ -315,7 +345,13 @@ subscription triggers.
 global changes. For details read the 
 [deep-dive docs(coming soon)](./deep-dive.md)
 
-<div style='display:flex; gap: 10px;'>
+<table>
+  <tr>
+    <td>GraphQL</td>
+    <td>Read/Write</td>
+  </tr>
+  <tr>
+    <td>
 
 ```ts
 const GET_DOGS = gql`
@@ -381,7 +417,11 @@ function Dogs({ onDogSelected }) {
   );
 }
 ```
+      
+</td>
 
+<td>
+    
 ```ts
 import { useRead } from 'read-write';
 
@@ -400,7 +440,10 @@ function Dogs({ onDogSelected }) {
   );
 }
 ```
-</div>
+
+</td>
+</tr>
+</table>
 
 ## Further Details
 
