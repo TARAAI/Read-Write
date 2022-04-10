@@ -3,7 +3,7 @@
 ## Basic Write
 `createMutate({ action, read, write })` 
 
-Create a Redux action creator to create, update & delete data. Mutations synchrnously update the Redux store making React components feel instant. 
+Create a Redux action creator to create, update & delete data. Mutations synchronously update the Redux store making React components feel instant. 
 
 ```ts
 const archiveTask = createMutate({ 
@@ -18,6 +18,19 @@ const archiveTask = createMutate({
   }),
 });
 ```
+
+## Atomic Operations
+
+Limitations. As of v1 atomicOperations are only provided at the top level. 
+Deeply nested operations, like an array union that has a timestamp, would
+require using the Google SDK's FieldValue, for now.
+
+- `::serverTimestamp`
+- `::arrayUnion`
+- `::arrayRemove`
+- `::increment`
+- `::delete`
+- Nested Updates
 
 ## Advanced Write
 
@@ -49,7 +62,7 @@ Both read and write functions allow the Redux
 store to inject custom data. This helps make global-like state more accessible without having
 React components send data in via the payload.
 
-For `read` the data will be recieved in the
+For `read` the data will be received in the
 second argument. On `write` it will be included
 in the object sent in the first argument.
 
@@ -109,8 +122,8 @@ const updateProfile = createMutate({
 
 ## Folder Structure
 
-The recommendation is to have all the descrete
-write functions in a seperate folder. Write
+The recommendation is to have all the discrete
+write functions in a separate folder. Write
 functions are idempotent. Typescript will
 warn if one of the writes does not accept the
 right read keys.
@@ -176,7 +189,7 @@ createMutate({
         tasks: taskOrder.splice(taskOrder.findIndex(insertAfterId), 0, task.id) 
       },
     ];
-    // This is the wrong, niave way. 
+    // This is the wrong, naive way. 
     // Don't just check if React injected source (properly locking the doc in the transaction)
     // if (source ) {
     //   writes.push({ 
