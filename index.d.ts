@@ -1,10 +1,17 @@
-import { ReduxFirestoreQuerySetting } from 'react-redux-firebase';
+import {
+  ReduxFirestoreQuerySetting,
+  getFirebase,
+  useFirestore,
+  ReactReduxFirebaseProvider
+} from 'react-redux-firebase';
 import * as Firebase from 'firebase';
 import { Dispatch } from 'redux';
 import {
   AsyncThunkAction,
   ActionCreatorWithPreparedPayload,
 } from '@reduxjs/toolkit';
+
+export * from 'react-redux-firebase';
 
 /**
  * Action types used within actions dispatched internally. These action types
@@ -73,8 +80,8 @@ export interface Config {
 
   // https://github.com/prescottprue/redux-firestore#allowmultiplelisteners
   allowMultipleListeners:
-    | ((listenerToAttach: any, currentListeners: any) => boolean)
-    | boolean;
+  | ((listenerToAttach: any, currentListeners: any) => boolean)
+  | boolean;
 
   // https://github.com/prescottprue/redux-firestore#preserveondelete
   preserveOnDelete: null | object;
@@ -86,8 +93,8 @@ export interface Config {
 
   // https://github.com/prescottprue/redux-firestore#onattemptcollectiondelete
   onAttemptCollectionDelete:
-    | null
-    | ((queryOption: string, dispatch: Dispatch, firebase: Object) => void);
+  | null
+  | ((queryOption: string, dispatch: Dispatch, firebase: Object) => void);
 
   // https://github.com/prescottprue/redux-firestore#mergeordered
   mergeOrdered: boolean;
@@ -141,10 +148,10 @@ export type Transaction<Type extends Record<string, unknown>> = {
     [P in keyof Type]: ReadQuery | Read | ReadProvides;
   };
   writes:
-    | WriteFn<Extract<keyof Type, string>>[]
-    | WriteFn<Extract<keyof Type, string>>
-    | Write
-    | Write[];
+  | WriteFn<Extract<keyof Type, string>>[]
+  | WriteFn<Extract<keyof Type, string>>
+  | Write
+  | Write[];
 };
 
 /**
@@ -610,11 +617,6 @@ export function firestoreReducer<Schema extends Record<string, any> = {}>(
   action: any,
 ): Reducer<FirestoreReducer.State<Schema>>;
 
-export function firebaseReducer<Schema extends Record<string, any> = {}>(
-  state: any,
-  action: any,
-): Reducer<FirebaseReducer.State<Schema>>;
-
 /**
  * Create a firestore instance that has helpers attached for dispatching actions
  */
@@ -665,8 +667,8 @@ export namespace FirestoreReducer {
 
   export type OrderedData<Schema extends Record<string, any>> = {
     [T in keyof Schema]: Schema[T] extends Entity<infer V>
-      ? EntityWithId<V>[]
-      : OrderedData<EntityWithId<Schema[T]>>[];
+    ? EntityWithId<V>[]
+    : OrderedData<EntityWithId<Schema[T]>>[];
   };
 
   export interface CacheDatabase<T> {
@@ -674,8 +676,8 @@ export namespace FirestoreReducer {
   }
   export type CachedData<Schema extends Record<string, any>> = {
     [T in keyof Schema]: Schema[T] extends Entity<infer V>
-      ? EntityWithIdPath<V>[]
-      : CachedData<EntityWithIdPath<Schema[T]>>[];
+    ? EntityWithIdPath<V>[]
+    : CachedData<EntityWithIdPath<Schema[T]>>[];
   };
 
   export interface Reducer<Schema extends Record<string, any> = {}> {

@@ -3,6 +3,11 @@ import {
   getFirebase,
   useFirestore,
   useFirebase,
+  useFirestoreConnect,
+  WhereOptions,
+  OrderByOptions,
+  populate,
+  isLoaded,
   firebaseReducer,
   ReactReduxFirebaseProvider,
 } from 'react-redux-firebase';
@@ -43,6 +48,12 @@ export {
   middleware,
   CALL_FIRESTORE,
   createMutate,
+  // will delete
+  useFirestoreConnect,
+  WhereOptions,
+  OrderByOptions,
+  populate,
+  isLoaded,
 };
 
 export default {
@@ -67,4 +78,10 @@ export default {
   middleware,
   CALL_FIRESTORE,
   createMutate,
+  // will delete
+  useFirestoreConnect,
+  WhereOptions,
+  OrderByOptions,
+  populate,
+  isLoaded,
 };
