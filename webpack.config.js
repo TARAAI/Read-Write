@@ -21,6 +21,7 @@ const config = {
     '@reduxjs/toolkit': '@reduxjs/toolkit',
     firebase: 'firebase',
     react: 'react',
+    'react-dom': 'react-dom',
   },
   optimization: {
     minimize: isProduction,

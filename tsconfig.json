@@ -1,10 +1,10 @@
 {
   "compilerOptions": {
     "module": "commonjs",
-    "declarations": true,
+    "declaration": true,
     "jsx": "react",
   },
   "files": [
-    "src/index.d.ts",
+    "./index.d.ts",
   ]
 }

@@ -1,4 +1,5 @@
 import { isFunction, isEmpty } from 'lodash';
+import { getFirestore } from 'react-redux-firebase';
 import { getRead, isDocRead, isProviderRead } from '../../utils/mutate';
 
 /**
@@ -39,8 +40,7 @@ const arrayRemove = (key, val, cached) =>
 const increment = (key, val, cached) =>
   key === '::increment' && typeof val === 'number' && (cached() || 0) + val;
 
-const serverTimestamp = (key) =>
-  key === '::serverTimestamp' && getFirestore().FieldValue.serverTimestamp();
+const serverTimestamp = (key) => key === '::serverTimestamp' && null; //getFirestore().FieldValue.serverTimestamp();
 
 /**
  * Process Mutation to a vanilla JSON
