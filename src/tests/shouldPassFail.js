@@ -50,8 +50,6 @@ const { mutationWriteOutput: mutationWriteOutputActual } = jest.requireActual(
   '../reducers/utils/mutate',
 );
 
-const { performance = { now: () => +new Date() } } = require('perf_hooks');
-
 const noop = () => null;
 
 function setupFirestore(databaseURL, enhancers, sideEffects, preload = []) {
