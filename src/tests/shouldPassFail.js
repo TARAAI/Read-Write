@@ -22,7 +22,7 @@ import { actionTypes } from '../constants';
 import { writeFile } from 'fs';
 import { performance } from 'perf_hooks';
 
-const __non_webpack_require__ = module[`require`].bind(module);
+// const __non_webpack_require__ = module[`require`].bind(module);
 
 const removeColors =
   /[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/g;
@@ -312,26 +312,25 @@ function shouldPass(actionCreatorFn, useEmulator = false) {
       let elementName;
       let preComponent;
       if (component) {
-        const UI =
-          typeof component === 'string'
-            ? __non_webpack_require__(component).default
-            : component;
-        elementName = component
-          .split('/')
-          .pop()
-          .replace(/\.(tsx|jsx|js|ts)/, '');
-        element = render(
-          <Provider store={store}>
-            <UI />
-          </Provider>,
-        );
-        profiles.push({
-          name: 'component-rendered',
-          time: performance.now(),
-          delta: performance.now() - profiles[profiles.length - 1].time,
-        });
-
-        preComponent = prettyDOM(element.container).replace(removeColors, '');
+        // const UI =
+        //   typeof component === 'string'
+        //     ? __non_webpack_require__(component).default
+        //     : component;
+        // elementName = component
+        //   .split('/')
+        //   .pop()
+        //   .replace(/\.(tsx|jsx|js|ts)/, '');
+        // element = render(
+        //   <Provider store={store}>
+        //     <UI />
+        //   </Provider>,
+        // );
+        // profiles.push({
+        //   name: 'component-rendered',
+        //   time: performance.now(),
+        //   delta: performance.now() - profiles[profiles.length - 1].time,
+        // });
+        // preComponent = prettyDOM(element.container).replace(removeColors, '');
       }
 
       // spy on results returned from mutation
