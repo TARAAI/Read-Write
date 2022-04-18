@@ -63,6 +63,7 @@ const testingConfig = {
     '@reduxjs/toolkit': '@reduxjs/toolkit',
     firebase: 'firebase',
     react: 'react',
+    'react-dom': 'react-dom',
   },
   module: {
     rules: [

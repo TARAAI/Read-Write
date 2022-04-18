@@ -19,7 +19,10 @@ import React from 'react';
 import { prettyDOM, render } from '@testing-library/react';
 import { getQueryConfig, getQueryName } from '../utils/query';
 import { actionTypes } from '../constants';
-import { writeFile, writeSync } from 'fs';
+import { writeFile } from 'fs';
+import { performance } from 'perf_hooks';
+
+const __non_webpack_require__ = module[`require`].bind(module);
 
 const removeColors =
   /[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/g;
@@ -79,7 +82,7 @@ function setupFirestore(databaseURL, enhancers, sideEffects, preload = []) {
   const app = firebase.initializeApp({
     databaseURL,
     authDomain: 'localhost:9099',
-    projectId: 'demo-read-write-web3',
+    projectId: 'demo-read-write',
   });
 
   const extendedFirestoreInstance = createFirestoreInstance(
@@ -157,7 +160,7 @@ async function cleanFirestore(firestore, messages) {
  * Autotest unit + integration
  *
  * @param {Function} actionCreatorFn The createMutate action
- * @param {Boolean} [useEmulator=false] run as intergration test
+ * @param {Boolean} [useEmulator=false] run as integration test
  * @returns {Function} Jest Test
  *
  * ## Basic Example Usage:
@@ -182,7 +185,7 @@ async function cleanFirestore(firestore, messages) {
  *
  * @param {string} testName Custom test suite name
  * @param {Function} actionCreatorFn  The createMutate action
- * @param {Boolean} [useEmulator=false] run as intergration test
+ * @param {Boolean} [useEmulator=false] run as integration test
  * @returns {Function} Jest Test
  *
  * ## Advanced Example Usage:
@@ -220,7 +223,7 @@ function shouldPass(actionCreatorFn, useEmulator = false) {
     process.env.READWRITE_INTEGRATION ||
     (typeof useEmulator === 'boolean' ? useEmulator : arguments[2] || false);
 
-  const type = isIntegration ? '[intergration]' : '[unit]';
+  const type = isIntegration ? '[integration]' : '[unit]';
   const testSuiteName =
     typeof actionCreatorFn === 'string'
       ? `${type}: ${actionCreatorFn}`
@@ -255,7 +258,7 @@ function shouldPass(actionCreatorFn, useEmulator = false) {
         )
       ) {
         throw new Error(
-          `'setup' must be an { path:string; id: string; ...any}[] but recieved ${JSON.stringify(
+          `'setup' must be an { path:string; id: string; ...any}[] but received ${JSON.stringify(
             setup,
           )}.`,
         );
@@ -313,7 +316,7 @@ function shouldPass(actionCreatorFn, useEmulator = false) {
       if (component) {
         const UI =
           typeof component === 'string'
-            ? require(component).default
+            ? __non_webpack_require__(component).default
             : component;
         elementName = component
           .split('/')
@@ -334,9 +337,9 @@ function shouldPass(actionCreatorFn, useEmulator = false) {
       }
 
       // spy on results returned from mutation
-      let writeRecieved;
+      let writeReceived;
       mutationWriteOutput.mockImplementation((writes, db) => {
-        writeRecieved = Array.isArray(writesExpected) ? writes : writes[0];
+        writeReceived = Array.isArray(writesExpected) ? writes : writes[0];
         return mutationWriteOutputActual(writes, db);
       });
 
@@ -346,7 +349,7 @@ function shouldPass(actionCreatorFn, useEmulator = false) {
         .then(unwrapResult);
 
       // Action Creator should not throw errors
-      const returnRevieved = await expect(dispatched).resolves.not.toThrow();
+      const returnRevived = await expect(dispatched).resolves.not.toThrow();
       profiles.push({
         name: 'action-dispatched',
         time: performance.now(),
@@ -378,7 +381,7 @@ function shouldPass(actionCreatorFn, useEmulator = false) {
 
       if (writesExpected !== undefined) {
         // Validates the expected results from the writes
-        expect(writesExpected).toStrictEqual(writeRecieved);
+        expect(writesExpected).toStrictEqual(writeReceived);
       }
 
       // validate outputs in redux store & firestore
@@ -446,12 +449,12 @@ function shouldPass(actionCreatorFn, useEmulator = false) {
 
       if (returnExpected !== undefined) {
         // Validate the return from the async thunk payload
-        expect(returnExpected).toStrictEqual(returnRevieved);
+        expect(returnExpected).toStrictEqual(returnRevived);
       }
 
       await cleanFirestore(firestore, [
         ...(setup || []),
-        ...(Array.isArray(writeRecieved) ? writeRecieved : [writeRecieved]),
+        ...(Array.isArray(writeReceived) ? writeReceived : [writeReceived]),
       ]);
       profiles.push({
         name: 'firestore-cleaned',
