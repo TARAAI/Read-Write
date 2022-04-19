@@ -1,4 +1,6 @@
-import { has, isEqual, isPlainObject, pick } from 'lodash';
+import has from 'lodash/has';
+import isEqual from 'lodash/isEqual';
+import pick from 'lodash/pick';
 import { useMemo, useEffect, useState, useCallback } from 'react';
 import { useSelector } from 'react-redux';
 

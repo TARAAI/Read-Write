@@ -1,5 +1,5 @@
 /* eslint-disable no-unused-vars */
-import { isFunction } from 'lodash';
+import isFunction from 'lodash/isFunction';
 import { createAsyncThunk } from '@reduxjs/toolkit';
 
 // eslint-disable-next-line require-jsdoc

@@ -1,4 +1,5 @@
-import { isFunction, isEmpty } from 'lodash';
+import isFunction from 'lodash/isFunction';
+import isEmpty from 'lodash/isEmpty';
 import { getFirestore } from 'react-redux-firebase';
 import { getRead, isDocRead, isProviderRead } from '../../utils/mutate';
 

@@ -1,25 +1,23 @@
 import produce from 'immer';
 import debug from 'debug';
-import {
-  set,
-  unset,
-  filter,
-  flow,
-  orderBy,
-  take,
-  map,
-  partialRight,
-  zip,
-  setWith,
-  isFunction,
-  findIndex,
-  isMatch,
-  get,
-  isEqual,
-  takeRight,
-  isEmpty,
-  identity,
-} from 'lodash';
+import set from 'lodash/set';
+import unset from 'lodash/unset';
+import filter from 'lodash/filter';
+import flow from 'lodash/flow';
+import orderBy from 'lodash/orderBy';
+import take from 'lodash/take';
+import map from 'lodash/map';
+import partialRight from 'lodash/partialRight';
+import zip from 'lodash/zip';
+import setWith from 'lodash/setWith';
+import isFunction from 'lodash/isFunction';
+import findIndex from 'lodash/findIndex';
+import isMatch from 'lodash/isMatch';
+import get from 'lodash/get';
+import isEqual from 'lodash/isEqual';
+import takeRight from 'lodash/takeRight';
+import isEmpty from 'lodash/isEmpty';
+import identity from 'lodash/identity';
 
 import { getFirestore } from '../createFirestoreInstance';
 import { actionTypes } from '../constants';

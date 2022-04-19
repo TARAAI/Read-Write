@@ -1,7 +1,7 @@
 /* eslint-disable prefer-template */
 /* istanbul ignore file */
 
-import { noop } from 'lodash';
+import noop from 'lodash/noop';
 import debug from 'debug';
 
 const info = debug('readwrite:profile');

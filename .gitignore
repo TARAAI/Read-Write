@@ -57,3 +57,4 @@ yarn-error.log*
 *.tsbuildinfo
 /stories
 /.storybook
+/stats.json

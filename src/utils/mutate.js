@@ -1,13 +1,11 @@
-import {
-  chunk,
-  cloneDeep,
-  flatten,
-  isFunction,
-  isPlainObject,
-  mapValues,
-  isEmpty,
-  has,
-} from 'lodash';
+import chunk from 'lodash/chunk';
+import cloneDeep from 'lodash/cloneDeep';
+import flatten from 'lodash/flatten';
+import isFunction from 'lodash/isFunction';
+import isPlainObject from 'lodash/isPlainObject';
+import mapValues from 'lodash/mapValues';
+import isEmpty from 'lodash/isEmpty';
+import has from 'lodash/has';
 import debug from 'debug';
 import { firestoreRef } from './query';
 import mark from './profiling';
