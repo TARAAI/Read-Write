@@ -288,7 +288,8 @@ return <span>{calculateEffort(effortType, taskEfforts)}</span>;
 ## Query Syntax
 
 
-A 1-to-1 mirror of [Firestore Queries](https://firebase.google.com/docs/firestore/query-data/queries)
+A 1-to-1 mirror of [Firestore Queries](https://firebase.google.com/docs/firestore/query-data/queries) but expressed as JSON instead 
+of a class instance chaining API.
 
 ##### Collections
 

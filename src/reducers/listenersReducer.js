@@ -1,4 +1,4 @@
-import { omit } from 'lodash';
+import omit from 'lodash/omit';
 import { actionTypes } from '../constants';
 import { combineReducers } from '../utils/reducers';
 

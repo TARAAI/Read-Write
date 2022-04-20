@@ -1,4 +1,9 @@
-import { isBoolean, pick, replace, trimStart, flatten } from 'lodash';
+import isBoolean from 'lodash/isBoolean';
+
+import pick from 'lodash/pick';
+import replace from 'lodash/replace';
+import trimStart from 'lodash/trimStart';
+import flatten from 'lodash/flatten';
 
 /**
  * Create a path array from path string

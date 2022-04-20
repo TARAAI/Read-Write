@@ -1,5 +1,7 @@
 const path = require('path');
 const TerserPlugin = require('terser-webpack-plugin');
+const BundleAnalyzerPlugin =
+  require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
 
 const libraryName = 'read-write';
 const isProduction = process.env.NODE_ENV === 'production';
@@ -21,10 +23,14 @@ const config = {
     '@reduxjs/toolkit': '@reduxjs/toolkit',
     firebase: 'firebase',
     react: 'react',
+    'react-dom': 'react-dom',
+    'react-redux': 'react-redux',
   },
   optimization: {
     minimize: isProduction,
-    minimizer: isProduction ? [new TerserPlugin()] : [],
+    minimizer: isProduction
+      ? [new TerserPlugin()]
+      : [new BundleAnalyzerPlugin()],
   },
   module: {
     rules: [
@@ -34,7 +40,7 @@ const config = {
           loader: 'babel-loader',
           options: {
             presets: ['@babel/preset-env'],
-            plugins: ['@babel/transform-runtime'],
+            plugins: ['lodash', '@babel/transform-runtime'],
           },
         },
         exclude: /node_modules/,
@@ -62,6 +68,8 @@ const testingConfig = {
     '@reduxjs/toolkit': '@reduxjs/toolkit',
     firebase: 'firebase',
     react: 'react',
+    'react-dom': 'react-dom',
+    'react-redux': 'react-redux',
   },
   module: {
     rules: [
@@ -71,7 +79,7 @@ const testingConfig = {
           loader: 'babel-loader',
           options: {
             presets: ['@babel/preset-env'],
-            plugins: ['@babel/transform-runtime'],
+            plugins: ['lodash', '@babel/transform-runtime'],
           },
         },
         exclude: /node_modules/,

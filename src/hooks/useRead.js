@@ -1,6 +1,8 @@
-import { filter, isEqual, some } from 'lodash';
+import filter from 'lodash/filter';
+import isEqual from 'lodash/isEqual';
+import some from 'lodash/some';
 import { useRef, useEffect } from 'react';
-import { useFirestore } from 'react-redux-firebase';
+import useFirestore from '../redux-firebase/useFirestore';
 import { getQueryName } from '../utils/query';
 import useCache from './useCache';
 

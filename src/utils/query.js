@@ -1,4 +1,9 @@
-import { isObject, isNumber, isEmpty, trim, cloneDeep, has } from 'lodash';
+import isObject from 'lodash/isObject';
+import isNumber from 'lodash/isNumber';
+import isEmpty from 'lodash/isEmpty';
+import trim from 'lodash/trim';
+import cloneDeep from 'lodash/cloneDeep';
+import has from 'lodash/has';
 import { actionTypes } from '../constants';
 
 export const snapshotCache = new WeakMap();

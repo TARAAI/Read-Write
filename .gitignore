@@ -10,7 +10,9 @@ coverage
 .nyc_output
 /examples/rww-notes/yarn.lock
 .clj-kondo
+.cpcache
 .lsp
+target
 
 /examples/rww-notes/.next
 /examples/rww-notes/node_modules
@@ -55,3 +57,4 @@ yarn-error.log*
 *.tsbuildinfo
 /stories
 /.storybook
+/stats.json

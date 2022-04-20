@@ -1,5 +1,5 @@
 /* eslint-disable jsdoc/require-param */
-import { every } from 'lodash';
+import every from 'lodash/every';
 import { resource } from '../utils/profiling';
 import { wrapInDispatch } from '../utils/actions';
 import { actionTypes } from '../constants';
@@ -271,6 +271,7 @@ export function setListener(firebase, dispatch, queryOpts, successCb, errorCb) {
         error,
       )
     : firestoreRef(firebase, meta).onSnapshot(success, error);
+
   attachListener(firebase, dispatch, meta, unsubscribe);
 
   return unsubscribe;

@@ -4,47 +4,47 @@
  * @description Prefix for all actions within library
  * @example
  * import { constants } from 'react-redux-firebase'
- * constants.actionsPrefix === '@@reduxFirestore' // true
+ * constants.actionsPrefix === '::readwrite' // true
  */
-export const actionsPrefix = '@@reduxFirestore';
+export const actionsPrefix = '::readwrite';
 
 /**
  * @constant
  * @type {object}
  * @description Object containing all action types
- * @property {string} START - `@@reduxFirestore/START`
- * @property {string} ERROR - `@@reduxFirestore/ERROR`
- * @property {string} SET_LISTENER - `@@reduxFirestore/SET_LISTENER`
- * @property {string} UNSET_LISTENER - `@@reduxFirestore/UNSET_LISTENER`
- * @property {string} LISTENER_RESPONSE - `@@reduxFirestore/LISTENER_RESPONSE`
- * @property {string} LISTENER_ERROR - `@@reduxFirestore/LISTENER_ERROR`
- * @property {string} CLEAR_DATA - `@@reduxFirestore/CLEAR_DATA`
- * @property {string} CLEAR_ERROR - `@@reduxFirestore/CLEAR_ERROR`
- * @property {string} CLEAR_ERRORS - `@@reduxFirestore/CLEAR_ERRORS`
- * @property {string} GET_REQUEST - `@@reduxFirestore/GET_REQUEST`
- * @property {string} GET_SUCCESS - `@@reduxFirestore/GET_SUCCESS`
- * @property {string} GET_FAILURE - `@@reduxFirestore/GET_FAILURE`
- * @property {string} SET_REQUEST - `@@reduxFirestore/SET_REQUEST`
- * @property {string} SET_SUCCESS - `@@reduxFirestore/SET_SUCCESS`
- * @property {string} SET_FAILURE - `@@reduxFirestore/SET_FAILURE`
- * @property {string} ADD_REQUEST - `@@reduxFirestore/ADD_REQUEST`
- * @property {string} ADD_SUCCESS - `@@reduxFirestore/ADD_SUCCESS`
- * @property {string} ADD_FAILURE - `@@reduxFirestore/ADD_FAILURE`
- * @property {string} UPDATE_REQUEST - `@@reduxFirestore/UPDATE_REQUEST`
- * @property {string} UPDATE_SUCCESS - `@@reduxFirestore/UPDATE_SUCCESS`
- * @property {string} UPDATE_FAILURE - `@@reduxFirestore/UPDATE_FAILURE`
- * @property {string} DELETE_REQUEST - `@@reduxFirestore/DELETE_REQUEST`
- * @property {string} DELETE_SUCCESS - `@@reduxFirestore/DELETE_SUCCESS`
- * @property {string} DELETE_FAILURE - `@@reduxFirestore/DELETE_FAILURE`
- * @property {string} ON_SNAPSHOT_REQUEST - `@@reduxFirestore/ON_SNAPSHOT_REQUEST`
- * @property {string} ON_SNAPSHOT_SUCCESS - `@@reduxFirestore/ON_SNAPSHOT_SUCCESS`
- * @property {string} ON_SNAPSHOT_FAILURE - `@@reduxFirestore/ON_SNAPSHOT_FAILURE`
- * @property {string} TRANSACTION_START - `@@reduxFirestore/TRANSACTION_START`
- * @property {string} TRANSACTION_SUCCESS - `@@reduxFirestore/TRANSACTION_SUCCESS`
- * @property {string} TRANSACTION_FAILURE - `@@reduxFirestore/TRANSACTION_FAILURE`
+ * @property {string} START - `::readwrite/START`
+ * @property {string} ERROR - `::readwrite/ERROR`
+ * @property {string} SET_LISTENER - `::readwrite/SET_LISTENER`
+ * @property {string} UNSET_LISTENER - `::readwrite/UNSET_LISTENER`
+ * @property {string} LISTENER_RESPONSE - `::readwrite/LISTENER_RESPONSE`
+ * @property {string} LISTENER_ERROR - `::readwrite/LISTENER_ERROR`
+ * @property {string} CLEAR_DATA - `::readwrite/CLEAR_DATA`
+ * @property {string} CLEAR_ERROR - `::readwrite/CLEAR_ERROR`
+ * @property {string} CLEAR_ERRORS - `::readwrite/CLEAR_ERRORS`
+ * @property {string} GET_REQUEST - `::readwrite/GET_REQUEST`
+ * @property {string} GET_SUCCESS - `::readwrite/GET_SUCCESS`
+ * @property {string} GET_FAILURE - `::readwrite/GET_FAILURE`
+ * @property {string} SET_REQUEST - `::readwrite/SET_REQUEST`
+ * @property {string} SET_SUCCESS - `::readwrite/SET_SUCCESS`
+ * @property {string} SET_FAILURE - `::readwrite/SET_FAILURE`
+ * @property {string} ADD_REQUEST - `::readwrite/ADD_REQUEST`
+ * @property {string} ADD_SUCCESS - `::readwrite/ADD_SUCCESS`
+ * @property {string} ADD_FAILURE - `::readwrite/ADD_FAILURE`
+ * @property {string} UPDATE_REQUEST - `::readwrite/UPDATE_REQUEST`
+ * @property {string} UPDATE_SUCCESS - `::readwrite/UPDATE_SUCCESS`
+ * @property {string} UPDATE_FAILURE - `::readwrite/UPDATE_FAILURE`
+ * @property {string} DELETE_REQUEST - `::readwrite/DELETE_REQUEST`
+ * @property {string} DELETE_SUCCESS - `::readwrite/DELETE_SUCCESS`
+ * @property {string} DELETE_FAILURE - `::readwrite/DELETE_FAILURE`
+ * @property {string} ON_SNAPSHOT_REQUEST - `::readwrite/ON_SNAPSHOT_REQUEST`
+ * @property {string} ON_SNAPSHOT_SUCCESS - `::readwrite/ON_SNAPSHOT_SUCCESS`
+ * @property {string} ON_SNAPSHOT_FAILURE - `::readwrite/ON_SNAPSHOT_FAILURE`
+ * @property {string} TRANSACTION_START - `::readwrite/TRANSACTION_START`
+ * @property {string} TRANSACTION_SUCCESS - `::readwrite/TRANSACTION_SUCCESS`
+ * @property {string} TRANSACTION_FAILURE - `::readwrite/TRANSACTION_FAILURE`
  * @example
  * import { actionTypes } from 'react-redux-firebase'
- * actionTypes.SET === '@@reduxFirestore/SET' // true
+ * actionTypes.SET === '::readwrite/SET' // true
  */
 export const actionTypes = {
   START: `${actionsPrefix}/START`,

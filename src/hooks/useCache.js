@@ -1,4 +1,6 @@
-import { has, isEqual, isPlainObject, pick } from 'lodash';
+import has from 'lodash/has';
+import isEqual from 'lodash/isEqual';
+import pick from 'lodash/pick';
 import { useMemo, useEffect, useState, useCallback } from 'react';
 import { useSelector } from 'react-redux';
 
@@ -43,7 +45,7 @@ const selectAlias = (state, alias) =>
   undefined;
 
 /**
- * set/uset listeners and return a selector to it.
+ * set/unset listeners and return a selector to it.
  * Note: functions are supported but don't use them.
  * @param { PathId | PathIds[] | ReadQuery.alias } alias
  * @param { null | string } selection

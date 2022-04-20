@@ -3,9 +3,12 @@ import {
   getFirebase,
   useFirestore,
   useFirebase,
+  useFirestoreConnect,
+  populate,
+  isLoaded,
   firebaseReducer,
   ReactReduxFirebaseProvider,
-} from 'react-redux-firebase';
+} from './redux-firebase';
 import enhancer from './enhancer';
 import reducer from './reducer';
 import { firestoreActions } from './actions';
@@ -43,6 +46,10 @@ export {
   middleware,
   CALL_FIRESTORE,
   createMutate,
+  // will delete
+  useFirestoreConnect,
+  populate,
+  isLoaded,
 };
 
 export default {
@@ -67,4 +74,8 @@ export default {
   middleware,
   CALL_FIRESTORE,
   createMutate,
+  // will delete
+  useFirestoreConnect,
+  populate,
+  isLoaded,
 };

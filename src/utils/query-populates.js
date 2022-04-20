@@ -1,5 +1,9 @@
 /* istanbul ignore file: Populates are non-performant. Serializing and chaining promises is a bad access pattern for the front-end.  */
-import { forEach, get, has, isObject, set } from 'lodash';
+import forEach from 'lodash/forEach';
+import get from 'lodash/get';
+import has from 'lodash/has';
+import isObject from 'lodash/isObject';
+import set from 'lodash/set';
 import { dataByIdSnapshot, getPopulateChild } from './query';
 
 /**

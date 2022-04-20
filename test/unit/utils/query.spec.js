@@ -203,7 +203,7 @@ describe('query utils', () => {
         expect(dispatch).toHaveBeenCalledWith({
           meta,
           payload: { name: 'test' },
-          type: '@@reduxFirestore/SET_LISTENER',
+          type: '::readwrite/SET_LISTENER',
         });
       });
 
@@ -213,7 +213,7 @@ describe('query utils', () => {
         expect(dispatch).toHaveBeenCalledWith({
           meta,
           payload: { name: `${meta.collection}/${meta.doc}` },
-          type: '@@reduxFirestore/SET_LISTENER',
+          type: '::readwrite/SET_LISTENER',
         });
       });
 
@@ -229,7 +229,7 @@ describe('query utils', () => {
           payload: {
             name: `${meta.collection}/${meta.doc}/${meta.subcollections[0].collection}`,
           },
-          type: '@@reduxFirestore/SET_LISTENER',
+          type: '::readwrite/SET_LISTENER',
         });
       });
     });

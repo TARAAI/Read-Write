@@ -242,6 +242,7 @@ Looking for options to work with Firestore? Check out these other libraries:
 - [Write](./docs/write.md)
 - [Test](./docs/test.md)
 - [Setup](./docs/getting-started.md)
+- [Coming from GraphQL?](./docs/graphql.md)
 
 **Code deep-dives**
 - [Breaking down Optimistic Updates](./docs/cache-reducer.md)
