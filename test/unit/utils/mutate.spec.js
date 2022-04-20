@@ -192,7 +192,7 @@ describe('firestore.mutate()', () => {
               data: {
                 'nested.field': 'new-value',
                 nextSprintId:
-                  team?.sprintSettings.moveRemainingTasksTo === 'Backlog'
+                  team && team.sprintSettings.moveRemainingTasksTo === 'Backlog'
                     ? null
                     : 'next-sprint-id-123',
               },
