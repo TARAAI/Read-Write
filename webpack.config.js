@@ -25,7 +25,6 @@ const config = {
     react: 'react',
     'react-dom': 'react-dom',
     'react-redux': 'react-redux',
-    'react-redux-firebase': 'react-redux-firebase',
   },
   optimization: {
     minimize: isProduction,
@@ -71,7 +70,6 @@ const testingConfig = {
     react: 'react',
     'react-dom': 'react-dom',
     'react-redux': 'react-redux',
-    'react-redux-firebase': 'react-redux-firebase',
   },
   module: {
     rules: [

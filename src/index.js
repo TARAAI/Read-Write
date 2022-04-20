@@ -4,13 +4,11 @@ import {
   useFirestore,
   useFirebase,
   useFirestoreConnect,
-  WhereOptions,
-  OrderByOptions,
   populate,
   isLoaded,
   firebaseReducer,
   ReactReduxFirebaseProvider,
-} from 'react-redux-firebase';
+} from './redux-firebase';
 import enhancer from './enhancer';
 import reducer from './reducer';
 import { firestoreActions } from './actions';
@@ -50,8 +48,6 @@ export {
   createMutate,
   // will delete
   useFirestoreConnect,
-  WhereOptions,
-  OrderByOptions,
   populate,
   isLoaded,
 };
@@ -80,8 +76,6 @@ export default {
   createMutate,
   // will delete
   useFirestoreConnect,
-  WhereOptions,
-  OrderByOptions,
   populate,
   isLoaded,
 };

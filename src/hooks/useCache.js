@@ -45,7 +45,7 @@ const selectAlias = (state, alias) =>
   undefined;
 
 /**
- * set/uset listeners and return a selector to it.
+ * set/unset listeners and return a selector to it.
  * Note: functions are supported but don't use them.
  * @param { PathId | PathIds[] | ReadQuery.alias } alias
  * @param { null | string } selection

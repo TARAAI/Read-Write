@@ -32,11 +32,11 @@ import { performance } from 'perf_hooks';
 const removeColors =
   /[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/g;
 
-jest.mock('react-redux-firebase', () => ({
-  ...jest.requireActual('react-redux-firebase'),
+jest.mock('../redux-firebase/useFirebase', () => ({
+  ...jest.requireActual('../redux-firebase/useFirebase'),
   useFirestore: jest.fn(),
 }));
-const { useFirestore } = require('react-redux-firebase');
+const useFirestore = require('../redux-firebase/useFirebase');
 
 jest.mock('../utils/actions', () => ({
   ...jest.requireActual('../utils/actions'),
