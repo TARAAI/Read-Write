@@ -91,19 +91,16 @@ export function wrapInDispatch(
       });
       return err;
     });
-  
+
   return new Promise((done, error) => {
     Promise.race([
       new Promise((resolve) => setTimeout(resolve, 30_000, ['timeout'])),
-      Promise.allSettled([saved, optimistic])
+      Promise.allSettled([saved, optimistic]),
     ]).then(([firestore, memory]) => {
-      if (firestore === 'timeout') return error(`Timed out after 30 seconds when saving ${JSON.stringify(args)}.`);
-      if (memory.status === 'rejected') return error(memory.reason);
-      if (firestore.status === 'rejected') return error(firestore.reason);
-      return done(firestore.value);
-  });
-  return new Promise((done, error) => {
-    Promise.allSettled([saved, optimistic]).then(([firestore, memory]) => {
+      if (firestore === 'timeout')
+        return error(
+          `Timed out after 30 seconds when saving ${JSON.stringify(args)}.`,
+        );
       if (memory.status === 'rejected') return error(memory.reason);
       if (firestore.status === 'rejected') return error(firestore.reason);
       return done(firestore.value);
