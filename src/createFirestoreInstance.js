@@ -72,6 +72,16 @@ export default function createFirestoreInstance(firebase, configs, dispatch) {
       : methods,
   );
 
+  if (location && location.hostName === 'localhost') {
+    console.log(`🔥 Read/Write started.
+
+    Enable logging:
+    localStore.debug = 'readwrite:cache,readwrite:mutate';
+
+    See stats for document loading phases:
+    readwriteStats(true)`);
+  }
+
   return firestoreInstance;
 }
 

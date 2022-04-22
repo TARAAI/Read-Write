@@ -90,7 +90,7 @@ export function resource(meta, stringify) {
 
 /* istanbul ignore next */
 if (win) {
-  win.readwrite = (force = false) => {
+  win.readwriteStats = (force = false) => {
     if (
       !debug.enabled('readwrite:cache') ||
       !debug.enabled('readwrite:profile') ||
