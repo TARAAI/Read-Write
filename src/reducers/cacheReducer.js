@@ -10,7 +10,6 @@ import map from 'lodash/map';
 import partialRight from 'lodash/partialRight';
 import zip from 'lodash/zip';
 import setWith from 'lodash/setWith';
-import isFunction from 'lodash/isFunction';
 import findIndex from 'lodash/findIndex';
 import isMatch from 'lodash/isMatch';
 import get from 'lodash/get';
@@ -19,10 +18,9 @@ import takeRight from 'lodash/takeRight';
 import isEmpty from 'lodash/isEmpty';
 import identity from 'lodash/identity';
 
-import { getFirestore } from '../createFirestoreInstance';
 import { actionTypes } from '../constants';
 import { getQueryName } from '../utils/query';
-import { getRead, isDocRead, isProviderRead } from '../utils/mutate';
+import { getRead } from '../utils/mutate';
 import {
   mutationWriteOutput,
   mutationProduceWrites,
@@ -31,7 +29,7 @@ import {
 import mark from '../utils/profiling';
 
 const info = debug('readwrite:cache');
-const verbose = debug('rrfVerbose:cache');
+const verbose = debug('readwrite:verbose');
 
 /**
  * @typedef {object & Object.<string, RRFQuery>} CacheState
@@ -511,15 +509,17 @@ function translateMutationToOverrides({ payload }, db = {}, dbo = {}) {
       'Optimistic Cache',
       JSON.stringify(
         {
-          'input-read': Object.keys(reads).reduce(
-            (clone, key) => (
-              {
-                ...clone,
-                [key]: getRead(reads[key]),
-              },
-              JSON.parse(JSON.stringify(reads))
+          'input-read':
+            reads &&
+            Object.keys(reads).reduce(
+              (clone, key) => (
+                {
+                  ...clone,
+                  [key]: getRead(reads[key]),
+                },
+                JSON.parse(JSON.stringify(reads))
+              ),
             ),
-          ),
           'input-write-args': optimistic,
           'output-writes': overrides,
         },
