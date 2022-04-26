@@ -1,7 +1,7 @@
 {
-  "name": "@puppybits/read-write",
+  "name": "@taraai/read-write",
   "version": "0.0.1",
-  "description": "Synchronous Firestore",
+  "description": "Synchronous NoSQL/Firestore for React",
   "main": "lib/index.js",
   "module": "es/index.js",
   "jsnext:main": "es/index.js",

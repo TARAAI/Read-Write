@@ -94,7 +94,7 @@ export function wrapInDispatch(
 
   return new Promise((done, error) => {
     Promise.race([
-      new Promise((resolve) => setTimeout(resolve, 30_000, ['timeout'])),
+      new Promise((resolve) => setTimeout(resolve, 30000, ['timeout'])),
       Promise.allSettled([saved, optimistic]),
     ]).then(([firestore, memory]) => {
       if (firestore === 'timeout')
