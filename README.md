@@ -6,7 +6,7 @@
 
 - **[Instant UI.](#read)** Change data synchronously. No Thunks, no Sagas, no Axios, no GraphQL mutations/subscriptions. 
 - **[Zero-Redux Redux.](#write)** Write Redux without Redux. No reducers, no slices, no selectors, no entity mappers, no normalization.
-- **[The One Test.](#testing)** The One test rules them all. Why write seperate unit, integration, visual/storybook & property-based tests? _The One_ test validates each layer seperately & together. No boilerplate, no stubs, no mocks, no spys.
+- **[The One Test.](#testing)** The One test rules them all. Why write separate unit, integration, visual/storybook & property-based tests? _The One_ test validates each layer separately & together. No boilerplate, no stubs, no mocks, no spys.
 - **[Offline-first NoSQL.](#documentation)** Firestore ACID-compliant transactions with live subscriptions.
 
 
@@ -37,7 +37,8 @@ const tasks = useRead({
   orderBy: ['createdAt', 'desc'],
 });
 ```
-[@see Advanced Read](./docs/read.md#advanced-read)
+[@see Read API](./read.md) on [partials](./read.md#partial-reads), [query](./read.md#query-syntax), [indexing](./read.md#firestore-indexes), [pagination](./read.md#pagination) & [advanced strategies](./read.md#advanced-strategies)
+
 
 
 ## Write
@@ -61,7 +62,7 @@ const archiveAction = createMutate({
   }),
 });
 ```
-[@see Advanced Write](./docs/write.md#advanced-write)
+[@see Write API](./write.md)
 
 `createMutate` returns an Action Creator. When the action creator 
 is dispatched it return a promise that will 
@@ -111,14 +112,14 @@ it.each([{
 
 }])(...shouldFail(archiveAction));
 ```
-[@see Jest Test](./docs/test.md#jest)
+[@see Test](./test.md)
 
 
-## Intergration Tests
+## Integration Tests
 
-Automatically upgrade unit tests to intergration with just a boolean. Integration tests loads setup data into the database, tests access rules then validates the final mutation in the database.  
+Automatically upgrade unit tests to integration with just a boolean. Integration tests loads setup data into the database, tests access rules then validates the final mutation in the database.  
 
-_(Coming Soon): Parallelized intergation tests_
+_(Coming Soon): Parallelized integration tests_
 
 ```ts
 import { archiveAction } from '../mutations';
@@ -196,7 +197,7 @@ it.each({
 _Working to extract it from our codebase_
 
 
-## The One Test (QuickType + Unit + Intergration + Storybook)
+## The One Test (QuickType + Unit + Integration + Storybook)
 
 Why write multiple tests when you could write one?
 
@@ -229,7 +230,7 @@ Run `yarn && yarn start`
 
 Looking for options to work with Firestore? Check out these other libraries:
 
-- [Offical Google SDK](https://github.com/firebase/firebase-js-sdk)
+- [Official Google SDK](https://github.com/firebase/firebase-js-sdk)
 - [ReactFire](https://github.com/FirebaseExtended/reactfire)
 - [redux-firestore](https://github.com/prescottprue/redux-firestore)
 
@@ -245,7 +246,7 @@ Looking for options to work with Firestore? Check out these other libraries:
 
 **Code deep-dives**
 - [Breaking down Optimistic Updates](./docs/cache-reducer.md)
-- [Translating Firesore to Mutations](./docs/mutate.md)
+- [Translating Firestore to Mutations](./docs/mutate.md)
 - [No-Redux Redux](./docs/performance.md)
 
 **Design Fundamentals**
@@ -353,7 +354,7 @@ render(
 - [x] lib: hooks return query results from firestore
 - [x] lib: hooks return picks & partials of firestore data
 - [x] lib: hooks alternative solution for createSelector
-- [x] lib: hooks validatin of rendering performance
+- [x] lib: hooks validation of rendering performance
 - [x] lib: cache reducer synchronous, optimistic reads
 - [x] lib: cache reducer synchronous, optimistic database writes
 - [x] lib: cache reducer synchronous updates all affected queries upon mutation
@@ -366,9 +367,9 @@ render(
 - [x] lib: mutation batches accept an infinite number of writes, chunk into 500 and fold in results
 - [x] lib: mutation transactions run synchronous, optimistic and are ACID-compliant (online-only)
 - [x] tests: support data-driven unit tests
-- [x] tests: data-driven intergration tests with Firestore emulator
+- [x] tests: data-driven integration tests with Firestore emulator
 - [x] tests: data-driven storybook tests are written to disk
-- [ ] **todo** tests: switch intergration tests to run parallelized 
+- [ ] **todo** tests: switch integration tests to run parallelized 
 - [x] DX: add _readwrite:cache_ profiling for Redux store changes
 - [x] DX: add _readwrite:profile_ profiling for data load phases timings
 - [ ] **in progress** docs: document public API layer
@@ -377,7 +378,7 @@ render(
 **future**
 - docs: document internal processes
 - lib: remove redux-firebase, redux, redux-toolkit dependencies
-- lib: create redux-compatable layer but don't use Redux
+- lib: create redux-compatible layer but don't use Redux
 - lib: reduce lib deployment size
 - lib: support CSP channel streaming reducers with max runtime buffer
 - lib: support hard delete
@@ -387,9 +388,9 @@ render(
 - lib: allow custom config
 - lib: cache reducer performance boost on reprocessing by exclude on where clauses
 - lib: refactor cache reduce & mutation to be agnostic for any NoSQL
-- tests: export Typescript Decoders from our interal project
+- tests: export Typescript Decoders from our internal project
 - tests: move test cases to pure JSON
-- tests: add auth into intergration tests for Firestore rules
+- tests: add auth into integration tests for Firestore rules
 - tests: create API to better integrate visual tests into storybook
 - tests: setup support for standard redux reducers and selectors
 - tests: QuickType support relational ids
