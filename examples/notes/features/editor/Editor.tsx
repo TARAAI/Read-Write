@@ -23,7 +23,7 @@ const extensions = () => [
 interface EditorDoc {
   path: string;
   id: string;
-  text: string
+  text: string;
 }
 
 export const Editor = () => {

@@ -24,9 +24,12 @@ const selectDocument = (cache, id, path, fields = null) => {
   return doc;
 };
 
-const selectList = (cache, result, fields = null) => {
-  if (!result || !result.ordered) return undefined;
-  const docs = result.ordered.reduce((arr, [path, id]) => {
+const selectList = (cache, { id, path, ordered, via } = {}, fields = null) => {
+  if (!ordered) return ordered;
+  if (ordered.length === 0 && selectDocument(cache, id, path, fields) === null)
+    return null; // Query finished but no documents exist in Firestore
+
+  const docs = ordered.reduce((arr, [path, id]) => {
     const doc = selectDocument(cache, id, path, fields);
     if (doc) {
       arr.push(doc);
@@ -88,9 +91,9 @@ export default function useCache(alias, selection = null) {
         const listsAndDocs = (isMultiple ? aliases : [aliases]).map((alias) => {
           const isAlias = typeof alias === 'string';
           if (isAlias) {
-            const key = selectAlias(state, alias);
-            if (!key) return undefined;
-            return selectList(cache, key, fields);
+            const queryResults = selectAlias(state, alias);
+            if (!queryResults) return undefined;
+            return selectList(cache, queryResults, fields);
           }
 
           return selectDocument(cache, alias.id, alias.path, fields);

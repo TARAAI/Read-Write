@@ -2,7 +2,7 @@
 
 **[dark launch: pre-release]**
 
-## The fastest, production-ready DX & UX for NoSQL/Firestore.
+## Synchronous NoSQL/Firestore for React
 
 - **[Instant UI.](#read)** Change data synchronously. No Thunks, no Sagas, no Axios, no GraphQL mutations/subscriptions. 
 - **[Zero-Redux Redux.](#write)** Write Redux without Redux. No reducers, no slices, no selectors, no entity mappers, no normalization.
