@@ -1,7 +1,7 @@
 import isFunction from 'lodash/isFunction';
 import isEmpty from 'lodash/isEmpty';
-import { getFirestore } from '../../createFirestoreInstance';
 import { getRead, isDocRead, isProviderRead } from '../../utils/mutate';
+import { serverTimestamp as serverTimestampFS } from 'firebase/firestore';
 
 /**
  * Not a Mutate, just an array
@@ -42,7 +42,7 @@ const increment = (key, val, cached) =>
   key === '::increment' && typeof val === 'number' && (cached() || 0) + val;
 
 const serverTimestamp = (key) =>
-  key === '::serverTimestamp' && getFirestore().FieldValue.serverTimestamp();
+  key === '::serverTimestamp' && serverTimestampFS();
 
 /**
  * Process Mutation to a vanilla JSON

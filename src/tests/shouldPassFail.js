@@ -26,6 +26,10 @@ import { getQueryConfig, getQueryName } from '../utils/query';
 import { actionTypes } from '../constants';
 import { writeFile } from 'fs';
 import { performance } from 'perf_hooks';
+import debug from 'debug';
+
+const info = debug('readwrite:*');
+const verbose = debug('readwrite:debug');
 
 // const __non_webpack_require__ = module[`require`].bind(module);
 
@@ -36,7 +40,7 @@ jest.mock('../redux-firebase/useFirebase', () => ({
   ...jest.requireActual('../redux-firebase/useFirebase'),
   useFirestore: jest.fn(),
 }));
-const useFirestore = require('../redux-firebase/useFirebase');
+const { useFirestore } = require('../redux-firebase/useFirebase');
 
 jest.mock('../utils/actions', () => ({
   ...jest.requireActual('../utils/actions'),
@@ -83,9 +87,8 @@ function setupFirestore(databaseURL, enhancers, sideEffects, preload = []) {
   });
 
   const app = firebase.initializeApp({
-    databaseURL,
-    authDomain: 'localhost:9099',
     projectId: 'demo-read-write',
+    ...(databaseURL ? { authDomain: 'localhost:9099', databaseURL } : {}),
   });
 
   const extendedFirestoreInstance = createFirestoreInstance(
@@ -149,7 +152,7 @@ async function loadCollection(firestore, messages) {
 
 async function cleanFirestore(firestore, messages) {
   const batch = firestore.batch();
-  messages.forEach(({ path, id }) => {
+  messages.filter(Boolean).forEach(({ path, id }) => {
     batch.delete(firestore.doc(`${path}/${id}`));
   });
 
@@ -164,7 +167,7 @@ async function cleanFirestore(firestore, messages) {
  *
  * @param {Function} actionCreatorFn The createMutate action
  * @param {Boolean} [useEmulator=false] run as integration test
- * @returns {Function} Jest Test
+ * @returns {Array<string, Function>} Jest Test
  *
  * ## Basic Example Usage:
  * #### Action Creator
@@ -189,7 +192,7 @@ async function cleanFirestore(firestore, messages) {
  * @param {string} testName Custom test suite name
  * @param {Function} actionCreatorFn  The createMutate action
  * @param {Boolean} [useEmulator=false] run as integration test
- * @returns {Function} Jest Test
+ * @returns {Array<string, Function>} Jest Test
  *
  * ## Advanced Example Usage:
  * #### Action Creator
@@ -339,13 +342,15 @@ function shouldPass(actionCreatorFn, useEmulator = false) {
       }
 
       // spy on results returned from mutation
-      let writeReceived;
+      let writeReceived = null;
       mutationWriteOutput.mockImplementation((writes, db) => {
         writeReceived = Array.isArray(writesExpected) ? writes : writes[0];
         return mutationWriteOutputActual(writes, db);
       });
 
       // send the test action
+      verbose.enabled &&
+        verbose(`\npayload: ${JSON.stringify(payload, null, 2)}`);
       const dispatched = store
         .dispatch(actionCreator(payload))
         .then(unwrapResult);
@@ -358,10 +363,10 @@ function shouldPass(actionCreatorFn, useEmulator = false) {
         delta: performance.now() - profiles[profiles.length - 1].time,
       });
 
-      const postComponent = prettyDOM(element.container).replace(
-        removeColors,
-        '',
-      );
+      const postComponent =
+        element &&
+        element.container &&
+        prettyDOM(element.container).replace(removeColors, '');
       writeFile(
         `stories/${startCase(elementName)}_${kebabCase(testname)}.stories.tsx`,
         `import React from 'react';\nexport default {\n\t` +
@@ -370,16 +375,19 @@ function shouldPass(actionCreatorFn, useEmulator = false) {
           `export const After = () => (${postComponent});`,
         (done, err) => null,
       );
-      // console.log(
-      //   `stories/${snakeCase(testname)}_mutation.stories.tsx`,
-      //   `${prettyFormat.format(element.toJSON(), {
-      //     plugins: [prettyFormat.plugins.ReactTestComponent],
-      //     printFunctionName: false,
-      //     highlight: false,
-      //   })}`,
-      //   (done, err) => null,
-      // );
-      // TODO: export visual check
+
+      if (element && info.enabled) {
+        info(
+          `\nstories/${snakeCase(testname)}_mutation.stories.tsx`,
+          `${prettyFormat.format(element.toJSON(), {
+            plugins: [prettyFormat.plugins.ReactTestComponent],
+            printFunctionName: false,
+            highlight: false,
+          })}`,
+          (done, err) => null,
+        );
+        // TODO: export visual check
+      }
 
       if (writesExpected !== undefined) {
         // Validates the expected results from the writes
@@ -393,20 +401,27 @@ function shouldPass(actionCreatorFn, useEmulator = false) {
           cache: memoryExpected = resultsExpected,
         } = resultsExpected;
 
+        verbose.enabled &&
+          verbose(`\nstore: ${JSON.stringify(memoryExpected, null, 2)}`);
         Object.keys(memoryExpected).forEach((path) =>
           Object.keys(memoryExpected[path]).forEach((id) => {
             const documentExpected = memoryExpected[path][id];
             const keys = Object.keys(documentExpected);
+
             const optimistic = {
-              ...((cache.database && cache.database[path][id]) || {}),
+              ...((cache.database &&
+                cache.database[path] &&
+                cache.database[path][id]) ||
+                {}),
               ...((cache.databaseOverrides &&
+                cache.databaseOverrides[path] &&
                 cache.databaseOverrides[path][id]) ||
                 {}),
             };
             const documentCached = pick(optimistic, keys);
 
             // Validates each document's synchronous, optimistic results in Redux
-            expect(documentExpected).toStrictEqual(documentCached);
+            expect(documentCached).toStrictEqual(documentExpected);
           }),
         );
         profiles.push({
@@ -469,11 +484,16 @@ function shouldPass(actionCreatorFn, useEmulator = false) {
         firestore[i] = null;
       }
 
-      console.log(
-        profiles
-          .map(({ name, delta }) => `${name}: ${delta.toFixed(2)}ms `)
-          .join('\n'),
-      );
+      if (info.enabled) {
+        info(
+          `\ntest-name: "${testname}"\n`,
+          profiles
+            .slice(1)
+            .map(({ name, delta }) => `${name}: ${delta.toFixed(2)}ms `)
+            .join('\n'),
+          '\n',
+        );
+      }
     },
   ];
 }

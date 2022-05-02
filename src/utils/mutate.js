@@ -9,6 +9,13 @@ import has from 'lodash/has';
 import debug from 'debug';
 import { firestoreRef } from './query';
 import mark from './profiling';
+import {
+  increment as incrementFS,
+  arrayUnion as arrayUnionFS,
+  arrayRemove as arrayRemoveFS,
+  serverTimestamp as serverTimestampFS,
+  deleteField as deleteFieldFS,
+} from 'firebase/firestore';
 
 const info = debug('readwrite:mutate');
 
@@ -46,9 +53,6 @@ const hasNothing = (snapshot) =>
   (has(snapshot, 'empty') && snapshot.empty()) ||
   (has(snapshot, 'exists') && snapshot.exists);
 
-const getFieldValue = (firebase) =>
-  firebase.firestore.FieldValue || firebase.firebase.firestore.FieldValue;
-
 // ----- FieldValue support -----
 
 const primaryValue = (arr) =>
@@ -58,24 +62,21 @@ const primaryValue = (arr) =>
 
 const arrayUnion = (firebase, key, ...val) => {
   if (key !== '::arrayUnion') return null;
-  return getFieldValue(firebase).arrayUnion(...val);
+  return arrayUnionFS(...val);
 };
 
 const arrayRemove = (firebase, key, ...val) => {
   if (key !== '::arrayRemove') return null;
-  return getFieldValue(firebase).arrayRemove(...val);
+  return arrayRemoveFS(...val);
 };
 
 const increment = (firebase, key, val) =>
-  key === '::increment' &&
-  typeof val === 'number' &&
-  getFieldValue(firebase).increment(val);
+  key === '::increment' && typeof val === 'number' && incrementFS(val);
 
-const deleteField = (firebase, key) =>
-  key === '::delete' && getFieldValue(firebase).delete();
+const deleteField = (firebase, key) => key === '::delete' && deleteFieldFS();
 
 const serverTimestamp = (firebase, key) =>
-  key === '::serverTimestamp' && getFieldValue(firebase).serverTimestamp();
+  key === '::serverTimestamp' && serverTimestampFS();
 
 /**
  * Process Mutation to a vanilla JSON
@@ -296,7 +297,7 @@ async function writeInTransaction(firebase, operations) {
 }
 
 export function convertReadProviders(mutations) {
-  const shouldMakeProvidesIdempotent = mutations.reads;
+  const shouldMakeProvidesIdempotent = mutations && mutations.reads;
   if (!shouldMakeProvidesIdempotent) return;
 
   Object.keys(mutations.reads).forEach((key) => {
