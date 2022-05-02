@@ -86,10 +86,13 @@ function setupFirestore(databaseURL, enhancers, sideEffects, preload = []) {
     },
   });
 
-  const app = firebase.initializeApp({
-    projectId: 'demo-read-write',
-    ...(databaseURL ? { authDomain: 'localhost:9099', databaseURL } : {}),
-  });
+  const wasStarted = firebase.apps.length > 0;
+  const app = wasStarted
+    ? firebase.apps[0]
+    : firebase.initializeApp({
+        projectId: 'demo-read-write',
+        ...(databaseURL ? { authDomain: 'localhost:9099', databaseURL } : {}),
+      });
 
   const extendedFirestoreInstance = createFirestoreInstance(
     app,
@@ -113,7 +116,7 @@ function setupFirestore(databaseURL, enhancers, sideEffects, preload = []) {
   };
   useFirestore.mockReturnValue(extendedFirestoreInstance);
 
-  firebase.firestore().useEmulator('localhost', 8080);
+  if (!wasStarted) firebase.firestore().useEmulator('localhost', 8080);
 
   // spy on mutations
   wrapInDispatch.mockImplementation((dispatcher, action) => {
@@ -345,12 +348,26 @@ function shouldPass(actionCreatorFn, useEmulator = false) {
       let writeReceived = null;
       mutationWriteOutput.mockImplementation((writes, db) => {
         writeReceived = Array.isArray(writesExpected) ? writes : writes[0];
+        verbose.enabled &&
+          verbose(
+            `test-name: "${testname}"\nwrite: ${JSON.stringify(
+              writeReceived,
+              null,
+              2,
+            )}`,
+          );
         return mutationWriteOutputActual(writes, db);
       });
 
       // send the test action
       verbose.enabled &&
-        verbose(`\npayload: ${JSON.stringify(payload, null, 2)}`);
+        verbose(
+          `test-name: "${testname}"\npayload: ${JSON.stringify(
+            payload,
+            null,
+            2,
+          )}`,
+        );
       const dispatched = store
         .dispatch(actionCreator(payload))
         .then(unwrapResult);
@@ -402,7 +419,13 @@ function shouldPass(actionCreatorFn, useEmulator = false) {
         } = resultsExpected;
 
         verbose.enabled &&
-          verbose(`\nstore: ${JSON.stringify(memoryExpected, null, 2)}`);
+          verbose(
+            `test-name: "${testname}"\nstore: ${JSON.stringify(
+              memoryExpected,
+              null,
+              2,
+            )}`,
+          );
         Object.keys(memoryExpected).forEach((path) =>
           Object.keys(memoryExpected[path]).forEach((id) => {
             const documentExpected = memoryExpected[path][id];
