@@ -1,6 +1,6 @@
 {
   "name": "@taraai/read-write",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "Synchronous NoSQL/Firestore for React",
   "main": "lib/index.js",
   "module": "es/index.js",
