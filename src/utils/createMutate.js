@@ -25,56 +25,50 @@ export default function createMutate({ action, ...mutation }) {
     );
 
   const { read, write, readwrite } = mutation;
-  return createAsyncThunk(
-    action,
-    readwrite !== undefined
-      ? readwrite
-      : (payload, thunkAPI) => {
-          try {
-            const state = (thunkAPI.getState && thunkAPI.getState()) || {};
-            const { getFirestore, getFirebase, ...extras } =
-              thunkAPI.extra || {};
-            const { mutate } = getFirestore();
+  return createAsyncThunk(action, (payload, thunkAPI) => {
+    try {
+      const state = (thunkAPI.getState && thunkAPI.getState()) || {};
+      const { getFirestore, getFirebase, ...extras } = thunkAPI.extra || {};
+      const { mutate } = getFirestore();
 
-            const globals = Object.keys(extras).reduce(
-              (obj, extra) => ({
-                ...obj,
-                [extra]: safeProvider(extras[extra], state),
-              }),
-              {
-                uid:
-                  state.firebase &&
-                  state.firebase.auth &&
-                  state.firebase.auth.uid,
-              },
-            );
-
-            const reads = read(payload, globals);
-            const writes = Array.isArray(write) ? write : [write];
-
-            const isTransaction =
-              reads &&
-              !Object.keys(reads).every((key) => isFunction(reads[key]));
-            if (isTransaction) {
-              return mutate({ reads, writes });
-            }
-
-            const values = Object.keys(reads).reduce((reader, key) => {
-              if (reader[key]) return reader;
-              return isFunction(reads[key])
-                ? { ...reader, [key]: reads[key]() }
-                : { ...reader, [key]: reads[key] };
-            }, globals);
-
-            const isBatch = Array.isArray(write);
-            if (isBatch) {
-              return mutate(write.map((writeFnc) => writeFnc(values)));
-            }
-
-            return mutate(write(values));
-          } catch (error) {
-            return error;
-          }
+      const globals = Object.keys(extras).reduce(
+        (obj, extra) => ({
+          ...obj,
+          [extra]: safeProvider(extras[extra], state),
+        }),
+        {
+          uid: state.firebase && state.firebase.auth && state.firebase.auth.uid,
         },
-  );
+      );
+
+      const { read: reads, write: writes } = readwrite
+        ? readwrite(payload, globals)
+        : {
+            read: read(payload, globals),
+            write: Array.isArray(write) ? write : [write],
+          };
+
+      const isTransaction =
+        reads && !Object.keys(reads).every((key) => isFunction(reads[key]));
+      if (isTransaction) {
+        return mutate({ reads, writes });
+      }
+
+      const values = Object.keys(reads).reduce((reader, key) => {
+        if (reader[key]) return reader;
+        return isFunction(reads[key])
+          ? { ...reader, [key]: reads[key]() }
+          : { ...reader, [key]: reads[key] };
+      }, globals);
+
+      const isBatch = Array.isArray(write);
+      if (isBatch) {
+        return mutate(write.map((writeFnc) => writeFnc(values)));
+      }
+
+      return mutate(write(values));
+    } catch (error) {
+      return error;
+    }
+  });
 }

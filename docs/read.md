@@ -73,14 +73,14 @@ function useRead<Document>(
 Query & load & subscribe to live updates from Firestore but only return a partial of top-level properties.
 
 ```ts
-const { title, status } = useRead<Task>({ 
+const { title, status } = useRead<Task, 'title' | 'status'>({ 
     path: 'tasks', 
     id: 'task-one'
   },
   ['title', 'status']
 );
 
-const taskTitlePartials = useRead<Task>({ 
+const taskTitlePartials = useRead<Task, 'title'>({ 
     path: 'tasks', 
     where: [
       ['status', '==', 'done'],
@@ -115,14 +115,14 @@ Query & load & subscribe to live updates from Firestore but only return
 the value of a single top-level property.
 
 ```ts
-const title = useRead<Task>({ 
+const title = useRead<Task, 'title'>({ 
     path: 'tasks', 
     id: 'task-one'
   },
   'title'
 );
 
-const taskTitleStrings = useRead<Task>({ 
+const taskTitleStrings = useRead<Task, 'title'>({ 
     path: 'tasks', 
     where: [
       ['status', '==', 'done'],
@@ -216,7 +216,7 @@ of a class instance chaining API.
 { path: 'users', id: 'puppybits' }
 ```
 
-##### Enitre Sub-collection
+##### Entire Sub-collection
 
 ```js
 { path: 'orgs/my-workspace/tasks' }
@@ -403,7 +403,7 @@ data and returns a memoize selector which contains the results.
 
 Select a document directly from the normalized, in-memory Redux store.
 ```ts
-const readTask = useCache({ 
+const readTask = useCache<Task>({ 
   path: 'tasks', 
   id: taskOne.id
 });
@@ -431,7 +431,7 @@ const [taskAlias, doneTaskAlias] = useRead([
   }
 ], '::alias');
 
-const [myTaskDoc, doneTaskList] = useCache([taskAlias, doneTaskAlias]);
+const [myTaskDoc, doneTaskList] = useCache<Task>([taskAlias, doneTaskAlias]);
 ```
 
 

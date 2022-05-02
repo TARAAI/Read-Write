@@ -88,6 +88,7 @@ export function mutationReadFromCache(reads, { db, dbo }) {
     const collection = db[path] || {};
     const overrides = dbo[path] || {};
 
+    // BROKE: TODO: need to support sync queries for reads
     const isQueryRead = !isDocRead(reads[key]);
     if (isQueryRead) {
       const pathIds = processOptimistic(reads[key], {
