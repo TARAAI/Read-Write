@@ -2,33 +2,11 @@
  * @jest-environment jsdom
  */
 
-// wrap in dispatch
-jest.mock('../utils/actions', () => ({
-  ...jest.requireActual('../utils/actions'),
-  wrapInDispatch: jest.fn(),
-}));
-const { wrapInDispatch } = require('../utils/actions');
-const { wrapInDispatch: dispatchActual } =
-  jest.requireActual('../utils/actions');
-
-// cache reducer mutation output
-jest.mock('../reducers/utils/mutate', () => ({
-  ...jest.requireActual('../reducers/utils/mutate'),
-  mutationWriteOutput: jest.fn(),
-}));
-const { mutationWriteOutput } = require('../reducers/utils/mutate');
-const { mutationWriteOutput: mutationWriteOutputActual } = jest.requireActual(
-  '../reducers/utils/mutate',
-);
-
-// firebase
-jest.mock('../redux-firebase/useFirebase', () => ({
-  ...jest.requireActual('../redux-firebase/useFirebase'),
-  useFirestore: jest.fn(),
-}));
-const { useFirestore } = require('../redux-firebase/useFirebase');
-
 /* istanbul ignore file */
+import {
+  dispatchActual,
+  mutationWriteOutputActual,
+} from './__mock__/shouldPassFail';
 import firebase from 'firebase/compat/app';
 import 'firebase/compat/firestore';
 import 'firebase/auth';
@@ -53,6 +31,10 @@ import { actionTypes } from '../constants';
 import { writeFile } from 'fs';
 import { performance } from 'perf_hooks';
 import debug from 'debug';
+
+const { useFirestore } = require('../redux-firebase/useFirebase');
+const { mutationWriteOutput } = require('../reducers/utils/mutate');
+const { wrapInDispatch } = require('../utils/actions');
 
 const info = debug('readwrite:*');
 const verbose = debug('readwrite:debug');
