@@ -72,12 +72,15 @@ function setupFirestore(databaseURL, enhancers, sideEffects, preload = []) {
   });
 
   const wasStarted = firebase.apps.length > 0;
-  const app = wasStarted
-    ? firebase.apps[0]
-    : firebase.initializeApp({
-        projectId: 'demo-read-write',
-        ...(databaseURL ? { authDomain: 'localhost:9099', databaseURL } : {}),
-      });
+  const app = function () {
+    // binded function ensures only explicit configs are used
+    return wasStarted
+      ? firebase.apps[0]
+      : firebase.initializeApp({
+          projectId: 'demo-read-write',
+          ...(databaseURL ? { authDomain: 'localhost:9099', databaseURL } : {}),
+        });
+  }.bind(null)();
 
   const extendedFirestoreInstance = createFirestoreInstance(
     app,
