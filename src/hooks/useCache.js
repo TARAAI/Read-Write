@@ -37,7 +37,7 @@ const selectList = (cache, { id, path, ordered, via } = {}, fields = null) => {
     return arr;
   }, []);
 
-  return result.id && Array.isArray(docs) ? docs[0] : docs;
+  return id && Array.isArray(docs) ? docs[0] : docs;
 };
 
 const selectAlias = (state, alias) =>

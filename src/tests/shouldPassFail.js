@@ -2,6 +2,32 @@
  * @jest-environment jsdom
  */
 
+// wrap in dispatch
+jest.mock('../utils/actions', () => ({
+  ...jest.requireActual('../utils/actions'),
+  wrapInDispatch: jest.fn(),
+}));
+const { wrapInDispatch } = require('../utils/actions');
+const { wrapInDispatch: dispatchActual } =
+  jest.requireActual('../utils/actions');
+
+// cache reducer mutation output
+jest.mock('../reducers/utils/mutate', () => ({
+  ...jest.requireActual('../reducers/utils/mutate'),
+  mutationWriteOutput: jest.fn(),
+}));
+const { mutationWriteOutput } = require('../reducers/utils/mutate');
+const { mutationWriteOutput: mutationWriteOutputActual } = jest.requireActual(
+  '../reducers/utils/mutate',
+);
+
+// firebase
+jest.mock('../redux-firebase/useFirebase', () => ({
+  ...jest.requireActual('../redux-firebase/useFirebase'),
+  useFirestore: jest.fn(),
+}));
+const { useFirestore } = require('../redux-firebase/useFirebase');
+
 /* istanbul ignore file */
 import firebase from 'firebase/compat/app';
 import 'firebase/compat/firestore';
@@ -35,29 +61,6 @@ const verbose = debug('readwrite:debug');
 
 const removeColors =
   /[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/g;
-
-jest.mock('../redux-firebase/useFirebase', () => ({
-  ...jest.requireActual('../redux-firebase/useFirebase'),
-  useFirestore: jest.fn(),
-}));
-const { useFirestore } = require('../redux-firebase/useFirebase');
-
-jest.mock('../utils/actions', () => ({
-  ...jest.requireActual('../utils/actions'),
-  wrapInDispatch: jest.fn(),
-}));
-const { wrapInDispatch } = require('../utils/actions');
-const { wrapInDispatch: dispatchActual } =
-  jest.requireActual('../utils/actions');
-
-jest.mock('../reducers/utils/mutate', () => ({
-  ...jest.requireActual('../reducers/utils/mutate'),
-  mutationWriteOutput: jest.fn(),
-}));
-const { mutationWriteOutput } = require('../reducers/utils/mutate');
-const { mutationWriteOutput: mutationWriteOutputActual } = jest.requireActual(
-  '../reducers/utils/mutate',
-);
 
 const noop = () => null;
 
@@ -236,7 +239,9 @@ function shouldPass(actionCreatorFn, useEmulator = false) {
   const testSuiteName =
     typeof actionCreatorFn === 'string'
       ? `${type}: ${actionCreatorFn}`
-      : `${type}: ${actionCreatorFn.typePrefix || ''} $payload should pass.`;
+      : `${type}: ${
+          actionCreatorFn.typePrefix || ''
+        } %# $testname should pass.`;
 
   const actionCreator = isFunction(useEmulator) ? useEmulator : actionCreatorFn;
 
@@ -408,7 +413,7 @@ function shouldPass(actionCreatorFn, useEmulator = false) {
 
       if (writesExpected !== undefined) {
         // Validates the expected results from the writes
-        expect(writesExpected).toStrictEqual(writeReceived);
+        expect(writeReceived).toStrictEqual(writesExpected);
       }
 
       // validate outputs in redux store & firestore
