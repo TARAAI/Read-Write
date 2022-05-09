@@ -126,7 +126,7 @@ function atomize(firebase, operation) {
 // ----- write functions -----
 
 /**
- * For details between set & udpate see:
+ * For details between set & update see:
  * https://firebase.google.com/docs/reference/js/firebase.firestore.Transaction#update
  * @param {object} firebase
  * @param {Mutation_v1 | Mutation_v2} operation
@@ -312,20 +312,20 @@ export function convertReadProviders(mutations) {
 /**
  * @public
  * Write any data to Firestore.
- * @param {object} firestore
+ * @param {object} firebase
  * @param {object} operations
  * @returns {Promise}
  */
-export default function mutate(firestore, operations) {
+export default function mutate(firebase, operations) {
   if (isSingleWrite(operations)) {
-    return writeSingle(firestore, operations);
+    return writeSingle(firebase, operations);
   }
 
   if (isBatchedWrite(operations)) {
-    return writeInBatch(firestore, operations);
+    return writeInBatch(firebase, operations);
   }
 
   convertReadProviders(operations);
 
-  return writeInTransaction(firestore, operations);
+  return writeInTransaction(firebase, operations);
 }

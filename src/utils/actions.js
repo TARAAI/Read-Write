@@ -54,9 +54,6 @@ export function wrapInDispatch(
     dispatch(startAction);
   });
 
-  if (((ref && ref.options && ref.options.databaseURL) || null) === null)
-    return Promise.resolve();
-
   const saved =
     method === 'mutate' ? mutate(ref, ...args) : ref[method](...args);
 

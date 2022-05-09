@@ -1,15 +1,18 @@
 import isFunction from 'lodash/isFunction';
 import isEmpty from 'lodash/isEmpty';
 import { getRead, isDocRead, isProviderRead } from '../../utils/mutate';
-import { serverTimestamp as serverTimestampFS } from 'firebase/firestore';
+import { Timestamp as TimestampFS } from 'firebase/firestore';
 
 /**
  * Not a Mutate, just an array
  * @param {Array} arr
  * @returns Null | Array
  */
+
 const primaryValue = (arr) =>
-  typeof arr[0] === 'string' && arr[0].indexOf('::') === 0 ? null : arr;
+  Array.isArray(arr) && typeof arr[0] === 'string' && arr[0].indexOf('::') === 0
+    ? null
+    : arr;
 
 /**
  * Mutate Nested Object
@@ -42,7 +45,14 @@ const increment = (key, val, cached) =>
   key === '::increment' && typeof val === 'number' && (cached() || 0) + val;
 
 const serverTimestamp = (key) =>
-  key === '::serverTimestamp' && serverTimestampFS();
+  key === '::serverTimestamp' && TimestampFS.now();
+
+const deleteField = (key, cached) => {
+  if (key === '::delete') {
+    // eslint-disable-next-line no-param-reassign
+    delete cached()[key];
+  }
+};
 
 /**
  * Process Mutation to a vanilla JSON
@@ -62,6 +72,7 @@ function atomize(mutation, cached) {
         serverTimestamp(val[0]) ||
         arrayUnion(val[0], val[1], () => cached(key)) ||
         arrayRemove(val[0], val[1], () => cached(key)) ||
+        deleteField(val[0], val[1], () => cached(key)) ||
         increment(val[0], val[1], () => cached(key));
     }
 
