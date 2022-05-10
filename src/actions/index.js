@@ -1,4 +1,4 @@
-import * as firestoreActions from './firestore';
+import * as firestoreActions from './firestore-dispatcher';
 
 export { firestoreActions };
 export default { firestoreActions };

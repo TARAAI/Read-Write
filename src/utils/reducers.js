@@ -162,7 +162,7 @@ export function createReducer(initialState, handlers) {
  * @param {object} state - slice of redux state to be preserved
  * @param {boolean|Function|Array} preserveSetting [description]
  * @param {object} nextState - What state would have been set to if preserve
- * was not occuring.
+ * was not occurring.
  * @returns {object} Slice of state with values preserved
  * @private
  */

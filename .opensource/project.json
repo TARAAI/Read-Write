@@ -1,5 +1,5 @@
 {
-  "name": "read-write-web",
+  "name": "read-write",
   "platforms": [
     "Web",
     "iOS",
@@ -7,7 +7,7 @@
   ],
   "content": "README.md",
   "tabs": [
-    { "title": "NPM", "href": "https://npmjs.com/package/read-write-web" },
-    { "title": "API Reference", "href": "https://github.com/TARAAI/read-write-web/blob/main/README.md" }
+    { "title": "NPM", "href": "https://npmjs.com/package/@taraai/read-write" },
+    { "title": "API Reference", "href": "https://github.com/TARAAI/read-write/blob/main/README.md" }
   ]
 }

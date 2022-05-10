@@ -1,4 +1,4 @@
-# Read-Write-Web
+# Read/Write
 
 Read
 ```ts

@@ -1,22 +1,13 @@
 /* istanbul ignore file */
-import {
-  getFirebase,
-  useFirestore,
-  useFirebase,
-  useFirestoreConnect,
-  populate,
-  isLoaded,
-  firebaseReducer,
-  ReactReduxFirebaseProvider,
-} from './redux-firebase';
-import enhancer from './enhancer';
-import reducer from './reducer';
+import * as reduxFirestore from './redux-firebase';
+import enhancer from './store/enhancer';
+import reducer from './reducers';
 import { firestoreActions } from './actions';
 import createFirestoreInstance, {
   getFirestore,
-} from './createFirestoreInstance';
+} from './sdk/createFirestoreInstance';
 import constants, { actionTypes } from './constants';
-import middleware, { CALL_FIRESTORE } from './middleware';
+import middleware, { CALL_FIRESTORE } from './store/middleware';
 import { getSnapshotByObject } from './utils/query';
 import createMutate from './utils/createMutate';
 import useRead from './hooks/useRead';
@@ -24,6 +15,25 @@ import useCache from './hooks/useCache';
 
 // converted with transform-inline-environment-variables
 export const version = process.env.npm_package_version;
+
+const {
+  getFirebase,
+  useFirestore,
+  useFirebase,
+  populate,
+  firebaseReducer,
+  ReactReduxFirebaseProvider,
+} = reduxFirestore;
+
+/**
+ * @deprecated useRead/Cache directly properly creates the Redux selectors
+ **/
+const useFirestoreConnect = reduxFirestore.useFirestoreConnect;
+
+/**
+ * @deprecated undefined results are not loaded yet
+ **/
+const isLoaded = reduxFirestore.isLoaded;
 
 export {
   reducer,

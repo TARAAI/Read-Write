@@ -1,17 +1,17 @@
 {
   "name": "@taraai/read-write",
   "version": "0.0.7-alpha.8",
-  "description": "Synchronous NoSQL/Firestore for React",
+  "description": "A Synchronous React data layer for NoSQL & Firestore",
   "main": "lib/index.js",
   "module": "es/index.js",
   "jsnext:main": "es/index.js",
   "unpkg": "dist/read-write.min.js",
   "scripts": {
     "autotest": "concurrently --kill-others \"yarn test:watch shouldPassFail\" \"yarn --cwd ./examples/notes dev:firestore\"",
-    "clean": "rimraf lib dist es",
+    "clean": "rimraf lib dist es coverage",
     "dev": "yarn --cwd ./examples/notes dev",
-    "build:commonjs": "cross-env BABEL_ENV=commonjs babel src --out-dir lib",
-    "build:es": "cross-env BABEL_ENV=es babel src --out-dir es",
+    "build:commonjs": "cross-env BABEL_ENV=commonjs babel src --out-dir lib --ignore '**/__tests__' --ignore '**/__mocks__'",
+    "build:es": "cross-env BABEL_ENV=es babel src --out-dir es --ignore '**/__tests__' --ignore '**/__mocks__'",
     "build:dev": "cp ./index.d.ts ./examples/notes/node_modules/read-write; cross-env BABEL_ENV=es babel src --out-dir ./examples/notes/node_modules/read-write",
     "build:umd": "cross-env BABEL_ENV=commonjs NODE_ENV=development webpack",
     "build:umd:min": "cross-env BABEL_ENV=commonjs NODE_ENV=production webpack",
@@ -21,9 +21,9 @@
     "watch:dev": "npm run build:dev -- --watch",
     "watch:lib": "npm run build:lib -- --watch",
     "watch:commonjs": "npm run build:commonjs -- --watch",
-    "test": "jest",
-    "test:watch": "jest --watch",
-    "test:cc": "jest --coverage --coverage-reporters=lcov",
+    "test": "NODE_ENV=test jest",
+    "test:watch": "NODE_ENV=test jest --watch",
+    "test:cc": "NODE_ENV=test jest --coverage --coverage-reporters=lcov",
     "start": "yarn --cwd ./examples/notes start",
     "lint": "eslint src test",
     "lint:fix": "npm run lint -- --fix",
@@ -36,7 +36,7 @@
   },
   "dependencies": {
     "@testing-library/jest-dom": "^5.16.4",
-    "@testing-library/react": "^12.1.4",
+    "@testing-library/react": "^12.1.5",
     "debug": "^4.3.4",
     "global": "^4.4.0",
     "immer": "9.0.12",
@@ -50,11 +50,11 @@
     "storybook": "^6.4.22"
   },
   "devDependencies": {
-    "@babel/cli": "^7.17.6",
-    "@babel/core": "^7.17.9",
+    "@babel/cli": "^7.17.10",
+    "@babel/core": "^7.17.10",
+    "@babel/eslint-parser": "^7.17.0",
     "@babel/plugin-transform-modules-commonjs": "^7.17.9",
-    "@babel/plugin-transform-runtime": "^7.17.0",
-    "@babel/preset-env": "^7.16.11",
+    "@babel/preset-env": "^7.17.10",
     "@babel/preset-react": "^7.16.7",
     "@babel/register": "^7.17.7",
     "@babel/runtime": "^7.17.9",
@@ -64,36 +64,36 @@
     "@storybook/addon-interactions": "^6.4.22",
     "@storybook/addon-links": "^6.4.22",
     "@storybook/react": "^6.4.22",
-    "@storybook/testing-library": "^0.0.10",
-    "babel-eslint": "^10.1.0",
+    "@storybook/testing-library": "^0.0.11",
     "babel-loader": "^8.2.5",
     "babel-plugin-lodash": "^3.3.4",
     "babel-plugin-module-resolver": "^4.1.0",
-    "babel-plugin-transform-inline-environment-variables": "^0.4.3",
+    "babel-plugin-transform-inline-environment-variables": "^0.4.4",
     "concurrently": "^7.1.0",
     "cross-env": "^7.0.3",
-    "eslint": "^8.14.0",
+    "eslint": "^8.15.0",
     "eslint-config-airbnb-base": "^15.0.0",
     "eslint-config-google": "^0.14.0",
     "eslint-config-prettier": "^8.5.0",
     "eslint-plugin-babel": "^5.3.1",
     "eslint-plugin-import": "^2.26.0",
-    "eslint-plugin-jsdoc": "^39.2.8",
+    "eslint-plugin-jsdoc": "^39.2.9",
     "eslint-plugin-jsx-a11y": "^6.5.1",
     "eslint-plugin-prettier": "^4.0.0",
     "eslint-plugin-react": "^7.29.4",
-    "firebase": "^9.6.11",
-    "firebase-tools": "^10.7.2",
+    "firebase": "^9.8.1",
+    "firebase-tools": "^10.8.0",
     "husky": "^7.0.4",
     "jest": "^27.5.1",
     "kelonio": "0.7.0",
     "prettier": "2.6.2",
     "react": "^17.0.2",
-    "react-redux": "^8.0.0",
+    "react-redux": "^8.0.1",
     "redux": "^4.2.0",
     "rimraf": "^3.0.2",
     "terser-webpack-plugin": "^5.3.1",
-    "webpack": "^5.72.0",
+    "ts-jest": "^28.0.2",
+    "webpack": "^5.72.1",
     "webpack-bundle-analyzer": "^4.5.0",
     "webpack-cli": "^4.9.2"
   },
@@ -105,20 +105,116 @@
     "src",
     "index.d.ts"
   ],
-  "browserslist": [
-    "> 2%"
-  ],
   "jest": {
     "verbose": true,
+    "moduleDirectories": [
+      "node_modules",
+      "src"
+    ],
     "testEnvironment": "jsdom",
     "collectCoverage": true,
     "coverageReporters": [
       "lcov"
     ],
+    "coveragePathIgnorePatterns": ["redux-firebase"],
     "modulePathIgnorePatterns": [
       "examples"
     ]
   },
+  "browserslist": "> 1%",
+  "babel": {
+    "presets": [
+      "@babel/preset-react",
+      "@babel/preset-env"
+    ],
+    "comments": false,
+    "plugins": [
+      "lodash",
+      "transform-inline-environment-variables"
+    ],
+    "ignore": [
+      "./es",
+      "./lib",
+      "./dist"
+    ],
+    "env": {
+      "test": {}
+    }
+  },
+  "prettier": {
+    "singleQuote": true,
+    "trailingComma": "all"
+  },
+  "eslintConfig": {
+    "root": true,
+    "parser": "babel-eslint",
+    "extends": [
+      "airbnb-base",
+      "google",
+      "prettier",
+      "plugin:jsdoc/recommended"
+    ],
+    "plugins": [
+      "babel",
+      "prettier",
+      "jsdoc"
+    ],
+    "env": {
+      "browser": true,
+      "es6": true,
+      "node": true
+    },
+    "settings": {
+      "import/resolver": {
+        "node": {
+          "moduleDirectory": [
+            "node_modules",
+            "/"
+          ]
+        }
+      }
+    },
+    "rules": {
+      "prettier/prettier": [
+        "error",
+        {
+          "singleQuote": true,
+          "trailingComma": "all"
+        }
+      ],
+      "no-console": "error",
+      "valid-jsdoc": 0,
+      "no-confusing-arrow": 0,
+      "no-case-declarations": 0,
+      "no-param-reassign": [
+        2,
+        {
+          "props": false
+        }
+      ],
+      "arrow-parens": 0,
+      "prefer-default-export": 0,
+      "jsdoc/newline-after-description": 0,
+      "jsdoc/no-undefined-types": [
+        1,
+        {
+          "definedTypes": [
+            "firebase"
+          ]
+        }
+      ]
+    }
+  },
+  "eslintIgnore": [
+    "examples/**",
+    "build/use-lodash-es.js",
+    "coverage/**",
+    "node_modules/**",
+    "lib/**",
+    "es/**",
+    "dist/**",
+    ".nyc_output"
+  ],
   "license": "MIT",
   "homepage": "https://github.com/taraai/read-write",
   "keywords": [
@@ -128,8 +224,7 @@
     "react",
     "read-write",
     "react-firestore",
-    "react-redux-firebase",
-    "redux-firebase",
+    "react-redux-firebase", "redux-firebase",
     "react-firebase"
   ],
   "repository": {

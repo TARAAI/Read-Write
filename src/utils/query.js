@@ -24,7 +24,7 @@ export function getSnapshotByObject(obj) {
 }
 
 /**
- * Add where claues to Cloud Firestore Reference handling invalid formats
+ * Add where clause to Cloud Firestore Reference handling invalid formats
  * and multiple where statements (array of arrays)
  * @param {firebase.firestore.Reference} ref - Reference which to add where to
  * @param {Array} where - Where statement to attach to reference
@@ -138,7 +138,7 @@ function handleSubcollections(ref, subcollectionList) {
  */
 export function firestoreRef(firebase, meta) {
   if (!firebase.firestore) {
-    throw new Error('Firestore must be required and initalized.');
+    throw new Error('Firestore must be required and initialized.');
   }
   const {
     path,
@@ -163,14 +163,14 @@ export function firestoreRef(firebase, meta) {
   if (isInvalidGroup) {
     throw new Error(
       `Reference cannot contain both Path and CollectionGroup.` +
-        ` (recieved: ${JSON.stringify(meta)})`,
+        ` (received: ${JSON.stringify(meta)})`,
     );
   }
 
   if (!collectionGroup && isInvalidQuery) {
     throw new Error(
       `Query References must include a 'path' property.` +
-        ` (recieved: ${JSON.stringify(meta)})`,
+        ` (received: ${JSON.stringify(meta)})`,
     );
   }
 
@@ -221,7 +221,7 @@ function arrayToStr(key, value) {
 }
 
 /**
- * Pcik query params from object
+ * Pick query params from object
  * @param {object} obj - Object from which to pick query params
  * @returns {object} Object of query params by name
  */
@@ -238,7 +238,7 @@ function pickQueryParams(obj) {
 }
 
 /**
- * Join/serilize query params
+ * Join/serialize query params
  * @param {object} queryParams - Query settings
  * @returns {string} Serialized string
  */
@@ -434,7 +434,7 @@ export function queryStrToObj(queryPathStr, parsedPath) {
 }
 
 /**
- * Convert array of querys into an array of query config objects.
+ * Convert array of queries into an array of query config objects.
  * This normalizes things for later use.
  * @param {object|string} query - Query setups in the form of objects or strings
  * @returns {object} Query setup normalized into a queryConfig object
@@ -463,7 +463,7 @@ export function getQueryConfig(query) {
 }
 
 /**
- * Convert array of querys into an array of queryConfig objects
+ * Convert array of queries into an array of queryConfig objects
  * @param {Array} queries - Array of query strings/objects
  * @returns {Array} watchEvents - Array of watch events
  */
@@ -477,7 +477,7 @@ export function getQueryConfigs(queries) {
   if (isObject(queries)) {
     return [getQueryConfig(queries)];
   }
-  throw new Error('Querie(s) must be an Array or a string.');
+  throw new Error('Queries must be an Array or a string.');
 }
 
 /**

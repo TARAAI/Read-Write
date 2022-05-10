@@ -7,11 +7,11 @@ import {
   mapValues,
   reduce,
   defaultsDeep,
-  some
-} from 'lodash'
-import { topLevelPaths } from './constants'
-import { getPopulateObjs } from './utils/populate'
-import { getDotStrPath } from './utils/reducers'
+  some,
+} from 'lodash';
+import { topLevelPaths } from './constants';
+import { getPopulateObjs } from './utils/populate';
+import { getDotStrPath } from './utils/reducers';
 
 /**
  * **Deprecated** - This helper will be removed in future versions. Please
@@ -71,13 +71,13 @@ import { getDotStrPath } from './utils/reducers'
  */
 export function getVal(firebase, path, notSetValue) {
   if (!firebase) {
-    return notSetValue
+    return notSetValue;
   }
 
-  const dotPath = getDotStrPath(path)
-  const valueAtPath = get(firebase, dotPath, notSetValue)
+  const dotPath = getDotStrPath(path);
+  const valueAtPath = get(firebase, dotPath, notSetValue);
 
-  return valueAtPath
+  return valueAtPath;
 }
 
 /**
@@ -123,7 +123,7 @@ export function getVal(firebase, path, notSetValue) {
 export function isLoaded(...args) {
   return !args || !args.length
     ? true
-    : args.every((arg) => arg !== undefined && get(arg, 'isLoaded') !== false)
+    : args.every((arg) => arg !== undefined && get(arg, 'isLoaded') !== false);
 }
 
 /**
@@ -168,7 +168,7 @@ export function isLoaded(...args) {
 export function isEmpty(...args) {
   return !args || !args.length
     ? true
-    : args.some((arg) => !(arg && size(arg)) || arg.isEmpty === true)
+    : args.some((arg) => !(arg && size(arg)) || arg.isEmpty === true);
 }
 
 /**
@@ -178,7 +178,7 @@ export function isEmpty(...args) {
  * @private
  */
 export function fixPath(path) {
-  return (path.substring(0, 1) === '/' ? '' : '/') + path
+  return (path.substring(0, 1) === '/' ? '' : '/') + path;
 }
 
 /**
@@ -189,33 +189,33 @@ export function fixPath(path) {
  * @returns {object} List of child objects
  */
 function buildChildList(state, list, p) {
-  const mapFn = Array.isArray(list) ? map : mapValues
+  const mapFn = Array.isArray(list) ? map : mapValues;
   return mapFn(list, (val, key) => {
-    let getKey = val
+    let getKey = val;
     // Handle key: true lists
     if (val === true || p.populateByKey) {
-      getKey = key
+      getKey = key;
     }
     // Allow for aliasing populated data see #126 for more details
-    const dotRoot = getDotStrPath(p.root)
-    const pathArr = [dotRoot, getKey]
+    const dotRoot = getDotStrPath(p.root);
+    const pathArr = [dotRoot, getKey];
 
     // Handle child param
     if (p.childParam) {
-      pathArr.push(p.childParam)
+      pathArr.push(p.childParam);
     }
 
-    const pathString = pathArr.join('.')
+    const pathString = pathArr.join('.');
 
     // Set to child under key if populate child exists
     if (get(state.data, pathString)) {
       return p.keyProp
         ? { [p.keyProp]: getKey, ...get(state.data, pathString) }
-        : get(state.data, pathString)
+        : get(state.data, pathString);
     }
     // Populate child does not exist
-    return val === true || p.populateByKey ? val : getKey
-  })
+    return val === true || p.populateByKey ? val : getKey;
+  });
 }
 
 /**
@@ -227,9 +227,9 @@ function buildChildList(state, list, p) {
  */
 function populateChild(state, child, p) {
   // no matching child parameter
-  const childVal = get(child, p.child)
+  const childVal = get(child, p.child);
   if (!child || !childVal) {
-    return null
+    return null;
   }
   // populate child is key
   if (typeof childVal === 'string' || childVal instanceof String) {
@@ -237,33 +237,34 @@ function populateChild(state, child, p) {
     const dotRoot = (p.storeAs ? p.storeAs : p.root)
       .split('/')
       .filter(Boolean) // Drop falsey values (compact)
-      .join('.')
-    const pathArr = [dotRoot, childVal]
+      .join('.');
+    const pathArr = [dotRoot, childVal];
 
     // Handle child param
     if (p.childParam) {
-      pathArr.push(p.childParam)
+      pathArr.push(p.childParam);
     }
 
-    const pathString = pathArr.join('.')
+    const pathString = pathArr.join('.');
 
-    const populateVal = get(state.data, pathString)
+    const populateVal = get(state.data, pathString);
     if (populateVal) {
       return set(
         {},
         p.childAlias || p.child,
-        p.keyProp ? { [p.keyProp]: childVal, ...populateVal } : populateVal
-      )
+        p.keyProp ? { [p.keyProp]: childVal, ...populateVal } : populateVal,
+      );
     }
     // matching child does not exist
-    return child
+    return child;
   }
   // populate child list
-  return set({}, p.childAlias || p.child, buildChildList(state, childVal, p))
+  return set({}, p.childAlias || p.child, buildChildList(state, childVal, p));
 }
 
 /**
  * Populate with data from multiple locations of redux state.
+ * @deprecated Chaining relational lookups in high-latency NoSQL is an anti-pattern
  * @param {object} state - Firebase state object (state.firebase in redux store)
  * @param {string} path - Path of parameter to load
  * @param {Array} populates - Array of populate config objects
@@ -290,100 +291,100 @@ function populateChild(state, child, p) {
  * export default enhance(SomeComponent)
  */
 export function populate(state, path, populates, notSetValue) {
-  const splitPath = path.split('/').filter(Boolean) // Drop falsey values (compact)
+  const splitPath = path.split('/').filter(Boolean); // Drop falsey values (compact)
   // append 'data' prefix to path if it is not a top level path
   const pathArr =
     topLevelPaths.indexOf(splitPath[0]) === -1
       ? ['data', ...splitPath]
-      : splitPath
-  const dotPath = pathArr.join('.')
+      : splitPath;
+  const dotPath = pathArr.join('.');
   // Gather data from top level if path is profile (handles populating profile)
-  const data = get(state, dotPath, notSetValue)
+  const data = get(state, dotPath, notSetValue);
 
   // Return notSetValue for undefined child
   if (!state || data === notSetValue) {
-    return notSetValue
+    return notSetValue;
   }
   // Return null for null child
   if (data === null) {
-    return null
+    return null;
   }
 
   // check for if data is single object or a list of objects
   const populatesForData = getPopulateObjs(
     typeof populates === 'function'
       ? populates(pathArr.slice(-1)[0], data) // pass last slice in path
-      : populates
-  )
+      : populates,
+  );
 
   if (Array.isArray(data)) {
     // When using a path in ordered, data will be an array instead of an object
     // and data is located at the `value` prop
     const someArrayItemHasKey = (array) => (key) =>
-      some(array, (item) => has(item, key))
+      some(array, (item) => has(item, key));
 
     // Check items within the list to see if value exists for some populate parameters
     const dataHasPopulateChilds = some(populatesForData, (populate) =>
-      someArrayItemHasKey(data)(['value', populate.child])
-    )
+      someArrayItemHasKey(data)(['value', populate.child]),
+    );
 
     // Populate if populate children exist
     if (dataHasPopulateChilds) {
       return data.map(({ key, value: dataValue }) => {
         const populatedValue = populatesForData
           .map((p) => populateChild(state, dataValue, p))
-          .reduce((acc, v) => defaultsDeep(v, acc), dataValue)
+          .reduce((acc, v) => defaultsDeep(v, acc), dataValue);
 
         return {
           key,
-          value: populatedValue
-        }
-      })
+          value: populatedValue,
+        };
+      });
     }
 
     // return unpopulated data if no populates have values
-    return data
+    return data;
   }
 
   // check each populate child parameter for existence
   const dataHasPopulateChilds = some(populatesForData, (p) =>
-    has(data, p.child)
-  )
+    has(data, p.child),
+  );
 
   // Single object that contains at least one child parameter
   if (dataHasPopulateChilds) {
     return populatesForData
       .map((p) => populateChild(state, data, p))
-      .reduce((acc, v) => defaultsDeep(v, acc), data)
+      .reduce((acc, v) => defaultsDeep(v, acc), data);
   }
 
   // Return for profile since it is a single object (following is for a list of objects)
   // TODO: Improve this logic to allow for other paths containing profile
   if (pathArr.indexOf('profile') !== -1) {
-    return data
+    return data;
   }
 
   // Data is a map of objects, each value has parameters to be populated
   return mapValues(data, (child, childKey) => {
     // use child's key if doing ordered populate
-    const key = pathArr[0] === 'ordered' ? child.key : childKey
+    const key = pathArr[0] === 'ordered' ? child.key : childKey;
     // get populate settings on item level (passes child if populates is a function)
     const populatesForDataItem = getPopulateObjs(
-      typeof populates === 'function' ? populates(key, child) : populates
-    )
+      typeof populates === 'function' ? populates(key, child) : populates,
+    );
     // confirm at least one populate value exists on child
     const dataHasPopulateChilds = some(populatesForDataItem, (p) =>
-      has(child, p.child)
-    )
+      has(child, p.child),
+    );
     // return unmodified child if no populate params exist on child
     if (!dataHasPopulateChilds) {
-      return child
+      return child;
     }
     // combine data from all populates to one object starting with original data
     return reduce(
       map(populatesForDataItem, (p) => populateChild(state, child, p)),
       (obj, v) => defaultsDeep(v, obj),
-      child
-    )
-  })
+      child,
+    );
+  });
 }

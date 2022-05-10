@@ -40,7 +40,8 @@ const config = {
           loader: 'babel-loader',
           options: {
             presets: ['@babel/preset-env'],
-            plugins: ['lodash', '@babel/transform-runtime'],
+            plugins: ['lodash', 'transform-inline-environment-variables'],
+            ignore: ['**/__tests__', '**/__mocks__'],
           },
         },
         exclude: /node_modules/,
@@ -53,7 +54,7 @@ const config = {
 const testingConfig = {
   target: 'node',
   mode: process.env.NODE_ENV || 'production',
-  entry: [path.join(__dirname, 'src/test.js')],
+  entry: [path.join(__dirname, 'src/testing.js')],
   output: {
     path: path.join(__dirname, 'dist'),
     filename: libraryName + '-test.js',
@@ -79,7 +80,8 @@ const testingConfig = {
           loader: 'babel-loader',
           options: {
             presets: ['@babel/preset-env'],
-            plugins: ['lodash', '@babel/transform-runtime'],
+            plugins: ['lodash', 'transform-inline-environment-variables'],
+            ignore: ['**/__tests__', '**/__mocks__'],
           },
         },
         exclude: /node_modules/,
