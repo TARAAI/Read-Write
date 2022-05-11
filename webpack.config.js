@@ -21,7 +21,7 @@ const config = {
   },
   externals: {
     '@reduxjs/toolkit': '@reduxjs/toolkit',
-    firebase: 'firebase',
+    '@firebase': '@firebase',
     react: 'react',
     'react-dom': 'react-dom',
     'react-redux': 'react-redux',

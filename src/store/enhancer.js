@@ -1,5 +1,6 @@
+/* eslint-disable jsdoc/require-param */
 import { defaultConfig } from '../constants';
-import createFirestoreInstance from '../sdk/createFirestoreInstance';
+import createFirestoreInstance from '../firestore/extend/createFirestoreInstance';
 
 let firestoreInstance;
 

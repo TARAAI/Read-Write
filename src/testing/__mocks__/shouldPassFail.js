@@ -1,21 +1,21 @@
 // wrap in dispatch
-jest.mock('../../utils/actions', () => ({
-  ...jest.requireActual('../../utils/actions'),
+jest.mock('../../firestore/extend/dispatchWrapper', () => ({
+  ...jest.requireActual('../../firestore/extend/dispatchWrapper'),
   wrapInDispatch: jest.fn(),
 }));
-const { wrapInDispatch } = require('../../utils/actions');
+const { wrapInDispatch } = require('../../firestore/extend/dispatchWrapper');
 const { wrapInDispatch: dispatchActual } = jest.requireActual(
-  '../../utils/actions',
+  '../../firestore/extend/dispatchWrapper',
 );
 
 // cache reducer mutation output
-jest.mock('../../reducers/utils/mutate', () => ({
-  ...jest.requireActual('../../reducers/utils/mutate'),
+jest.mock('../../reducers/cacheReducer/mutation', () => ({
+  ...jest.requireActual('../../reducers/cacheReducer/mutation'),
   mutationWriteOutput: jest.fn(),
 }));
-const { mutationWriteOutput } = require('../../reducers/utils/mutate');
+const { mutationWriteOutput } = require('../../reducers/cacheReducer/mutation');
 const { mutationWriteOutput: mutationWriteOutputActual } = jest.requireActual(
-  '../../reducers/utils/mutate',
+  '../../reducers/cacheReducer/mutation',
 );
 
 // firebase

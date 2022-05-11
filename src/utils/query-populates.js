@@ -4,7 +4,7 @@ import get from 'lodash/get';
 import has from 'lodash/has';
 import isObject from 'lodash/isObject';
 import set from 'lodash/set';
-import { dataByIdSnapshot, getPopulateChild } from './query';
+import { dataByIdSnapshot, getPopulateChild } from './listener';
 
 /**
  * @private

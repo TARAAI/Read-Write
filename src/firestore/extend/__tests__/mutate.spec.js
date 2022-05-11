@@ -1,10 +1,9 @@
 /* eslint-disable require-jsdoc */
-import mutate from 'utils/mutate';
-import { getRead } from '../../../src/utils/mutate';
+import mutate, { getRead } from '../mutate';
 
 describe('firestore.mutate()', () => {
   it('getRead', async () => {
-    expect(getRead({ '::w3Provider': 'val' })).toBe('val');
+    expect(getRead({ '::provided': 'val' })).toBe('val');
     expect(getRead(() => 'non-deterministic')).toBe('non-deterministic');
     expect(getRead({ some: 'map' })).toStrictEqual({ some: 'map' });
   });

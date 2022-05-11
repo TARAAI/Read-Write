@@ -1,4 +1,5 @@
-import { actionTypes } from '../constants'
+/* eslint-disable jsdoc/require-param */
+import { actionTypes } from '../constants';
 import {
   orderedFromSnapshot,
   populateAndDispatch,
@@ -6,8 +7,8 @@ import {
   getWatcherCount,
   setWatcher,
   unsetWatcher,
-  getQueryIdFromPath
-} from '../utils/query'
+  getQueryIdFromPath,
+} from '../utils/query';
 
 /**
  * Watch a path in Firebase Real Time Database
@@ -24,35 +25,28 @@ import {
  */
 export function watchEvent(firebase, dispatch, options) {
   if (!firebase.database || typeof firebase.database !== 'function') {
-    throw new Error('Firebase database is required to create watchers')
+    throw new Error('Firebase database is required to create watchers');
   }
+  const { type, path, populates, queryParams, queryId, isQuery, storeAs } =
+    options;
   const {
-    type,
-    path,
-    populates,
-    queryParams,
-    queryId,
-    isQuery,
-    storeAs
-  } = options
-  const {
-    config: { logErrors }
-  } = firebase._
+    config: { logErrors },
+  } = firebase._;
 
-  const watchPath = !storeAs ? path : `${path}@${storeAs}`
-  const id = queryId || getQueryIdFromPath(path)
-  const counter = getWatcherCount(firebase, type, watchPath, id)
+  const watchPath = !storeAs ? path : `${path}@${storeAs}`;
+  const id = queryId || getQueryIdFromPath(path);
+  const counter = getWatcherCount(firebase, type, watchPath, id);
 
   if (counter > 0) {
     if (id) {
-      unsetWatcher(firebase, dispatch, type, path, id)
+      unsetWatcher(firebase, dispatch, type, path, id);
     }
   }
 
-  setWatcher(firebase, dispatch, type, watchPath, id)
+  setWatcher(firebase, dispatch, type, watchPath, id);
 
   if (counter > 0) {
-    return
+    return;
   }
 
   if (type === 'first_child') {
@@ -67,28 +61,28 @@ export function watchEvent(firebase, dispatch, options) {
         if (snapshot.val() === null) {
           dispatch({
             type: actionTypes.NO_VALUE,
-            path: storeAs || path
-          })
+            path: storeAs || path,
+          });
         }
-        return snapshot
+        return snapshot;
       })
       .catch((err) => {
         dispatch({
           type: actionTypes.ERROR,
           path: storeAs || path,
-          payload: err
-        })
-        return Promise.reject(err)
-      })
+          payload: err,
+        });
+        return Promise.reject(err);
+      });
   }
 
-  let query = firebase.database().ref().child(path)
+  let query = firebase.database().ref().child(path);
 
   if (isQuery) {
-    query = applyParamsToQuery(queryParams, query)
+    query = applyParamsToQuery(queryParams, query);
   }
 
-  dispatch({ type: actionTypes.START, path: storeAs || path })
+  dispatch({ type: actionTypes.START, path: storeAs || path });
 
   // Handle once queries
   if (type === 'once') {
@@ -98,8 +92,8 @@ export function watchEvent(firebase, dispatch, options) {
         if (snapshot.val() === null) {
           return dispatch({
             type: actionTypes.NO_VALUE,
-            path: storeAs || path
-          })
+            path: storeAs || path,
+          });
         }
         // dispatch normal event if no populates exist
         if (!populates) {
@@ -108,8 +102,8 @@ export function watchEvent(firebase, dispatch, options) {
             type: actionTypes.SET,
             path: storeAs || path,
             data: snapshot.val(),
-            ordered: orderedFromSnapshot(snapshot)
-          })
+            ordered: orderedFromSnapshot(snapshot),
+          });
         }
         // populate and dispatch associated actions if populates exist
         return populateAndDispatch(firebase, dispatch, {
@@ -117,16 +111,16 @@ export function watchEvent(firebase, dispatch, options) {
           storeAs,
           snapshot,
           data: snapshot.val(),
-          populates
-        })
+          populates,
+        });
       })
       .catch((err) => {
         dispatch({
           type: actionTypes.UNAUTHORIZED_ERROR,
-          payload: err
-        })
-        return Promise.reject(err)
-      })
+          payload: err,
+        });
+        return Promise.reject(err);
+      });
   }
   // Handle all other queries
 
@@ -134,9 +128,9 @@ export function watchEvent(firebase, dispatch, options) {
   query.on(
     type,
     (snapshot) => {
-      const data = type === 'child_removed' ? undefined : snapshot.val()
+      const data = type === 'child_removed' ? undefined : snapshot.val();
       const resultPath =
-        storeAs || type === 'value' ? path : `${path}/${snapshot.key}`
+        storeAs || type === 'value' ? path : `${path}/${snapshot.key}`;
 
       // Dispatch standard event if no populates exists
       if (!populates) {
@@ -144,13 +138,13 @@ export function watchEvent(firebase, dispatch, options) {
         const ordered =
           type === 'child_added'
             ? [{ key: snapshot.key, value: snapshot.val() }]
-            : orderedFromSnapshot(snapshot)
+            : orderedFromSnapshot(snapshot);
         return dispatch({
           type: actionTypes.SET,
           path: storeAs || resultPath,
           data,
-          ordered
-        })
+          ordered,
+        });
       }
       // populate and dispatch associated actions if populates exist
       return populateAndDispatch(firebase, dispatch, {
@@ -158,25 +152,25 @@ export function watchEvent(firebase, dispatch, options) {
         storeAs,
         snapshot,
         data: snapshot.val(),
-        populates
-      })
+        populates,
+      });
     },
     (err) => {
       if (logErrors) {
         // eslint-disable-next-line no-console
         console.log(
           `Error retrieving data for path: ${path}, storeAs: ${storeAs}. Firebase:`,
-          err
-        )
+          err,
+        );
       }
       dispatch({
         type: actionTypes.ERROR,
         storeAs,
         path,
-        payload: err
-      })
-    }
-  )
+        payload: err,
+      });
+    },
+  );
 }
 
 /**
@@ -195,10 +189,10 @@ export function watchEvent(firebase, dispatch, options) {
 export function unWatchEvent(
   firebase,
   dispatch,
-  { type, path, storeAs, queryId }
+  { type, path, storeAs, queryId },
 ) {
-  const watchPath = !storeAs ? path : `${path}@${storeAs}`
-  unsetWatcher(firebase, dispatch, type, watchPath, queryId)
+  const watchPath = !storeAs ? path : `${path}@${storeAs}`;
+  unsetWatcher(firebase, dispatch, type, watchPath, queryId);
 }
 
 /**
@@ -210,9 +204,9 @@ export function unWatchEvent(
  */
 export function watchEvents(firebase, dispatch, events) {
   if (!Array.isArray(events)) {
-    throw new Error('Events config must be an Array')
+    throw new Error('Events config must be an Array');
   }
-  return events.map((event) => watchEvent(firebase, dispatch, event))
+  return events.map((event) => watchEvent(firebase, dispatch, event));
 }
 
 /**
@@ -236,20 +230,20 @@ export function unWatchEvents(firebase, dispatch, events) {
  * @returns {Promise} Resolves with path
  */
 export function remove(firebase, dispatch, path, options = {}) {
-  const { dispatchAction = true } = options
-  const { dispatchRemoveAction } = firebase._.config
+  const { dispatchAction = true } = options;
+  const { dispatchRemoveAction } = firebase._.config;
   return firebase
     .database()
     .ref(path)
     .remove()
     .then(() => {
       if (dispatchRemoveAction && dispatchAction) {
-        dispatch({ type: actionTypes.REMOVE, path })
+        dispatch({ type: actionTypes.REMOVE, path });
       }
-      return path
+      return path;
     })
     .catch((err) => {
-      dispatch({ type: actionTypes.ERROR, payload: err })
-      return Promise.reject(err)
-    })
+      dispatch({ type: actionTypes.ERROR, payload: err });
+      return Promise.reject(err);
+    });
 }

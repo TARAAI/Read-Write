@@ -1,4 +1,5 @@
-import { isEqual, differenceWith } from 'lodash'
+import isEqual from 'lodash/isEqual';
+import differenceWith from 'lodash/differenceWith';
 import { useMemo, useEffect, useRef } from 'react'
 import { watchEvents, unWatchEvents } from './actions/query'
 import { getEventsFromInput, invokeArrayQuery } from './utils'

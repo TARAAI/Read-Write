@@ -1,4 +1,6 @@
-import { get, size, pick } from 'lodash'
+import get from 'lodash/get';
+import size from 'lodash/size';
+import pick from 'lodash/pick';
 import { unset } from 'lodash/fp'
 
 /**

@@ -76,7 +76,7 @@ export default function useCache(alias, selection = null) {
   // Standard (& Typed) Redux selector. Will recreate if alias or filtering changes
   const selector = useMemo(
     () =>
-      function readSelector(state) {
+      (function readSelector(state) {
         const { firestore: { cache } = {} } = state || {};
         if (!cache || !localAlias) return undefined;
 
@@ -104,7 +104,7 @@ export default function useCache(alias, selection = null) {
         }
 
         return (postFnc ? postFnc(listsAndDocs) : listsAndDocs)[0];
-      },
+      }),
     [localAlias, postFnc, fields],
   );
 

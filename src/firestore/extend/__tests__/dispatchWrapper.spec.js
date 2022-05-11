@@ -1,7 +1,8 @@
-import { wrapInDispatch } from 'utils/actions';
+/* eslint-disable jsdoc/require-param */
+import { wrapInDispatch } from '../dispatchWrapper';
 
 let dispatchSpy;
-describe('actions utils', () => {
+describe('dispath wrapper', () => {
   beforeEach(() => {
     dispatchSpy = jest.fn();
   });

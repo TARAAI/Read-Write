@@ -1,4 +1,5 @@
-import { omitBy, isUndefined } from 'lodash'
+import omitBy from 'lodash/omitBy';
+import isUndefined from 'lodash/isUndefined';
 import { actionTypes } from '../constants'
 
 const { FILE_UPLOAD_ERROR, FILE_UPLOAD_PROGRESS } = actionTypes

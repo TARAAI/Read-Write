@@ -1,10 +1,9 @@
+/* eslint-disable jsdoc/require-param */
 import { combineReducers } from '../utils/reducers';
-import {
-  statusReducer,
-  listenersReducer,
-  errorsReducer,
-  cacheReducer,
-} from './index-old';
+import errorsReducer from './errorsReducer';
+import listenersReducer from './listenersReducer';
+import statusReducer from './statusReducer';
+import cacheReducer from './cacheReducer';
 
 /**
  * @name firestoreReducer

@@ -1,14 +1,12 @@
-import {
-  size,
-  set,
-  get,
-  has,
-  map,
-  mapValues,
-  reduce,
-  defaultsDeep,
-  some,
-} from 'lodash';
+import size from 'lodash/size';
+import set from 'lodash/set';
+import get from 'lodash/get';
+import has from 'lodash/has';
+import map from 'lodash/map';
+import mapValues from 'lodash/mapValues';
+import reduce from 'lodash/reduce';
+import defaultsDeep from 'lodash/defaultsDeep';
+import some from 'lodash/some';
 import { topLevelPaths } from './constants';
 import { getPopulateObjs } from './utils/populate';
 import { getDotStrPath } from './utils/reducers';

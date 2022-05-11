@@ -1,6 +1,6 @@
 import React, { Component } from 'react'
 import PropTypes from 'prop-types'
-import { isEqual } from 'lodash'
+import isEqual from 'lodash/isEqual';
 import hoistStatics from 'hoist-non-react-statics'
 import { createCallable, wrapDisplayName, getChanges } from './utils'
 import ReduxFirestoreContext from './ReduxFirestoreContext'

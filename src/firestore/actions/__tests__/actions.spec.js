@@ -1,10 +1,9 @@
 import createFirestoreInstance, {
   getFirestore,
-} from 'sdk/createFirestoreInstance';
-import { firestoreActions } from 'actions';
-import { setListeners } from 'actions/firestore-dispatcher';
-import { actionTypes, defaultConfig } from 'constants';
-import { identity } from 'lodash';
+} from '../../extend/createFirestoreInstance';
+import { firestoreActions } from '..';
+import { setListeners } from '../snapshot-listener';
+import { actionTypes, defaultConfig } from '../../../constants';
 
 let dispatchSpy;
 let fakeFirebase;

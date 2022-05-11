@@ -1,5 +1,5 @@
 import { actionTypes } from '../constants';
-import { getQueryName } from '../utils/query';
+import { getQueryName } from '../utils/convertors';
 import { combineReducers } from '../utils/reducers';
 
 const { CLEAR_ERRORS, CLEAR_ERROR, LISTENER_ERROR, ERROR } = actionTypes;

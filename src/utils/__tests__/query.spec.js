@@ -7,9 +7,9 @@ import {
   orderedFromSnap,
   dataByIdSnapshot,
   getSnapshotByObject,
-} from 'utils/query';
-import { actionTypes, defaultConfig } from 'constants';
-import { getBaseQueryName } from 'utils/query';
+} from '../utils/convertors';
+import { actionTypes, defaultConfig } from '../constants';
+import { getBaseQueryName } from '../utils/convertors';
 
 let dispatch = jest.fn();
 let meta;

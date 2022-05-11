@@ -1,6 +1,7 @@
 import { actionTypes } from '../constants'
 import { promisesForPopulate } from './populate'
-import { isNaN, forEach } from 'lodash'
+import isNaN from 'lodash/isNaN';
+import forEach from 'lodash/forEach';
 import { isString } from './index'
 
 /**

@@ -12,7 +12,7 @@
     "dev": "yarn --cwd ./examples/notes dev",
     "build:commonjs": "cross-env BABEL_ENV=commonjs babel src --out-dir lib --ignore '**/__tests__' --ignore '**/__mocks__'",
     "build:es": "cross-env BABEL_ENV=es babel src --out-dir es --ignore '**/__tests__' --ignore '**/__mocks__'",
-    "build:dev": "cp ./index.d.ts ./examples/notes/node_modules/read-write; cross-env BABEL_ENV=es babel src --out-dir ./examples/notes/node_modules/read-write",
+    "build:dev": "cp ./index.d.ts ./examples/notes/node_modules/read-write && cross-env BABEL_ENV=es babel src --out-dir ./examples/notes/node_modules/read-write",
     "build:umd": "cross-env BABEL_ENV=commonjs NODE_ENV=development webpack",
     "build:umd:min": "cross-env BABEL_ENV=commonjs NODE_ENV=production webpack",
     "build": "npm run build:commonjs && npm run build:es && npm run build:umd && npm run build:umd:min",
@@ -116,7 +116,9 @@
     "coverageReporters": [
       "lcov"
     ],
-    "coveragePathIgnorePatterns": ["redux-firebase"],
+    "coveragePathIgnorePatterns": [
+      "redux-firebase"
+    ],
     "modulePathIgnorePatterns": [
       "examples"
     ]
@@ -224,7 +226,8 @@
     "react",
     "read-write",
     "react-firestore",
-    "react-redux-firebase", "redux-firebase",
+    "react-redux-firebase",
+    "redux-firebase",
     "react-firebase"
   ],
   "repository": {

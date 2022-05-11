@@ -1,5 +1,5 @@
+/* eslint-disable jsdoc/require-param */
 import isBoolean from 'lodash/isBoolean';
-
 import pick from 'lodash/pick';
 import replace from 'lodash/replace';
 import trimStart from 'lodash/trimStart';
@@ -7,7 +7,7 @@ import flatten from 'lodash/flatten';
 
 /**
  * Create a path array from path string
- * @param {string} path - Path seperated with slashes
+ * @param {string} path - Path separated with slashes
  * @returns {Array} Path as Array
  * @private
  */
@@ -17,8 +17,8 @@ export function pathToArr(path) {
 
 /**
  * Trim leading slash from path for use with state
- * @param {string} path - Path seperated with slashes
- * @returns {string} Path seperated with slashes
+ * @param {string} path - Path separated with slashes
+ * @returns {string} Path separated with slashes
  * @private
  */
 export function getSlashStrPath(path) {
@@ -26,9 +26,9 @@ export function getSlashStrPath(path) {
 }
 
 /**
- * Convert path with slashes to dot seperated path (for use with lodash get/set)
- * @param {string} path - Path seperated with slashes
- * @returns {string} Path seperated with dots
+ * Convert path with slashes to dot separated path (for use with lodash get/set)
+ * @param {string} path - Path separated with slashes
+ * @returns {string} Path separated with dots
  * @private
  */
 export function getDotStrPath(path) {
@@ -36,7 +36,7 @@ export function getDotStrPath(path) {
 }
 
 /**
- * Combine reducers utility (abreveated version of redux's combineReducer).
+ * Combine reducers utility (abbreviated version of redux's combineReducer).
  * Turns an object whose values are different reducer functions, into a single
  * reducer function.
  * @param {object} reducers An object whose values correspond to different
@@ -111,7 +111,7 @@ export function pathFromMeta(meta) {
  * it does not already exist
  * @param {Array} array - Array within which to update item
  * @param {string} itemId - Id of item to update
- * @param {Function} updateItemCallback - Callback dictacting how the item
+ * @param {Function} updateItemCallback - Callback dictating how the item
  * is updated
  * @returns {Array} Array with item updated
  * @private

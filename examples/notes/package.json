@@ -10,7 +10,8 @@
     "lint": "next lint",
     "test": "jest --watch",
     "storybook": "concurrently --kill-others \"yarn dev:firestore\" \"yarn start-storybook -s ./public -p 6006\"",
-    "postinstall": "yarn --cwd ../.. install && next build"
+    "preinstall": "yarn --cwd ../.. install",
+    "postinstall": "next build"
   },
   "dependencies": {
     "@reduxjs/toolkit": "^1.8.0",

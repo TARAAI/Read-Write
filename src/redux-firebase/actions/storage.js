@@ -1,4 +1,4 @@
-import { map } from 'lodash'
+import map from 'lodash/map';
 import { actionTypes } from '../constants'
 import { wrapInDispatch } from '../utils/actions'
 import {

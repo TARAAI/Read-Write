@@ -1,4 +1,4 @@
-import { isObject } from 'lodash'
+import isObject from 'lodash/isObject';
 import { merge } from 'lodash/fp'
 import { getEventsFromInput, createCallable } from './utils'
 import { mapWithFirebaseAndDispatch } from './utils/actions'

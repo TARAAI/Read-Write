@@ -1,4 +1,6 @@
-import { isObject, mapValues } from 'lodash'
+import isObject from 'lodash/isObject';
+
+import mapValues from 'lodash/mapValues';
 
 /**
  * Wrap method call in dispatched actions

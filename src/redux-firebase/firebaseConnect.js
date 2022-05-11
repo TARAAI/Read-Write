@@ -1,6 +1,7 @@
 import React, { Component } from 'react'
 import PropTypes from 'prop-types'
-import { isEqual, differenceWith } from 'lodash'
+import isEqual from 'lodash/isEqual';
+import differenceWith from 'lodash/differenceWith';
 import hoistStatics from 'hoist-non-react-statics'
 import { watchEvents, unWatchEvents } from './actions/query'
 import { getEventsFromInput, createCallable, wrapDisplayName } from './utils'

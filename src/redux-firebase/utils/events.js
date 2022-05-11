@@ -1,4 +1,6 @@
-import { flatMap, isObject, remove } from 'lodash'
+import flatMap from 'lodash/flatMap';
+import isObject from 'lodash/isObject';
+import remove from 'lodash/remove';
 import { getPopulates } from './populate'
 import { getQueryIdFromPath } from './query'
 

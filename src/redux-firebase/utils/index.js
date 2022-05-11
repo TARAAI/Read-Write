@@ -1,4 +1,7 @@
-import { constant, isEqual, some, filter } from 'lodash'
+import constant from 'lodash/constant';
+import isEqual from 'lodash/isEqual';
+import some from 'lodash/some';
+import filter from 'lodash/filter';
 export { getEventsFromInput } from './events'
 
 /**

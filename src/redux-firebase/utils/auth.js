@@ -1,4 +1,4 @@
-import { capitalize } from 'lodash'
+import capitalize from 'lodash/capitalize';
 import { supportedAuthProviders, actionTypes } from '../constants'
 
 /**

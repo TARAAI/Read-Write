@@ -1,7 +1,7 @@
 import firebase from 'firebase/compat/app';
 
 import { shouldPass } from '../shouldPassFail';
-import createMutate from 'utils/createMutate';
+import createMutate from '../../mutate/createMutate';
 
 const sampleAction = createMutate({
   action: 'sampleAction',

@@ -2,14 +2,13 @@
 import * as reduxFirestore from './redux-firebase';
 import enhancer from './store/enhancer';
 import reducer from './reducers';
-import { firestoreActions } from './actions';
+import { firestoreActions } from './firestore/actions';
 import createFirestoreInstance, {
   getFirestore,
-} from './sdk/createFirestoreInstance';
+} from './firestore/extend/createFirestoreInstance';
 import constants, { actionTypes } from './constants';
-import middleware, { CALL_FIRESTORE } from './store/middleware';
-import { getSnapshotByObject } from './utils/query';
-import createMutate from './utils/createMutate';
+import { getSnapshotByObject } from './utils/listener';
+import createMutate from './mutate/createMutate';
 import useRead from './hooks/useRead';
 import useCache from './hooks/useCache';
 
@@ -18,9 +17,7 @@ export const version = process.env.npm_package_version;
 
 const {
   getFirebase,
-  useFirestore,
   useFirebase,
-  populate,
   firebaseReducer,
   ReactReduxFirebaseProvider,
 } = reduxFirestore;
@@ -28,7 +25,17 @@ const {
 /**
  * @deprecated useRead/Cache directly properly creates the Redux selectors
  **/
+const useFirestore = reduxFirestore.useFirestore;
+
+/**
+ * @deprecated useRead/Cache directly properly creates the Redux selectors
+ **/
 const useFirestoreConnect = reduxFirestore.useFirestoreConnect;
+
+/**
+ * @deprecated MongoDB population don't work in a high-latency situations like a client-side DB
+ **/
+const populate = reduxFirestore.populate;
 
 /**
  * @deprecated undefined results are not loaded yet
@@ -36,6 +43,9 @@ const useFirestoreConnect = reduxFirestore.useFirestoreConnect;
 const isLoaded = reduxFirestore.isLoaded;
 
 export {
+  useRead,
+  useCache,
+  createMutate,
   reducer,
   reducer as firestoreReducer,
   enhancer,
@@ -48,30 +58,24 @@ export {
   getFirebase,
   useFirestore,
   useFirebase,
-  useRead,
-  useCache,
   getSnapshotByObject,
   constants,
   actionTypes,
-  middleware,
-  CALL_FIRESTORE,
-  createMutate,
-  // will delete
   useFirestoreConnect,
   populate,
   isLoaded,
 };
 
 export default {
+  useRead,
+  useCache,
+  createMutate,
   version,
   reducer,
   firestoreReducer: reducer,
   firebaseReducer,
   enhancer,
-  useRead,
-  useCache,
   getFirebase,
-  useFirestore,
   useFirebase,
   ReactReduxFirebaseProvider,
   reduxFirestore: enhancer,
@@ -81,10 +85,7 @@ export default {
   getSnapshotByObject,
   constants,
   actionTypes,
-  middleware,
-  CALL_FIRESTORE,
-  createMutate,
-  // will delete
+  useFirestore,
   useFirestoreConnect,
   populate,
   isLoaded,

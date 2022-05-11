@@ -1,4 +1,7 @@
-import { pick, omit, get, isObject } from 'lodash'
+import pick from 'lodash/pick';
+import omit from 'lodash/omit';
+import get from 'lodash/get';
+import isObject from 'lodash/isObject';
 import { setWith, assign } from 'lodash/fp'
 import { actionTypes } from './constants'
 import {

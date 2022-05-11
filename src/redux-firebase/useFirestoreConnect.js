@@ -1,4 +1,4 @@
-import { isEqual } from 'lodash'
+import isEqual from 'lodash/isEqual';
 import { useRef, useMemo, useEffect } from 'react'
 import { invokeArrayQuery, getChanges } from './utils'
 import useFirestore from './useFirestore'

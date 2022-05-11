@@ -1,84 +1,12 @@
+/* eslint-disable jsdoc/require-param */
 import isFunction from 'lodash/isFunction';
 import isEmpty from 'lodash/isEmpty';
-import { getRead, isDocRead, isProviderRead } from '../../utils/mutate';
-import { Timestamp as TimestampFS } from 'firebase/firestore';
-
-/**
- * Not a Mutate, just an array
- * @param {Array} arr
- * @returns Null | Array
- */
-
-const primaryValue = (arr) =>
-  Array.isArray(arr) && typeof arr[0] === 'string' && arr[0].indexOf('::') === 0
-    ? null
-    : arr;
-
-/**
- * Mutate Nested Object
- * @param {*} obj - data
- * @param {*} key - nested key path
- * @param {*} val - value to be set
- * @returns Null | object
- */
-const nestedMap = (obj, key, val) => {
-  // eslint-disable-next-line no-param-reassign
-  delete obj[key];
-  const fields = key.split('.');
-  fields.reduce((deep, field, idx) => {
-    // eslint-disable-next-line no-param-reassign
-    if (deep[field] === undefined) deep[field] = {};
-    // eslint-disable-next-line no-param-reassign
-    if (idx === fields.length - 1) deep[field] = val;
-    return deep[field];
-  }, obj);
-  return obj;
-};
-
-const arrayUnion = (key, val, cached) =>
-  key !== '::arrayUnion' ? null : (cached() || []).concat([val]);
-
-const arrayRemove = (key, val, cached) =>
-  key === '::arrayRemove' && (cached() || []).filter((item) => item !== val);
-
-const increment = (key, val, cached) =>
-  key === '::increment' && typeof val === 'number' && (cached() || 0) + val;
-
-const serverTimestamp = (key) =>
-  key === '::serverTimestamp' && TimestampFS.now();
-
-const deleteField = (key, cached) => {
-  if (key === '::delete') {
-    // eslint-disable-next-line no-param-reassign
-    delete cached()[key];
-  }
-};
-
-/**
- * Process Mutation to a vanilla JSON
- * @param {*} mutation - payload mutation
- * @param {Function} cached - function that returns in-memory cached instance
- * @returns
- */
-function atomize(mutation, cached) {
-  return Object.keys(mutation).reduce((data, key) => {
-    const val = data[key];
-    if (key.includes('.')) {
-      nestedMap(data, key, val);
-    } else if (Array.isArray(val) && val.length > 0) {
-      // eslint-disable-next-line no-param-reassign
-      data[key] =
-        primaryValue(val) ||
-        serverTimestamp(val[0]) ||
-        arrayUnion(val[0], val[1], () => cached(key)) ||
-        arrayRemove(val[0], val[1], () => cached(key)) ||
-        deleteField(val[0], val[1], () => cached(key)) ||
-        increment(val[0], val[1], () => cached(key));
-    }
-
-    return data;
-  }, JSON.parse(JSON.stringify(mutation)));
-}
+import {
+  getRead,
+  isDocRead,
+  isProviderRead,
+} from '../../firestore/extend/mutate';
+import { toJSON } from '../../utils/convertors';
 
 /**
  * Translates mutation reads request into read results
@@ -161,7 +89,7 @@ export function mutationWriteOutput(writeInstructions, { db }) {
     return {
       path: coll,
       id: docId,
-      ...atomize(collection ? data : rest, (key) => {
+      ...toJSON(collection ? data : rest, (key) => {
         const database = Object.keys(db).length > 0 ? db : {};
         const location = database[coll] || {};
         return (location[docId] || {})[key];

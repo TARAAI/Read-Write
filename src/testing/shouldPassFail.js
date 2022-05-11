@@ -12,9 +12,9 @@ import 'firebase/compat/firestore';
 import 'firebase/auth';
 import createFirestoreInstance, {
   getFirestore,
-} from '../sdk/createFirestoreInstance';
+} from '../firestore/extend/createFirestoreInstance';
 import firestoreReducer from '../reducers';
-import mutate from '../utils/mutate';
+import mutate from '../firestore/extend/mutate';
 import thunk from 'redux-thunk';
 import { configureStore, unwrapResult } from '@reduxjs/toolkit';
 import isEmpty from 'lodash/isEmpty';
@@ -26,15 +26,15 @@ import startCase from 'lodash/startCase';
 import { Provider } from 'react-redux';
 import React from 'react';
 import { prettyDOM, render } from '@testing-library/react';
-import { getQueryConfig, getQueryName } from '../utils/query';
+import { getQueryConfig, getQueryName } from '../utils/convertors';
 import { actionTypes } from '../constants';
 import { writeFile } from 'fs';
 import { performance } from 'perf_hooks';
 import debug from 'debug';
 
 const { useFirestore } = require('../redux-firebase/useFirebase');
-const { mutationWriteOutput } = require('../reducers/utils/mutate');
-const { wrapInDispatch } = require('../utils/actions');
+const { mutationWriteOutput } = require('../reducers/cacheReducer/mutation');
+const { wrapInDispatch } = require('../firestore/extend/dispatchWrapper');
 
 const info = debug('readwrite:*');
 const verbose = debug('readwrite:debug');

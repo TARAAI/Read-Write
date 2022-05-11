@@ -3,7 +3,7 @@ import isEqual from 'lodash/isEqual';
 import some from 'lodash/some';
 import { useRef, useEffect } from 'react';
 import useFirestore from '../redux-firebase/useFirestore';
-import { getQueryName } from '../utils/query';
+import { getQueryName } from '../utils/convertors';
 import useCache from './useCache';
 
 const getChanges = (data = [], prevData = []) => {

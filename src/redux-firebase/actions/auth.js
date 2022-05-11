@@ -1,4 +1,6 @@
-import { forEach, omit, pick } from 'lodash'
+import forEach from 'lodash/forEach';
+import omit from 'lodash/omit';
+import pick from 'lodash/pick';
 import { actionTypes } from '../constants'
 import { populate } from '../helpers'
 import { isString } from '../utils'

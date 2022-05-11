@@ -1,21 +1,14 @@
+/* eslint-disable jsdoc/require-param */
 import chunk from 'lodash/chunk';
-import cloneDeep from 'lodash/cloneDeep';
 import flatten from 'lodash/flatten';
 import isFunction from 'lodash/isFunction';
-import isPlainObject from 'lodash/isPlainObject';
 import mapValues from 'lodash/mapValues';
 import isEmpty from 'lodash/isEmpty';
 import has from 'lodash/has';
 import debug from 'debug';
-import { firestoreRef } from './query';
-import mark from './profiling';
-import {
-  increment as incrementFS,
-  arrayUnion as arrayUnionFS,
-  arrayRemove as arrayRemoveFS,
-  serverTimestamp as serverTimestampFS,
-  deleteField as deleteFieldFS,
-} from 'firebase/firestore';
+import { firestoreRef } from '../../utils/convertors';
+import mark from '../../utils/profiling';
+import { toFieldValues } from '../../utils/convertors';
 
 const info = debug('readwrite:mutate');
 
@@ -38,9 +31,9 @@ const isBatchedWrite = (operations) => Array.isArray(operations);
 export const isDocRead = ({ doc, id } = {}) =>
   typeof id === 'string' || typeof doc === 'string';
 export const isProviderRead = (read) =>
-  has(read, '::w3Provider') || isFunction(read);
+  has(read, '::provided') || isFunction(read);
 export const getRead = (read) => {
-  if (has(read, '::w3Provider')) return read['::w3Provider'];
+  if (has(read, '::provided')) return read['::provided'];
   if (isFunction(read)) return read();
   return read;
 };
@@ -52,76 +45,6 @@ const hasNothing = (snapshot) =>
   !snapshot ||
   (has(snapshot, 'empty') && snapshot.empty()) ||
   (has(snapshot, 'exists') && snapshot.exists);
-
-// ----- FieldValue support -----
-
-const primaryValue = (arr) =>
-  Array.isArray(arr) && typeof arr[0] === 'string' && arr[0].indexOf('::') === 0
-    ? null
-    : arr;
-
-const arrayUnion = (firebase, key, ...val) => {
-  if (key !== '::arrayUnion') return null;
-  return arrayUnionFS(...val);
-};
-
-const arrayRemove = (firebase, key, ...val) => {
-  if (key !== '::arrayRemove') return null;
-  return arrayRemoveFS(...val);
-};
-
-const increment = (firebase, key, val) =>
-  key === '::increment' && typeof val === 'number' && incrementFS(val);
-
-const deleteField = (firebase, key) => key === '::delete' && deleteFieldFS();
-
-const serverTimestamp = (firebase, key) =>
-  key === '::serverTimestamp' && serverTimestampFS();
-
-/**
- * Process Mutation to a vanilla JSON
- * @param {object} firebase - firebase
- * @param {*} operation - payload mutation
- * @returns
- */
-function atomize(firebase, operation) {
-  let requiresUpdate = false;
-  return [
-    Object.keys(operation).reduce((data, key) => {
-      const clone = { ...data };
-      const val = clone[key];
-      if (key.includes('.')) {
-        requiresUpdate = true;
-      }
-      if (!val) return clone;
-
-      const value =
-        primaryValue(val) ||
-        serverTimestamp(firebase, val[0]) ||
-        arrayUnion(firebase, val[0], val[1]) ||
-        arrayRemove(firebase, val[0], val[1]) ||
-        increment(firebase, val[0], val[1]) ||
-        deleteField(firebase, val[0], val[1]);
-
-      if (Array.isArray(val) && val.length > 0 && isPlainObject(val[0])) {
-        clone[key] = val.map((obj) => {
-          const [object, update] = atomize(firebase, obj);
-          if (update) requiresUpdate = true;
-          return object;
-        });
-      } else if (Array.isArray(val) && val.length > 0) {
-        // eslint-disable-next-line no-param-reassign
-        clone[key] = value;
-      } else if (isPlainObject(val)) {
-        const [object, update] = atomize(firebase, val);
-        clone[key] = object;
-        if (update) requiresUpdate = true;
-      }
-      return clone;
-    }, cloneDeep(operation)),
-    requiresUpdate,
-  ];
-}
 
 // ----- write functions -----
 
@@ -137,7 +60,7 @@ function write(firebase, operation = {}, writer = null) {
   if (isEmpty(operation)) return Promise.resolve();
   const { collection, path, doc, id, data, ...rest } = operation;
   const ref = docRef(firebase.firestore(), path || collection, id || doc);
-  const [changes, requiresUpdate = false] = atomize(firebase, data || rest);
+  const [changes, requiresUpdate = false] = toFieldValues(data || rest);
 
   if (writer) {
     const writeType = writer.commit ? 'Batching' : 'Transaction.set';
@@ -305,7 +228,7 @@ export function convertReadProviders(mutations) {
     const isReadProvider = isFunction(read);
     if (isAsync(read))
       throw new Error('Read Providers must be synchronous, nullary functions.');
-    mutations.reads[key] = isReadProvider ? { '::w3Provider': read() } : read;
+    mutations.reads[key] = isReadProvider ? { '::provided': read() } : read;
   }, mutations);
 }
 

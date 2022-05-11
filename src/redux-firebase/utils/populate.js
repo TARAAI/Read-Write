@@ -1,4 +1,11 @@
-import { filter, isObject, map, get, forEach, set, has, some } from 'lodash'
+import filter from 'lodash/filter';
+import isObject from 'lodash/isObject';
+import map from 'lodash/map';
+import get from 'lodash/get';
+import forEach from 'lodash/forEach';
+import set from 'lodash/set';
+import has from 'lodash/has';
+import some from 'lodash/some';
 import { isString } from './index'
 
 /**

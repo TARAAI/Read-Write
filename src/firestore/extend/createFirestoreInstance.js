@@ -1,7 +1,8 @@
+/* eslint-disable jsdoc/require-param */
 import { merge } from 'lodash/fp';
 import { firestoreActions } from '../actions';
-import { mapWithFirebaseAndDispatch } from '../utils/actions';
-import { defaultConfig, methodsToAddFromFirestore } from '../constants';
+import { mapWithFirebaseAndDispatch } from './dispatchWrapper';
+import { defaultConfig, methodsToAddFromFirestore } from '../../constants';
 
 let firestoreInstance;
 
