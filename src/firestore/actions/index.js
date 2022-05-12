@@ -29,5 +29,8 @@ const firestoreActions = {
   mutate,
 };
 
+/**
+ * Firestore class are wrapped to dispatch actions for request and response of call
+ */
 export { firestoreActions };
 export default { firestoreActions };

@@ -95,7 +95,7 @@ export function toFieldValues(mutation) {
 
       if (Array.isArray(val) && val.length > 0 && isPlainObject(val[0])) {
         clone[key] = val.map((obj) => {
-          const [object, update] = toRef(obj);
+          const [object, update] = toFieldValues(obj);
           if (update) requiresUpdate = true;
           return object;
         });
@@ -103,7 +103,7 @@ export function toFieldValues(mutation) {
         // eslint-disable-next-line no-param-reassign
         clone[key] = value;
       } else if (isPlainObject(val)) {
-        const [object, update] = toRef(val);
+        const [object, update] = toFieldValues(val);
         clone[key] = object;
         if (update) requiresUpdate = true;
       }

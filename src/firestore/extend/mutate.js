@@ -196,9 +196,6 @@ async function writeInTransaction(firebase, operations) {
     const writes = [];
 
     operations.writes.forEach((writeFnc) => {
-      if (isAsync(writeFnc))
-        throw new Error('Writes must be synchronous, unary functions.');
-
       const complete = mark('mutate.writeInTransaction:writes');
       const operation =
         typeof writeFnc === 'function' ? writeFnc(reads) : writeFnc;
@@ -220,6 +217,14 @@ async function writeInTransaction(firebase, operations) {
 }
 
 export function convertReadProviders(mutations) {
+  // ensure writes are an array of sync functions
+  mutations.writes = [].concat(mutations.writes);
+  mutations.writes.forEach((writeFnc) => {
+    if (isAsync(writeFnc))
+      throw new Error('Writes must be synchronous, unary functions.');
+  });
+
+  // validate reads
   const shouldMakeProvidesIdempotent = mutations && mutations.reads;
   if (!shouldMakeProvidesIdempotent) return;
 
@@ -249,6 +254,5 @@ export default function mutate(firebase, operations) {
   }
 
   convertReadProviders(operations);
-
   return writeInTransaction(firebase, operations);
 }

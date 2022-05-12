@@ -1,14 +1,49 @@
 /* eslint-disable require-jsdoc */
 import mutate, { getRead } from '../mutate';
+import firebase from 'firebase/compat/app';
+import 'firebase/compat/firestore';
 
-describe('firestore.mutate()', () => {
-  it('getRead', async () => {
+jest.mock('firebase/firestore', () => ({
+  ...jest.requireActual('firebase/firestore'),
+  increment: jest.fn(() => 'firestore.FieldValue.increment'),
+  arrayRemove: jest.fn(
+    (values) =>
+      `firestore.FieldValue.arrayRemove(${
+        typeof values === 'string' ? values : JSON.stringify(values)
+      })`,
+  ),
+  arrayUnion: jest.fn(
+    (values) => `firestore.FieldValue.arrayUnion(${values.toString()})`,
+  ),
+  serverTimestamp: jest.fn(() => 'firestore.FieldValue.serverTimestamp'),
+  deleteField: jest.fn(() => 'firestore.FieldValue.deleteField'),
+  Timestamp: jest.fn(() => {
+    now: () => 'this.is.now';
+  }),
+}));
+
+describe('Firestore Mutations', () => {
+  it('@scenario: Read Providers are deterministic.', async () => {
     expect(getRead({ '::provided': 'val' })).toBe('val');
     expect(getRead(() => 'non-deterministic')).toBe('non-deterministic');
     expect(getRead({ some: 'map' })).toStrictEqual({ some: 'map' });
   });
 
-  it('throws on async reads', async () => {
+  it('@scenario: Sll current Firestore FieldValues are supported.', () => {
+    const properties = Object.getOwnPropertyNames(
+      firebase.firestore.FieldValue,
+    ).filter((val) => !['length', 'name', 'prototype'].includes(val));
+
+    expect(properties).toStrictEqual([
+      'serverTimestamp',
+      'delete',
+      'arrayUnion',
+      'arrayRemove',
+      'increment',
+    ]);
+  });
+
+  it('@scenario: Attempting async reads throws an Error.', async () => {
     const set = jest.fn();
     const doc = jest.fn(() => ({
       set,
@@ -28,7 +63,35 @@ describe('firestore.mutate()', () => {
     ).toThrowError('Read Providers must be synchronous, nullary functions.');
   });
 
-  it('writes a single operation', async () => {
+  it('@scenario: Attempting async writes throws an Error.', async () => {
+    const set = jest.fn();
+
+    function* mock() {
+      yield Promise.resolve({
+        ref: { id: 'sprint-1', parent: { path: 'sprints' } },
+        data: () => ({
+          sprintSettings: { moveRemainingTasksTo: 'NextSprint' },
+        }),
+      });
+    }
+    const mocked = mock();
+    const transactionGet = () => mocked.next().value;
+    const transaction = { set, get: transactionGet };
+    const runTransaction = jest.fn((cb) => cb(transaction));
+
+    const doc = jest.fn(() => ({
+      set,
+      id: 'id',
+      parent: { path: 'path' },
+    }));
+    const firestore = jest.fn(() => ({ doc, runTransaction }));
+
+    expect(() =>
+      mutate({ firestore }, { writes: async () => 'async write never called' }),
+    ).toThrowError('Writes must be synchronous, unary functions.');
+  });
+
+  it('@scenario: Simple write mutation sends to Firestore.', async () => {
     const set = jest.fn();
     const doc = jest.fn(() => ({
       set,
@@ -55,7 +118,7 @@ describe('firestore.mutate()', () => {
     );
   });
 
-  it('writes operations in batch', async () => {
+  it('@scenario: Multiple write mutations batch to Firestore.', async () => {
     const set = jest.fn(() => {});
     const commit = jest.fn((val) => Promise.resolve(val));
     const doc = jest.fn((val) => ({
@@ -98,7 +161,7 @@ describe('firestore.mutate()', () => {
     expect(commit).toHaveBeenCalledTimes(1);
   });
 
-  it('writes operations in multiple batches when there are over 500 writes', async () => {
+  it('@scenario: > 500 write mutations sent in multiple batches to Firestore.', async () => {
     const set = jest.fn(() => ({ set, commit }));
     const commit = jest.fn((val) => Promise.resolve(val));
     const doc = jest.fn((val) => ({
@@ -125,7 +188,7 @@ describe('firestore.mutate()', () => {
     expect(commit.mock.calls.length).toBe(2);
   });
 
-  it('writes transaction w/ provider, query & doc', async () => {
+  it('@scenario: Reads support providers, gets and queries.', async () => {
     const firestoreGet = jest.fn(() =>
       Promise.resolve({
         docs: [
@@ -222,7 +285,7 @@ describe('firestore.mutate()', () => {
     expect(update.mock.calls[1][2]).toBeUndefined();
   });
 
-  it('writes transaction w/ single write', async () => {
+  it('@scenario: Transaction support a single write function.', async () => {
     const firestoreGet = jest.fn(() =>
       Promise.resolve({
         docs: [
@@ -264,13 +327,11 @@ describe('firestore.mutate()', () => {
             collectionName: 'teams',
           },
         },
-        writes: [
-          ({ team }) => ({
-            collection: 'orgs/tara-ai/team',
-            doc: team.id,
-            data: { teamCount: team.teamCount + 1 },
-          }),
-        ],
+        writes: ({ team }) => ({
+          collection: 'orgs/tara-ai/team',
+          doc: team.id,
+          data: { teamCount: team.teamCount + 1 },
+        }),
       },
     );
 
@@ -286,7 +347,7 @@ describe('firestore.mutate()', () => {
     expect(set.mock.calls[0][2]).toStrictEqual({ merge: true });
   });
 
-  it('handles empty read transaction', async () => {
+  it('@scenario: Writes can throw errors to cancel a transaction.', async () => {
     const firestoreGet = jest.fn(() => Promise.resolve());
     const withConverter = jest.fn(() => ({ get: firestoreGet }));
     const where = jest.fn(() => ({ get: firestoreGet, withConverter }));
@@ -332,7 +393,7 @@ describe('firestore.mutate()', () => {
     ).rejects.toThrowError("team wasn't loaded.");
   });
 
-  it('handles Firebase 9 stringified Field Values', async () => {
+  it('@scenario: Writes prefer using firestore.set when no nested updates are required.', async () => {
     const set = jest.fn();
     const update = jest.fn();
     const doc = jest.fn(() => ({
@@ -343,11 +404,6 @@ describe('firestore.mutate()', () => {
     }));
     const collection = jest.fn(() => ({ doc }));
     const firestore = jest.fn(() => ({ collection, doc }));
-    firestore.firestore = {
-      FieldValue: {
-        serverTimestamp: jest.fn(() => 'firestore.FieldValue.serverTimestamp'),
-      },
-    };
 
     await mutate(
       { firestore, firebase: firestore },
@@ -369,13 +425,9 @@ describe('firestore.mutate()', () => {
     expect(doc).toHaveBeenCalledWith('orgs/tara-ai/teams/team-bravo');
 
     expect(update).not.toBeCalled(); // only nested changes require update
-
-    expect(
-      firestore.firestore.FieldValue.serverTimestamp,
-    ).toHaveBeenCalledTimes(1);
   });
 
-  it('handles stringified Field Values', async () => {
+  it('@scenario: Writes support all known combinations for updates.', async () => {
     const set = jest.fn();
     const update = jest.fn();
     const doc = jest.fn(() => ({
@@ -386,19 +438,6 @@ describe('firestore.mutate()', () => {
     }));
     const collection = jest.fn(() => ({ doc }));
     const firestore = jest.fn(() => ({ collection, doc }));
-    firestore.FieldValue = {
-      serverTimestamp: jest.fn(() => 'firestore.FieldValue.serverTimestamp'),
-      increment: jest.fn(() => 'firestore.FieldValue.increment'),
-      arrayRemove: jest.fn(
-        (values) =>
-          `firestore.FieldValue.arrayRemove(${
-            typeof values === 'string' ? values : JSON.stringify(values)
-          })`,
-      ),
-      arrayUnion: jest.fn(
-        (values) => `firestore.FieldValue.arrayUnion(${values.toString()})`,
-      ),
-    };
 
     await mutate(
       { firestore },
@@ -414,6 +453,7 @@ describe('firestore.mutate()', () => {
           removeArrayObjects: ['::arrayRemove', [{ type: 1 }, { type: 2 }]],
           updateAt: ['::serverTimestamp'],
           counter: ['::increment', 3],
+          deleteMe: ['::delete'],
           deepUnnested: {
             moreDeep: {
               removeArray: ['::arrayRemove', 'val'],
@@ -441,6 +481,7 @@ describe('firestore.mutate()', () => {
         'firestore.FieldValue.arrayRemove([{"type":1},{"type":2}])',
       updateAt: 'firestore.FieldValue.serverTimestamp',
       counter: 'firestore.FieldValue.increment',
+      deleteMe: 'firestore.FieldValue.deleteField',
       deepUnnested: {
         moreDeep: { removeArray: 'firestore.FieldValue.arrayRemove(val)' },
         updateAt: 'firestore.FieldValue.serverTimestamp',
@@ -457,10 +498,5 @@ describe('firestore.mutate()', () => {
     expect(doc).toHaveBeenCalledWith('orgs/tara-ai/teams/team-bravo');
 
     expect(set).not.toBeCalled(); // nested updates require using `update`
-
-    expect(firestore.FieldValue.serverTimestamp).toHaveBeenCalledTimes(3);
-    expect(firestore.FieldValue.increment).toHaveBeenCalledTimes(1);
-    expect(firestore.FieldValue.arrayRemove).toHaveBeenCalledTimes(3);
-    expect(firestore.FieldValue.arrayUnion).toHaveBeenCalledTimes(3);
   });
 });
