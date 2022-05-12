@@ -6,9 +6,7 @@ import mapValues from 'lodash/mapValues';
 import isEmpty from 'lodash/isEmpty';
 import has from 'lodash/has';
 import debug from 'debug';
-import { firestoreRef } from '../../utils/convertors';
-import mark from '../../utils/profiling';
-import { toFieldValues } from '../../utils/convertors';
+import { mark, firestoreRef, toFieldValues } from '../../utils';
 
 const info = debug('readwrite:mutate');
 

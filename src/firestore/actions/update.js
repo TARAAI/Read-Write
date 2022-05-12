@@ -1,7 +1,7 @@
 /* eslint-disable jsdoc/require-param */
 import { wrapInDispatch } from '../extend/dispatchWrapper';
 import { actionTypes } from '../../constants';
-import { firestoreRef, getQueryConfig } from '../../utils/convertors';
+import { firestoreRef, getQueryConfig } from '../../utils';
 
 /**
  * @deprecated - use createMutate

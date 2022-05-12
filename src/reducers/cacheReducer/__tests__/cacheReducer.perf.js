@@ -1,18 +1,19 @@
 /* eslint-disable no-console */
 import reducer from '..';
-import { actionTypes } from '../../constants';
+import { actionTypes } from '../../../constants';
 import { benchmark } from 'kelonio';
 import { debug } from 'debug';
 import largeAction from '../__stubs__/one_mb_action.json';
 import appState from '../__stubs__/app_state.json';
 
-const firestoreModule = require('../../firestore/extend/createFirestoreInstance');
+const firestoreModule = require('../../../firestore/extend/createFirestoreInstance');
 
-jest.mock('../../firestore/extend/createFirestoreInstance');
+jest.mock('../../../firestore/extend/createFirestoreInstance');
 
-firestoreModule.getFirestore.mockReturnValue({
-  FieldValue: { serverTimestamp: () => 'serverTimestamp' },
-});
+jest.mock('firebase/firestore', () => ({
+  ...jest.requireActual('firebase/firestore'),
+  serverTimestamp: jest.fn(() => 'serverTimestamp'),
+}));
 
 const collection = 'testCollection';
 const path = `${collection}`;

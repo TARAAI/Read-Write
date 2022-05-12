@@ -2,7 +2,7 @@
 import every from 'lodash/every';
 import { wrapInDispatch } from '../extend/dispatchWrapper';
 import { actionTypes } from '../../constants';
-import { firestoreRef, getQueryConfig } from '../../utils/convertors';
+import { firestoreRef, getQueryConfig } from '../../utils';
 
 /**
  * Delete a reference on Cloud Firestore with the call to the Firebase library

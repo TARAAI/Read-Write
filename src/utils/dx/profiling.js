@@ -31,7 +31,7 @@ const perf = win && win.performance;
  * @param context
  * @returns {Function}
  */
-export default function mark(marker, context = '') {
+export function mark(marker, context = '') {
   if (
     !debug.enabled('readwrite:cache') ||
     !debug.enabled('readwrite:profile') ||
@@ -56,7 +56,7 @@ export default function mark(marker, context = '') {
     return noop;
   }
 }
-
+export default mark;
 /**
  *
  * @param {*} marker

@@ -11,14 +11,14 @@ import isEqual from 'lodash/isEqual';
 import isEmpty from 'lodash/isEmpty';
 
 import { actionTypes } from '../../constants';
-import { getQueryName } from '../../utils/convertors';
+import { getQueryName } from '../../utils';
 import { getRead } from '../../firestore/extend/mutate';
 import {
   mutationWriteOutput,
   mutationProduceWrites,
   mutationReadFromCache,
 } from './mutation';
-import mark from '../../utils/profiling';
+import { mark } from '../../utils';
 import { processOptimistic, reprocessQueries } from './reprocessor';
 
 const info = debug('readwrite:cache');

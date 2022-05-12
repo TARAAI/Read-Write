@@ -1,7 +1,6 @@
 /* eslint-disable jsdoc/require-param */
-import { actionTypes } from '../constants';
-import { getSlashStrPath, combineReducers } from '../utils/reducers';
-import { getQueryName } from '../utils/convertors';
+import { actionTypes } from '../../constants';
+import { getQueryName, getSlashStrPath, combineReducers } from '../../utils';
 
 const { SET_LISTENER, UNSET_LISTENER, LISTENER_ERROR, LISTENER_RESPONSE } =
   actionTypes;

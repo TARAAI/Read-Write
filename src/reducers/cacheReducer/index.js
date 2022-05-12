@@ -1,5 +1,5 @@
 import HANDLERS from './handlers';
-import { getQueryName } from '../../utils/convertors';
+import { getQueryName } from '../../utils';
 
 /**
  * @name cacheReducer

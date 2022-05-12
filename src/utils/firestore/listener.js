@@ -1,8 +1,8 @@
 /* eslint-disable jsdoc/require-param */
 import isObject from 'lodash/isObject';
 import cloneDeep from 'lodash/cloneDeep';
-import { actionTypes } from '../constants';
-import { firestoreRef, getQueryName } from './convertors';
+import { actionTypes } from '../../constants';
+import { firestoreRef, getQueryName } from '../convertors';
 
 export const snapshotCache = new WeakMap();
 /**

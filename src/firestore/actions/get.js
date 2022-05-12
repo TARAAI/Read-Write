@@ -1,8 +1,12 @@
 /* eslint-disable jsdoc/require-param */
 import { wrapInDispatch } from '../extend/dispatchWrapper';
 import { actionTypes } from '../../constants';
-import { firestoreRef, getQueryConfig } from '../../utils/convertors';
-import { dataByIdSnapshot, orderedFromSnap } from '../../utils/listener';
+import {
+  firestoreRef,
+  getQueryConfig,
+  dataByIdSnapshot,
+  orderedFromSnap,
+} from '../../utils';
 
 /**
  * Get a collection or document from Cloud Firestore with the call to

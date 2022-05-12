@@ -1,6 +1,6 @@
 import omit from 'lodash/omit';
-import { actionTypes } from '../constants';
-import { combineReducers } from '../utils/reducers';
+import { actionTypes } from '../../constants';
+import { combineReducers } from '../../utils';
 
 /**
  * Reducer for listeners ids. Changed by `SET_LISTENER` and `UNSET_LISTENER`

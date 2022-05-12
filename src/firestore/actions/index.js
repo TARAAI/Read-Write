@@ -1,5 +1,5 @@
 /* eslint-disable jsdoc/require-param */
-import { firestoreRef } from '../../utils/convertors';
+import { firestoreRef } from '../../utils';
 import { add } from './add';
 import { deleteRef } from './del';
 import { get } from './get';

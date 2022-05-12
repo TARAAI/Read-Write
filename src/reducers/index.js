@@ -1,8 +1,9 @@
+/* istanbul ignore file */
 /* eslint-disable jsdoc/require-param */
-import { combineReducers } from '../utils/reducers';
-import errorsReducer from './errorsReducer';
-import listenersReducer from './listenersReducer';
-import statusReducer from './statusReducer';
+import { combineReducers } from '../utils';
+import errorsReducer from './errorsReducer/errorsReducer';
+import listenersReducer from './listenersReducer/listenersReducer';
+import statusReducer from './statusReducer/statusReducer';
 import cacheReducer from './cacheReducer';
 
 /**

@@ -1,21 +1,15 @@
 import {
-  attachListener,
-  detachListener,
   getQueryConfigs,
   getQueryName,
   firestoreRef,
-  orderedFromSnap,
-  dataByIdSnapshot,
-  getSnapshotByObject,
   getBaseQueryName,
-} from '../convertors';
-import { actionTypes, defaultConfig } from '../../constants';
+} from '..';
 
-let dispatch = jest.fn();
 let meta;
 let result;
 let docSpy;
 let fakeFirebase;
+let dispatch;
 const collection = 'test';
 const fakeFirebaseWith = (spyedName) => {
   const theSpy = jest.fn(() => ({}));

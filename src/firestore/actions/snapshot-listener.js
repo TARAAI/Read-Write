@@ -1,17 +1,15 @@
 /* eslint-disable jsdoc/require-param */
-import { resource } from '../../utils/profiling';
 import { actionTypes } from '../../constants';
 import {
+  resource,
   firestoreRef,
   getQueryConfig,
   getQueryName,
-} from '../../utils/convertors';
-import {
   attachListener,
   detachListener,
   dispatchListenerResponse,
-} from '../../utils/listener';
-import { getPopulateActions } from '../../utils/query-populates';
+  getPopulateActions,
+} from '../../utils';
 
 /**
  * Set listener to Cloud Firestore with the call to the Firebase library

@@ -5,7 +5,7 @@ import {
   preserveValuesFromState,
   updateItemInArray,
   createReducer,
-} from 'utils/reducers';
+} from '..';
 
 let subcollections;
 let config;

@@ -26,7 +26,7 @@ import startCase from 'lodash/startCase';
 import { Provider } from 'react-redux';
 import React from 'react';
 import { prettyDOM, render } from '@testing-library/react';
-import { getQueryConfig, getQueryName } from '../utils/convertors';
+import { getQueryConfig, getQueryName } from '../utils';
 import { actionTypes } from '../constants';
 import { writeFile } from 'fs';
 import { performance } from 'perf_hooks';

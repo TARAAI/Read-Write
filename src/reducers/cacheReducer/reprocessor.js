@@ -12,7 +12,7 @@ import takeRight from 'lodash/takeRight';
 import isEmpty from 'lodash/isEmpty';
 import identity from 'lodash/identity';
 
-import mark from '../../utils/profiling';
+import { mark } from '../../utils';
 
 const info = debug('readwrite:cache');
 const verbose = debug('readwrite:verbose');
@@ -147,7 +147,7 @@ const xfVerbose = (title) =>
  * @returns {xFormCollection} - transducer
  */
 const xfAllIds = ({ collection, path: rawPath }) =>
-  (function allIdsTransducer(state) {
+  function allIdsTransducer(state) {
     const path = rawPath || collection;
     const { database: db = {}, databaseOverrides: dbo = {} } = state;
     const allIds = new Set([
@@ -156,7 +156,7 @@ const xfAllIds = ({ collection, path: rawPath }) =>
     ]);
 
     return [Array.from(allIds).map((id) => [path, id])];
-  });
+  };
 
 /**
  * @name xfWhere

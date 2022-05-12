@@ -6,7 +6,7 @@ import {
   isDocRead,
   isProviderRead,
 } from '../../firestore/extend/mutate';
-import { toJSON } from '../../utils/convertors';
+import { toJSON } from '../../utils';
 
 /**
  * Translates mutation reads request into read results
