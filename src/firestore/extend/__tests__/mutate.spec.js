@@ -29,7 +29,7 @@ describe('Firestore Mutations', () => {
     expect(getRead({ some: 'map' })).toStrictEqual({ some: 'map' });
   });
 
-  it('@scenario: Sll current Firestore FieldValues are supported.', () => {
+  it('@scenario: All current Firestore FieldValues are supported.', () => {
     const properties = Object.getOwnPropertyNames(
       firebase.firestore.FieldValue,
     ).filter((val) => !['length', 'name', 'prototype'].includes(val));

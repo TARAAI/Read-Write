@@ -5,6 +5,8 @@ import isEmpty from 'lodash/isEmpty';
 import trim from 'lodash/trim';
 import has from 'lodash/has';
 
+const arrayify = (arr) => [].concat(arr);
+
 /**
  * Add where clause to Cloud Firestore Reference handling invalid formats
  * and multiple where statements (array of arrays)
@@ -49,8 +51,6 @@ function addOrderByToRef(ref, orderBy) {
     ref,
   );
 }
-
-const arrayify = (cursor) => [].concat(cursor);
 
 /**
  * Call methods on ref object for provided subcollection list (from queryConfig
@@ -112,6 +112,7 @@ function handleSubcollections(ref, subcollectionList) {
  */
 export function firestoreRef(firebase, meta) {
   if (!firebase.firestore) {
+    /* istanbul ignore next */
     throw new Error('Firestore must be required and initialized.');
   }
   const {
@@ -352,23 +353,27 @@ export function getQueryConfig(query) {
   if (typeof query === 'string' || query instanceof String) {
     return queryStrToObj(query);
   }
-  if (isObject(query)) {
-    if (
-      !query.path &&
-      !query.id &&
-      !query.collection &&
-      !query.collectionGroup &&
-      !query.doc
-    ) {
-      throw new Error(
-        'Path, Collection Group and/or Id are required parameters within query definition object.',
-      );
-    }
-    return query;
+
+  if (!isObject(query)) {
+    /* istanbul ignore next */
+    throw new Error(
+      'Invalid Path Definition: Only Strings and Objects are accepted.',
+    );
   }
-  throw new Error(
-    'Invalid Path Definition: Only Strings and Objects are accepted.',
-  );
+
+  if (
+    !query.path &&
+    !query.id &&
+    !query.collection &&
+    !query.collectionGroup &&
+    !query.doc
+  ) {
+    throw new Error(
+      'Path, Collection Group and/or Id are required parameters within query definition object.',
+    );
+  }
+
+  return query;
 }
 
 /**

@@ -24,7 +24,8 @@ const promiseAllObject = async (object) =>
     ),
   );
 
-const isAsync = (fnc) => fnc.constructor.name === 'AsyncFunction';
+const isAsync = (fnc) =>
+  fnc && fnc.constructor && fnc.constructor.name === 'AsyncFunction';
 
 const isBatchedWrite = (operations) => Array.isArray(operations);
 
