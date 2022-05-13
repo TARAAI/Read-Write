@@ -334,7 +334,6 @@ const xfPaginate = (query, getDoc) => {
   return partialRight(map, (tuples) => {
     const results = [];
     let started = start === undefined;
-
     tuples.forEach(([path, id]) => {
       if (limit && results.length >= limit) return;
 
@@ -428,6 +427,9 @@ const skipReprocessing = (query, { databaseOverrides = {} }) => {
  * @param {string} path - path to rerun queries for
  */
 function reprocessQueries(draft, path) {
+  // if (verbose.enable) {
+  verbose(JSON.stringify(draft, null, 2));
+  // }
   const done = mark(`reprocess.${path}`);
   const queries = [];
 

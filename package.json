@@ -22,6 +22,7 @@
     "watch:lib": "npm run build:lib -- --watch",
     "watch:commonjs": "npm run build:commonjs -- --watch",
     "test": "NODE_ENV=test jest",
+    "test:debug": "DEBUG=readwrite:* NODE_ENV=test jest",
     "test:watch": "NODE_ENV=test jest --watch",
     "test:cc": "NODE_ENV=test jest --coverage --coverage-reporters=lcov",
     "start": "yarn --cwd ./examples/notes start",

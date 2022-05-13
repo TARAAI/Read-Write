@@ -6,10 +6,6 @@ import { debug } from 'debug';
 import largeAction from '../__stubs__/one_mb_action.json';
 import appState from '../__stubs__/app_state.json';
 
-const firestoreModule = require('../../../firestore/extend/createFirestoreInstance');
-
-jest.mock('../../../firestore/extend/createFirestoreInstance');
-
 jest.mock('firebase/firestore', () => ({
   ...jest.requireActual('firebase/firestore'),
   serverTimestamp: jest.fn(() => 'serverTimestamp'),
